@@ -56,6 +56,14 @@
                         "onInit": "lib.config.config_callbacks.set_version",
                         "help": "Current version installed"
                     },
+                    "upgrade_quality":{
+                        "label": "Upgrade Quality",
+                        "type": "list",
+                        "default": "stable",
+                        "values": ["stable", "unstable"],
+                        "level": 1,
+                        "help": "Version upgrade quality"
+                    },
                     "ostype":{
                         "label": "OS Type",
                         "type": "string",

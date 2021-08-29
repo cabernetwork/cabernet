@@ -16,7 +16,7 @@ After=network.target network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/hts/locast/tvheadend-locast/tvh_main.py
+ExecStart=/usr/bin/python3 /home/hts/locast/cabernet/tvh_main.py
 
 # Disable Python's buffering of STDOUT and STDERR, so that output from the
 # service shows up immediately in systemd's logs

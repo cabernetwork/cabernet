@@ -1,8 +1,8 @@
-## tvheadend-locast
-You have found the tvheadend-locast README. 
+## Cabernet
+You have found the Cabernet README. 
 To allow for easy insertion of the locast2plex baseline, most of the top level files are directly from locast2plex including the main README.md.
 
-Additional information is provided on the [Wiki](https://github.com/rocky4546/tvheadend-locast/wiki) pages.
+Additional information is provided on the [Wiki](https://cabernetwork.github.io/) pages.
 
 ### Purpose:
 This application has two primary purposes along with many minor updates.  

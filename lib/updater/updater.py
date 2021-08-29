@@ -131,22 +131,6 @@ class Updater:
         """
         self.plugin_db.save_plugin(_manifest)
  
-    @handle_json_except 
-    @handle_url_except 
-    def github_releases(self):
-        json_releases = importlib.resources.read_text(self.config['paths']['resources_pkg'], 'github_releases.json')
-        releases = json.loads(json_releases)
-        return releases
-
-        url = ''.join([
-            self.manifest['github_repo'], '/releases'
-            ])
-        login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
-        release_req = urllib.request.Request(url, headers=login_headers)
-        with urllib.request.urlopen(release_req) as resp:
-            release_list = json.load(resp)
-        return release_list
-
     def get_next_release(self, release_data_list):
         current_version = self.config['main']['version']
         x = self.version_re.match(current_version)

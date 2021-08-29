@@ -93,7 +93,8 @@ class CabernetUpgrade:
     @handle_url_except 
     def github_releases(self, _manifest):
         url = ''.join([
-            _manifest['github_repo'], '/releases'
+            _manifest['github_repo_' + self.config['main']['upgrade_quality'] ],
+            '/releases'
             ])
         login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
         release_req = urllib.request.Request(url, headers=login_headers)
@@ -152,7 +153,8 @@ class CabernetUpgrade:
         
         STATUS += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
-                c_manifest['github_repo'], 'zipball', c_manifest['next_version']
+                c_manifest['github_repo_' +  + self.config['main']['upgrade_quality'] ], 
+                'zipball', c_manifest['next_version']
                 ])):
             STATUS += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False

@@ -26,6 +26,7 @@ import lib.tvheadend.epg_category as epg_category
 from lib.common.decorators import getrequest
 from lib.db.db_channels import DBChannels
 from lib.db.db_epg import DBepg
+from lib.db.db_plugins import DBPlugins
 from lib.web.pages.templates import web_templates
 
 

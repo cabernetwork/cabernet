@@ -33,7 +33,7 @@ def patch_upgrade(_config, _new_version):
     To make sure this only executes associated with a specific version, the version 
     it is associated is tested with this new version.
     """
-    if _new_version == REQUIRED_VERSION:
+    if _new_version.startswith(REQUIRED_VERSION):
         logging.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
         path = os.path.join(_config['paths']['db_dir'], 
             _config['datamgmt']['db_files-plugins_db'] + '.db')

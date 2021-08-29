@@ -82,7 +82,7 @@ class IndexJS:
             current_version = manifest_list[0]['version']
             next_version = manifest_list[0]['next_version']
             latest_version = manifest_list[0]['latest_version']
-            if current_version == next_version:
+            if current_version >= next_version:
                 upgrade_js = ''
             else:
                 upgrade_js = ''.join([
