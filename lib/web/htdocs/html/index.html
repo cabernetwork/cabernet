@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html data-appversion="4.5.4.0" data-culture="en-US" lang="en" class="noScrollY">
+
+<head>
+
+    <meta name="viewport"
+        content="viewport-fit=cover, width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
+    <link rel="manifest" href="manifest.json">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    <meta http-equiv="X-UA-Compatibility" content="IE=Edge">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="cabernet">
+    <meta name="robots" content="noindex, nofollow, noarchive">
+    <meta property="og:title" content="cabernet">
+    <meta property="og:site_name" content="cabernet">
+    <meta property="og:url" content="https://emby.media">
+    <meta property="og:description" content="Energize your media.">
+    <meta property="og:type" content="article">
+    <meta property="fb:app_id" content="1618309211750238">
+    <link rel="apple-touch-icon" sizes="72x72" href="/images/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/images/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/images/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/icon-180x180.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/images/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="384x384" href="/images/icon-384x384.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/images/icon-512x512.png">
+    <link rel="icon" type="image/png" href="/images/icon-96x96.png" sizes="96x96">
+    <link rel="icon" type="image/png" href="/images/icon-32x32.png" sizes="32x32">
+    <meta name="msapplication-TileImage" content="/images/icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#333333">
+    <meta name="theme-color" content="#43A047">
+    <link rel="stylesheet" type="text/css" href="/modules/layout.css">
+    <link rel="stylesheet" type="text/css" href="/modules/navdrawer/navdrawer.css">
+    <link rel="stylesheet" type="text/css" href="/modules/fonts/fonts.css">
+    <link rel="stylesheet" type="text/css" href="/modules/fonts/material-icons/style.css">
+    <link rel="stylesheet" type="text/css" href="/modules/emby-elements/emby-collapse/emby-collapse.css">
+    <link rel="stylesheet" type="text/css" href="/modules/scrollstyles.css">
+    <link rel="stylesheet" type="text/css" href="/modules/emby-elements/emby-button/emby-button.css">
+    <link rel="stylesheet" type="text/css" href="/modules/backdrop/style.css">
+    <link rel="stylesheet" type="text/css" href="/modules/flexstyles.css">
+
+    <title>cabernet</title>
+
+    <style>
+        .preload {
+            background-color: #000;
+        }
+        .app-splash {
+            background-image: url(/modules/themes/logowhite.png);
+            background-position: center top;
+            background-repeat: no-repeat;
+            background-size: contain;
+            position: fixed;
+            top: 0%;
+            left: 50%;
+            right: 50%;
+            height: 100%;
+        }
+        .splash {
+            padding: 1% 0;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+            width: 60%;
+        }
+
+        @media (orientation: landscape) {
+            .app-splash {
+                left: 37.5%;
+                right: 37.5%;
+            }
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script type="text/javascript" src="/modules/navdrawer/navdrawer.js"></script>
+    <script type="text/javascript" src="/api/index.js"></script>
+</head>
+
+<body>
+    <div class="backdropContainer backdropContainer-withfulldrawer"></div>
+    <div class="backgroundContainer withBackdrop"></div>
+
+    <div class="mainDrawer scrollY hiddenScrollY-hover scrollY-mini drawer-docked drawer-open"
+        style="will-change: transform;">
+        <div class="navDrawerHeader flex flex-direction-row align-items-center">
+            <div class="navDrawerLogo pageTitleWithDefaultLogo flex-grow" href="/" title="Home">
+            </div>
+            <button type="button" 
+                class="navClosePanel btnPinNavDrawer paper-icon-button-light " 
+                title="Close Sidebar">
+                <i class="md-icon">close</i>
+            </button>
+        </div>
+        <a data-navmenuid="/" class="navMenuOption navButton" href="/" title="Home">
+            <i class="md-icon navMenuOptionIcon">home</i>
+            <span class="navMenuOptionText">Home</span>
+        </a>
+        <div class="navDrawerCollapseSection">
+            <input id="collapsible2" class="toggle" type="checkbox" checked />
+            <label for="collapsible2" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton">More
+                Info</label>
+            <div title="XML/JSON Links" class="collapsible-content">
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a 
+                        class="navMenuOption navButton"
+                        href="#" onclick='load_url("/html/links.html")' 
+                        title="Home Screen">
+                        <i class="md-icon navMenuOptionIcon">message</i>
+                        <span class="navMenuOptionText">XML/JSON Links</span>
+                    </a>
+                </div>
+                <hr>
+            </div>
+        </div>
+        <div class="navDrawerCollapseSection">
+            <input id="collapsible" class="toggle" type="checkbox" checked />
+            <label for="collapsible" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton">Settings</label>
+            <div title="Configuration" class="collapsible-content">
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=general")' title="Display">
+                        <i class="md-icon navMenuOptionIcon">settings</i>
+                        <span class="navMenuOptionText">Internal</span>
+                    </a>
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=providers")' title="Providers">
+                        <i class="md-icon navMenuOptionIcon">cast</i>
+                        <span class="navMenuOptionText">Providers</span>
+                    </a>
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=clients")' title="Providers">
+                        <i class="md-icon navMenuOptionIcon">tv</i>
+                        <span class="navMenuOptionText">Clients</span>
+                    </a>
+                    <a class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=logging")' title="Logging">
+                        <i class="md-icon navMenuOptionIcon">article</i>
+                        <span class="navMenuOptionText">Logging</span>
+                    </a>
+                </div>
+                <hr>
+            </div>
+        </div>
+        <div class="navDrawerCollapseSection">
+            <input id="collapsible3" class="toggle" type="checkbox" checked />
+            <label for="collapsible3" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton">Functions</label>
+            <div title="Configuration" class="collapsible-content">
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/channels")' title="Channel Editor">
+                        <i class="md-icon navMenuOptionIcon">build</i>
+                        <span class="navMenuOptionText">Channel Editor</span>
+                    </a>
+                </div>
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/schedulehtml")' title="Scheduled Tasks">
+                        <i class="md-icon navMenuOptionIcon">schedule</i>
+                        <span class="navMenuOptionText">Scheduled Tasks</span>
+                    </a>
+                </div>
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/data_mgmt")' title="Data Management">
+                        <i class="md-icon navMenuOptionIcon">inventory_2</i>
+                        <span class="navMenuOptionText">Data Mgmt</span>
+                    </a>
+                </div>
+                <hr>
+            </div>
+        </div>
+    </div>
+    <div class="mainAnimatedPages skinBody skinBody-withFullDrawer">
+
+        <button type="button"
+            class="navOpenPanel  paper-icon-button-light" 
+            title="Close Sidebar">
+            <i class="md-icon">menu_open</i>
+        </button>
+
+        <!--<div class="app-splash"></div>-->
+        <div is="emby-scroller"
+            class="view flex flex-direction-column scrollFrameY flex-grow emby-scroller page scrollY"
+            data-mousewheel="true" data-horizontal="false" data-centerfocus="card">
+            <div
+                class="scrollSlider flex-grow flex-direction-column padded-left padded-left-page padded-right padded-top-page padded-bottom-page dashboardContainer scrollSliderY">
+                <div class="dashboardSections" style="padding-top:.5em;">
+
+                <div id="content"></div>
+                <div class="dashboardFooter">
+                    <div style="height:1px;" class="ui-bar-inherit"></div>
+                    <div style="margin-top:1em;">
+                        <a is="emby-linkbutton" class="button-link emby-button" href="https://cabernetwork.github.io/"
+                            target="_blank">Cabernet</a>
+                        <a is="emby-linkbutton" class="button-link emby-button" href="https://tvheadend.org/boards/5/topics/43052"
+                            target="_blank">Community</a>
+                        <a is="emby-linkbutton" class="button-link emby-button" href="https://github.com/cabernetwork/cabernet"
+                            target="_blank">Github</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

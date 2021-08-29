@@ -1,0 +1,35 @@
+TX|TV|DT|TB|LD|DC
+
+CA
+AX
+NN
+NM
+TR
+FR
+DM
+FA
+TB
+LM
+DN
+TA
+FL
+TX
+FX
+DR
+FB
+AM
+LD
+DC
+DT
+FM
+TV
+---
+AX - Shortwave
+FR - FM Radio something
+FA - FM Radio something
+LM - Land Mobile station https://en.wikipedia.org/wiki/Land_mobile_station
+FL - FM Radio something (Perhaps low power)
+FX - FM Translator?
+FB - FM Radio something
+LD - Small Community TV
+DC - Small Community TV

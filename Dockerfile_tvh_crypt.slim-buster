@@ -1,0 +1,32 @@
+ARG BASE_IMAGE=python:3.8.8-slim-buster
+FROM $BASE_IMAGE as base
+WORKDIR /app
+ENV PYTHONPATH "${PYTHONPATH}:/app"
+
+##
+# Install any runtime dependencies here
+ENV RUNTIME_DEPENDENCIES="ffmpeg curl"
+
+RUN apt-get update \
+    && apt-get install -y $RUNTIME_DEPENDENCIES \
+&& rm -rf /var/lib/apt/lists/*
+
+#ENV BUILD_DEPENDENCIES="build-essential"
+ENV BUILD_DEPENDENCIES=""
+
+COPY requirements.txt /app/requirements.txt
+
+# Install any build dependencies here
+RUN apt-get update \
+    && pip install --upgrade pip \
+    && apt-get install -y $BUILD_DEPENDENCIES \
+    && pip install --no-cache-dir -r requirements.txt \
+&& apt-get remove -y $BUILD_DEPENDENCIES \
+&& apt-get auto-remove -y \
+&& rm -rf /var/lib/apt/lists/*
+
+COPY *.py /app/
+COPY lib/ /app/lib/
+COPY plugins /app/plugins
+RUN touch /app/is_container
+ENTRYPOINT ["python3", "/app/tvh_main.py"]

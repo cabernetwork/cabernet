@@ -1,0 +1,454 @@
+"524": "ATLANTA", // 33.7490, -84.3880
+//listings
+active: true
+callSign: "2.1 ABC"
+dma: 524
+id: 1571261945557
+listings: [{stationId: 1571261945557, startTime: 1590883200000, duration: 3660, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Atlanta/ABC.png"
+logoUrl: "https://static.locastnet.org/logo/Atlanta/ABC.png"
+name: "WSBDT"
+sequence: 10
+stationId: "19586"
+// stream
+active: true
+callSign: "2.1 ABC"
+dma: 524
+id: 1571261945557
+logo226Url: "https://static.locastnet.org/roku/Atlanta/ABC.png"
+logoUrl: "https://static.locastnet.org/logo/Atlanta/ABC.png"
+name: "WSBDT"
+sequence: 10
+stationId: "19586"
+
+
+
+
+"512": "BALTIMORE", // 39.2904, -76.6122
+//listings
+active: true
+callSign: "WMAR"
+dma: 512
+id: 1024
+listings: [{stationId: 1024, startTime: 1590883200000, duration: 3660, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Baltimore/WMAR.png"
+logoUrl: "https://static.locastnet.org/logo/Baltimore/WMAR.png"
+name: "WMARDT"
+sequence: 10
+stationId: "21230"
+//stream
+active: true
+callSign: "WMAR"
+dma: 512
+id: 1024
+logo226Url: "https://static.locastnet.org/roku/Baltimore/WMAR.png"
+logoUrl: "https://static.locastnet.org/logo/Baltimore/WMAR.png"
+name: "WMARDT"
+sequence: 10
+stationId: "21230"
+
+
+
+
+"506": "BOSTON (MANCHESTER)", // 42.3601, -71.0589
+//listings
+active: true
+callSign: "WGBH"
+dma: 506
+id: 471
+listings: [{stationId: 471, startTime: 1590885000000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Boston/WGBH.png"
+logoUrl: "https://static.locastnet.org/logo/Boston/WGBH.png"
+name: "WGBHDT"
+sequence: 10
+stationId: "28055"
+//stream
+active: true
+callSign: "WGBH"
+dma: 506
+id: 471
+logo226Url: "https://static.locastnet.org/roku/Boston/WGBH.png"
+logoUrl: "https://static.locastnet.org/logo/Boston/WGBH.png"
+name: "WGBHDT"
+sequence: 10
+stationId: "28055"
+
+
+
+
+
+
+"602": "CHICAGO", // 41.8781, -87.6298
+active: true
+callSign: "2.1 CBS"
+dma: 602
+id: 653
+listings: [{stationId: 653, startTime: 1590886800000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Chicago/WBBM.png"
+logoUrl: "https://static.locastnet.org/logo/Chicago/WBBM.png"
+name: "WBBMDT"
+sequence: 10
+stationId: "20454"
+// stream
+active: true
+callSign: "2.1 CBS"
+dma: 602
+id: 653
+logo226Url: "https://static.locastnet.org/roku/Chicago/WBBM.png"
+logoUrl: "https://static.locastnet.org/logo/Chicago/WBBM.png"
+name: "WBBMDT"
+sequence: 10
+stationId: "20454"
+
+
+
+
+
+"623": "DALLAS-FT. WORTH", // 32.7767, -96.7970
+active: true
+callSign: "2.1 DYSTR"
+dma: 623
+id: 231
+listings: [{stationId: 231, startTime: 1590886800000, duration: 1800, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Dallas/KDTN.png"
+logoUrl: "https://static.locastnet.org/logo/Dallas/KDTN.png"
+name: "KDTNDT"
+sequence: 10
+stationId: "20371"
+//stream
+active: true
+callSign: "2.1 DYSTR"
+dma: 623
+id: 231
+logo226Url: "https://static.locastnet.org/roku/Dallas/KDTN.png"
+logoUrl: "https://static.locastnet.org/logo/Dallas/KDTN.png"
+name: "KDTNDT"
+sequence: 10
+stationId: "20371"
+
+
+
+
+
+
+
+"751": "DENVER", // 39.7392, -104.9903
+active: true
+callSign: "2.1 CW"
+description: "Channel 2"
+dma: 751
+id: 752
+listings: [{stationId: 752, startTime: 1590886800000, duration: 3600, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/Denver/KWGN.png"
+logoUrl: "https://static.locastnet.org/logo/Denver/KWGN.png"
+name: "KWGNDT"
+sequence: 10
+stationId: "20370"
+//stream
+active: true
+callSign: "2.1 CW"
+description: "Channel 2"
+dma: 751
+id: 752
+logo226Url: "https://static.locastnet.org/roku/Denver/KWGN.png"
+logoUrl: "https://static.locastnet.org/logo/Denver/KWGN.png"
+name: "KWGNDT"
+sequence: 10
+stationId: "20370"
+
+
+
+
+
+"618": "HOUSTON", // 29.7604, -95.3698
+active: true
+callSign: "KPRC"
+dma: 618
+id: 339
+listings: [{stationId: 339, startTime: 1590883200000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Houston/KPRC.png"
+logoUrl: "https://static.locastnet.org/logo/Houston/KPRC.png"
+name: "KPRCDT"
+sequence: 10
+stationId: "21250"
+//stream
+active: true
+callSign: "KPRC"
+dma: 618
+id: 339
+logo226Url: "https://static.locastnet.org/roku/Houston/KPRC.png"
+logoUrl: "https://static.locastnet.org/logo/Houston/KPRC.png"
+name: "KPRCDT"
+sequence: 10
+stationId: "21250"
+
+
+
+
+
+"803": "LOS ANGELES", // 34.0522, -118.2437
+active: true
+callSign: "2.1 CBS"
+dma: 803
+id: 1075
+listings: [{stationId: 1075, startTime: 1590886800000, duration: 1800, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/LA/KCBSDT.png"
+logoUrl: "https://static.locastnet.org/logo/LA/KCBSDT.png"
+name: "KCBSDT"
+sequence: 10
+stationId: "19567"
+//stream
+active: true
+callSign: "2.1 CBS"
+dma: 803
+id: 1075
+logo226Url: "https://static.locastnet.org/roku/LA/KCBSDT.png"
+logoUrl: "https://static.locastnet.org/logo/LA/KCBSDT.png"
+name: "KCBSDT"
+sequence: 10
+stationId: "19567"
+
+
+
+
+
+"501": "NEW YORK", // 40.7128, -74.0060
+active: true
+callSign: "2.1 CBS"
+dma: 501
+id: 104
+listings: [{stationId: 104, startTime: 1590886800000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/NewYork/WCBS.png"
+logoUrl: "https://static.locastnet.org/logo/NewYork/WCBS.png"
+name: "WCBSDT"
+sequence: 10
+stationId: "16689"
+//stream
+active: true
+callSign: "2.1 CBS"
+dma: 501
+id: 104
+logo226Url: "https://static.locastnet.org/roku/NewYork/WCBS.png"
+logoUrl: "https://static.locastnet.org/logo/NewYork/WCBS.png"
+name: "WCBSDT"
+sequence: 10
+stationId: "16689"
+
+
+
+
+
+"504": "PHILADELPHIA", // my location
+// listings
+active: true
+callSign: "WDPN"
+dma: 504
+id: 552
+listings: [{stationId: 552, startTime: 1590883200000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/Philadelphia/KJWP.png"
+logoUrl: "https://static.locastnet.org/logo/Philadelphia/KJWP.png"
+name: "KJWPDT"
+sequence: 5
+stationId: "64010"
+// stream
+active: true
+callSign: "WDPN"
+dma: 504
+id: 552
+logo226Url: "https://static.locastnet.org/roku/Philadelphia/KJWP.png"
+logoUrl: "https://static.locastnet.org/logo/Philadelphia/KJWP.png"
+name: "KJWPDT"
+sequence: 5
+stationId: "64010"
+
+
+
+
+
+
+"753": "PHOENIX (PRESCOTT)", // 33.4484, -112.0740
+active: true
+callSign: "3.1 KTVKDT"
+dma: 753
+id: 1571434910068
+listings: [{stationId: 1571434910068, startTime: 1590886800000, duration: 3600, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/Phoenix/KTVKDT.png"
+logoUrl: "https://static.locastnet.org/logo/Phoenix/KTVKDT.png"
+name: "KTVKDT"
+sequence: 10
+stationId: "30817"
+// stream
+active: true
+callSign: "3.1 KTVKDT"
+dma: 753
+id: 1571434910068
+logo226Url: "https://static.locastnet.org/roku/Phoenix/KTVKDT.png"
+logoUrl: "https://static.locastnet.org/logo/Phoenix/KTVKDT.png"
+name: "KTVKDT"
+sequence: 10
+stationId: "30817"
+
+
+
+
+"490": "PUERTO RICO", // 18.2208, -66.5901
+active: true
+callSign: "2.1 TELE"
+dma: 490
+id: 1586273104164
+listings: [{stationId: 1586273104164, startTime: 1590883200000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/PuertoRico/WKAQ-TV.png"
+logoUrl: "https://static.locastnet.org/logo/PuertoRico/WKAQ-TV.png"
+name: "WKAQDT"
+sequence: 10
+stationId: "43328"
+// stream
+active: true
+callSign: "2.1 TELE"
+dma: 490
+id: 1586273104164
+logo226Url: "https://static.locastnet.org/roku/PuertoRico/WKAQ-TV.png"
+logoUrl: "https://static.locastnet.org/logo/PuertoRico/WKAQ-TV.png"
+name: "WKAQDT"
+sequence: 10
+stationId: "43328"
+
+
+
+"764": "RAPID CITY", // 44.0805, -103.2310
+active: true
+callSign: "3.1 ABC"
+dma: 764
+id: 1045
+listings: [{stationId: 1045, startTime: 1590886800000, duration: 3660, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/RapidCity/KOTA.png"
+logoUrl: "https://static.locastnet.org/logo/RapidCity/KOTA.png"
+name: "KOTADT"
+sequence: 10
+stationId: "44026"
+// stream
+active: true
+callSign: "3.1 ABC"
+dma: 764
+id: 1045
+logo226Url: "https://static.locastnet.org/roku/RapidCity/KOTA.png"
+logoUrl: "https://static.locastnet.org/logo/RapidCity/KOTA.png"
+name: "KOTADT"
+sequence: 10
+stationId: "44026"
+
+
+
+
+/////////////////////////////////////////////////////////////
+// THIS ONE DOESN'T HAVE A PROPER CALLSIGN OR CHANNEL!!!!
+/////////////////////////////////////////////////////////////
+"807": "SAN FRANCISCO-OAK-SAN JOSE", // 37.7749, -122.4194
+active: true
+callSign: "CBS"
+dma: 807
+id: 1293
+listings: [{stationId: 1293, startTime: 1590886800000, duration: 3600, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/SFO/KPIXDT.png"
+logoUrl: "https://static.locastnet.org/logo/SFO/KPIXDT.png"
+name: "KPIXDT"
+sequence: 10
+stationId: "19572"
+//stream
+active: true
+callSign: "CBS"
+dma: 807
+id: 1293
+logo226Url: "https://static.locastnet.org/roku/SFO/KPIXDT.png"
+logoUrl: "https://static.locastnet.org/logo/SFO/KPIXDT.png"
+name: "KPIXDT"
+sequence: 10
+stationId: "19572"
+
+
+
+
+
+
+"819": "SEATTLE-TACOMA", // 47.6062, -122.3321
+// listings
+active: true
+callSign: "4.1 ABC"
+dma: 819
+id: 1572389490750
+listings: [{stationId: 1572389490750, startTime: 1590883200000, duration: 1800, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/Seattle/ABC.png"
+logoUrl: "https://static.locastnet.org/logo/Seattle/ABC.png"
+name: "KOMODT"
+sequence: 10
+stationId: "19629"
+// stream
+active: true
+callSign: "4.1 ABC"
+dma: 819
+id: 1572389490750
+logo226Url: "https://static.locastnet.org/roku/Seattle/ABC.png"
+logoUrl: "https://static.locastnet.org/logo/Seattle/ABC.png"
+name: "KOMODT"
+sequence: 10
+stationId: "19629"
+
+
+
+
+
+"624": "SIOUX CITY", // 42.4963, -96.4049
+active: true
+callSign: "2.1 PBS"
+dma: 624
+id: 1580138439
+listings: [{stationId: 1580138439, startTime: 1591061400000, duration: 7200, isNew: false,…},…]
+logo226Url: "https://static.locastnet.org/roku/RapidCity/KBHE.png"
+logoUrl: "https://static.locastnet.org/logo/SiouxCity/PBS.png"
+name: "KUSDDT"
+sequence: 10
+stationId: "44246"
+//stream
+active: true
+callSign: "2.1 PBS"
+dma: 624
+id: 1580138439
+logo226Url: "https://static.locastnet.org/roku/RapidCity/KBHE.png"
+logoUrl: "https://static.locastnet.org/logo/SiouxCity/PBS.png"
+name: "KUSDDT"
+sequence: 10
+stationId: "44246"
+
+
+
+
+
+
+"725": "SIOUX FALLS(MITCHELL)", // 43.3216, -92.8669
+
+
+
+
+
+
+"511": "WASHINGTON DC (HAGRSTWN)" // 38.9072, -77.0369
+active: true
+callSign: "WRC"
+dma: 511
+id: 1014
+listings: [{stationId: 1014, startTime: 1591066800000, duration: 2100, isNew: true,…},…]
+logo226Url: "https://static.locastnet.org/roku/Washington/WRC.png"
+logoUrl: "https://static.locastnet.org/logo/Washington/WRC.png"
+name: "WRCDT"
+sequence: 10
+stationId: "19578"
+//stream
+active: true
+callSign: "WRC"
+dma: 511
+id: 1014
+logo226Url: "https://static.locastnet.org/roku/Washington/WRC.png"
+logoUrl: "https://static.locastnet.org/logo/Washington/WRC.png"
+name: "WRCDT"
+sequence: 10
+stationId: "19578"

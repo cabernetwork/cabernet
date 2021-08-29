@@ -1,0 +1,56 @@
+.emby-collapse {
+    margin: 0.5em 0;
+}
+.collapseContent {
+    border-width: 0;
+    padding: 1.25em 1.25em;
+    height: 0;
+    -webkit-transition: height 0.3s ease-in-out;
+    -o-transition: height 0.3s ease-in-out;
+    transition: height 0.3s ease-in-out;
+    overflow: hidden;
+}
+.emby-collapsible-button {
+    margin: 0;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    text-transform: none;
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    border-width: 0;
+    padding-left: 0.1em;
+    background: 0 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;
+}
+.emby-collapsible-button-collapsed {
+    border-width: 0 0 0.1em 0 !important;
+    border-style: solid !important;
+}
+.emby-collapse-expandIcon {
+    -webkit-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+    -webkit-transition: -webkit-transform 180ms ease-in-out;
+    -o-transition: transform 180ms ease-in-out;
+    transition: transform 180ms ease-in-out;
+    position: absolute;
+    right: 0.5em;
+    font-size: 1.66956521739130434em;
+    -webkit-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+.emby-collapse-expandIconExpanded {
+    -webkit-transform: none;
+    transform: none;
+}
+.emby-collapsible-title {
+    margin: 0;
+    padding: 0;
+}

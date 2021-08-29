@@ -1,0 +1,87 @@
+.schedTable{
+    background: var(--docked-drawer-background);
+    width: 95%;
+}
+.schedIcon{
+    min-width: 2em;
+    font-size: 150%;
+    text-align: center;
+    display: table-cell;
+}
+
+@media not all and (min-width:50em){
+    .schedIcon{
+        min-width:1.3em;
+    }
+    .schedTable{
+        width: 99%;
+    }
+}
+@media not all and (max-width:60em){
+    .schedIcon{
+        min-width:3em;
+    }
+}
+.schedTask{
+    width:90%;
+}
+.schedTitle{
+    font-size: 110%;
+    font-weight: bold;
+}
+.schedSection{
+    font-size: 130%;
+    font-weight: bold;
+}
+.schedHide{
+    display: none;
+}
+.schedShow{
+    display: block;
+}
+.schedIconButton{
+    background: #ffffff61;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    padding: 0px;
+    border: 0px;
+    margin-left: 1em;
+    cursor: pointer;
+}
+td a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.progress-line, .progress-line:before {
+  height: 3px;
+  width: 100%;
+  margin: 0;
+}
+.progress-line {
+  background-color: #878bc7;
+  display: -webkit-flex;
+  display: flex;
+}
+.progress-line:before {
+  background-color: #ed344a;
+  content: '';
+  -webkit-animation: running-progress 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: running-progress 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@-webkit-keyframes running-progress {
+  0% { margin-left: 0px; margin-right: 100%; }
+  50% { margin-left: 25%; margin-right: 0%; }
+  100% { margin-left: 100%; margin-right: 0; }
+}
+@keyframes running-progress {
+  0% { margin-left: 0px; margin-right: 100%; }
+  50% { margin-left: 25%; margin-right: 0%; }
+  100% { margin-left: 100%; margin-right: 0; }
+}
+
+
+
+#background-image: linear-gradient(45deg, #ed344a 25%, #857830 25%, #857830 50%, #ed344a 50%, #ed344a 75%, #857830 75%, #857830 100%);
+#background-size: 56.57px 56.57px;

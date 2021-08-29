@@ -1,0 +1,195 @@
+{
+    "general":{
+        "sections":{
+            "paths":{
+                "label": "Paths",
+                "sort": "3",
+                "icon": "perm_media",
+                "description": "Contains the general settings for the web GUI",
+                "settings":{
+                    "main_dir":{
+                        "label": "Root Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_main_path",
+                        "help": "Not changeable. Where App is installed"
+                    },
+                    "data_dir":{
+                        "label": "Data Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_data_path",
+                        "help": "Cache and Data storage"
+                    },
+                    "config_file":{
+                        "label": "config.ini file",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "help": "Not changeable. Use --config_file option to change"
+                    },
+                    "db_dir":{
+                        "label": "Database Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 3,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_database_path",
+                        "help": "Location of temporary files"
+                    },
+                    "logs_dir":{
+                        "label": "Log Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_logs_path",
+                        "help": "Location of log files when set to be used"
+                    },
+                    "tmp_dir":{
+                        "label": "TEMP Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "onInit": "lib.config.config_callbacks.set_temp_path",
+                        "help": "Temporary Location for files and upgrades"
+                    },
+                    "resources_pkg":{
+                        "label": "Internal Resources Path",
+                        "type": "path",
+                        "default": "lib.resources",
+                        "level": 2,
+                        "writable": false,
+                        "help": "Not changeable, Location of the resource folder"
+                    },
+                    "config_defn_pkg":{
+                        "label": "Internal Config Definition Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 3,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_configdefn_path",
+                        "help": "Not changeable, Location of the base config definitions"
+                    },
+                    "www_pkg":{
+                        "label": "WWW Path",
+                        "type": "path",
+                        "default": "lib.web.htdocs",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Where HTML, JS, Image and CSS files are located"
+                    },
+                    "themes_pkg":{
+                        "label": "Themes Path",
+                        "type": "path",
+                        "default": "lib.web.htdocs.modules.themes",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Where the web site themes are located."
+                    },
+                    "internal_plugins_pkg":{
+                        "label": "Main Plugins Package",
+                        "type": "path",
+                        "default": "plugins",
+                        "level": 1,
+                        "writable": false,
+                        "help": "Package location of where the plugins are installed"
+                    },
+                    "ffmpeg_path":{
+                        "label": "ffmpeg_path",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_ffmpeg_path",
+                        "help": "Only used with stream_type=ffmpegproxy"
+                    },
+                    "ffprobe_path":{
+                        "label": "ffprobe_path",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_ffprobe_path",
+                        "help": "Only used with stream_type=ffmpegproxy"
+                    }
+
+                }
+            },
+            "datamgmt":{
+                "label": "Data Management",
+                "sort": "4",
+                "icon": "inventory_2",
+                "description": "Backup and Database Configuration",
+                "settings":{
+                    "backups-backupstoretain":{
+                        "label": "Backups to Retain",
+                        "type": "integer",
+                        "default": 10,
+                        "level": 1,
+                        "help": "Number of backups to retain"
+                    },
+                    "backups-location":{
+                        "label": "Path to backup location",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_backup_path",
+                        "help": "Location where backups are stored"
+                    },
+                    "backups-config_ini":{
+                        "label": "Config.ini Backup",
+                        "type": "path",
+                        "default": "config.ini",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Used to backup the config.ini file"
+                    },
+                    "db_files-defn_db":{
+                        "label": "Config Database",
+                        "type": "path",
+                        "default": "config_defn",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing config defn and config data"
+                    },
+                    "db_files-plugins_db":{
+                        "label": "Plugin Manifest Database",
+                        "type": "path",
+                        "default": "plugins",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing plugin manifests"
+                    },
+                    "db_files-channels_db":{
+                        "label": "Channels Database",
+                        "type": "path",
+                        "default": "channels",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing channel data"
+                    },
+                    "db_files-epg_db":{
+                        "label": "EPG Database",
+                        "type": "path",
+                        "default": "epg",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing program data"
+                    },
+                    "db_files-scheduler_db":{
+                        "label": "Scheduler Database",
+                        "type": "path",
+                        "default": "scheduler",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing scheduled tasking"
+                    }
+                    
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+@font-face {
+    font-family: "Material Icons Round";
+    font-style: normal;
+    font-weight: 400;
+    src: local("Material Icons Round"), local("MaterialIcons-Round"), url(LDItaoyNOAY6Uewc665JcIzCKsKc_M9flwmP_1.woff2) format("woff2"), url(LDItaoyNOAY6Uewc665JcIzCKsKc_M9flwmJ_1.woff) format("woff");
+}
+.md-icon {
+    font-family: "Material Icons Round";
+    font-weight: 400;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-feature-settings: "liga";
+    font-feature-settings: "liga";
+    overflow: hidden;
+    vertical-align: middle;
+}

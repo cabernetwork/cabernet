@@ -1,0 +1,14 @@
+{
+    "id": "repository.rocky4546",
+    "name": "rocky4546's Cabernet Plugins",
+    "version": "0.0.1",
+    "provider-name": "rocky4546",
+    "extension": {
+        "info": "pointer to the addon.xml containing all plugins available",
+        "checksum": "pointer to the md5 file",
+        "datadir": "pointer to the repo area.  Folder structure is .../repo/[id]/[id]-[version].zip",
+        "summary": "what this repo contains",
+        "description": "download and install plugins by rocky4546",
+        "category": ["repository"]
+    }
+}

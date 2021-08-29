@@ -1,0 +1,261 @@
+.emby-button {
+    position: relative;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0 0.29em;
+    text-align: center;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    z-index: 0;
+    padding: 0.66em 1em;
+    vertical-align: middle;
+    border: 0;
+    vertical-align: middle;
+    -webkit-border-radius: 0.42em;
+    border-radius: 0.42em;
+    position: relative;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: none;
+    line-height: inherit;
+}
+.emby-button-tv {
+    outline: 0 !important;
+}
+@media (pointer: coarse) {
+    .emby-button {
+        outline: 0 !important;
+    }
+}
+.emby-button:not(:focus-visible) {
+    outline: 0 !important;
+}
+.emby-button:not(:-moz-focusring) {
+    outline: 0 !important;
+}
+.emby-button:active,
+.emby-button:hover {
+    outline: 0 !important;
+}
+.emby-button::-moz-focus-inner {
+    border: 0;
+}
+.button-flat {
+    background: 0 0;
+}
+.button-link {
+    background: 0 0;
+    margin: 0;
+    padding: 0;
+    vertical-align: initial;
+    font-weight: 400;
+    outline: 0 !important;
+}
+.button-link:not(.emby-button-tv):focus {
+    text-decoration: underline;
+}
+@media (pointer: coarse) {
+    .button-link:focus {
+        text-decoration: none;
+    }
+}
+.button-link:not(.emby-button-tv):active {
+    text-decoration: underline;
+}
+.button-link:focus:not(:focus-visible) {
+    text-decoration: none;
+}
+.button-link:focus:not(:-moz-focusring) {
+    text-decoration: none;
+}
+.button-inherit-color {
+    color: inherit !important;
+}
+.raised-mini {
+    padding-top: 0.4em;
+    padding-bottom: 0.4em;
+    -webkit-border-radius: 100em;
+    border-radius: 100em;
+}
+@media (hover: hover) and (pointer: fine) {
+    .button-flat:hover {
+        opacity: 0.5;
+    }
+    .button-link:hover {
+        text-decoration: underline;
+    }
+}
+.emby-button-focusscale {
+    -webkit-transition: -webkit-transform 180ms ease-in-out !important;
+    -o-transition: transform 180ms ease-in-out !important;
+    transition: transform 180ms ease-in-out !important;
+    -webkit-transform-origin: center center;
+    transform-origin: center center;
+}
+.emby-button-focusscale:focus {
+    -webkit-transform: scale(1.16);
+    transform: scale(1.16);
+    z-index: 1;
+}
+.button-icon {
+    font-size: 1.36em;
+}
+.button-icon-left {
+    margin-right: 0.25em;
+    margin-left: -0.25em;
+}
+.button-icon-left-centered {
+    margin-right: 0.5em;
+}
+.button-icon-right {
+    margin-left: 0.25em;
+    margin-right: -0.25em;
+}
+.fab {
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    padding: 0.6em;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    text-align: center;
+}
+.emby-button.block {
+    display: block;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    margin: 0.25em 0;
+    width: 100%;
+}
+.paper-icon-button-light {
+    position: relative;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0 0.29em;
+    background: 0 0;
+    text-align: center;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    z-index: 0;
+    min-width: initial;
+    min-height: initial;
+    width: auto;
+    height: auto;
+    padding: 0.556em;
+    vertical-align: middle;
+    border: 0;
+    vertical-align: middle;
+    outline: 0 !important;
+    position: relative;
+    overflow: hidden;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    -webkit-transition: background 0.4s ease-in-out;
+    -o-transition: background 0.4s ease-in-out;
+    transition: background 0.4s ease-in-out;
+}
+.paper-icon-button-light:active {
+    -webkit-transition: background 0.1s ease-in-out;
+    -o-transition: background 0.1s ease-in-out;
+    transition: background 0.1s ease-in-out;
+}
+.paper-icon-button-light::-moz-focus-inner {
+    border: 0;
+}
+.paper-icon-button-light[disabled] {
+    opacity: 0.3;
+}
+.paper-icon-button-light > i {
+    font-size: 1.66956521739130434em;
+    position: relative;
+    z-index: 1;
+    vertical-align: middle;
+}
+.paper-icon-button-img {
+    width: 1.72em;
+    max-height: 100%;
+    position: relative;
+    z-index: 1;
+    vertical-align: middle;
+}
+.icon-button-focusscale {
+    -webkit-transition: -webkit-transform 180ms ease-in-out !important;
+    -o-transition: transform 180ms ease-in-out !important;
+    transition: transform 180ms ease-in-out !important;
+    -webkit-transform-origin: center center;
+    transform-origin: center center;
+}
+.icon-button-focusscale:focus {
+    -webkit-transform: scale(1.3);
+    transform: scale(1.3);
+    z-index: 1;
+}
+.btnFilterWithBubble {
+    position: relative;
+}
+.filterButtonBubble {
+    color: #fff;
+    position: absolute;
+    background: #444;
+    top: 0;
+    right: 0;
+    width: 1.6em;
+    height: 1.6em;
+    z-index: 100000000;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    font-size: 82%;
+    -webkit-border-radius: 100em;
+    border-radius: 100em;
+    -webkit-box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    background: #03a9f4;
+    font-weight: 700;
+}

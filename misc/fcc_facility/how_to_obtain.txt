@@ -1,0 +1,13 @@
+https://transition.fcc.gov/ftp/Bureaus/MB/Databases/cdbs/facility.zip
+
+Automated updates occur nightly between
+4:00 AM and 5:00 AM Eastern time.
+To avoid corrupted files, do not download during this time period.
+
+use the virtual channel to get base channel - then use the number after the four letter callsign to get subchannel
+
+I think I'll download it manually and update the list in the git - OR at least post it to git then do the downloading and updating via the docker app
+
+I'll edit and convert the data as follows:
+ - translate it to JSON
+ - Filter for latest, licensed, TV stations

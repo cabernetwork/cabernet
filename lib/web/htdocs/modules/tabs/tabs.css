@@ -1,0 +1,116 @@
+:root {
+  --tabs-top-padding: 0px;
+  --tabs-overhead-space: 8px;
+  --tabs-height: 1.5em;
+  --tabs-total-height: calc(var(--tabs-top-padding) + var(--tabs-height) + var(--tabs-overhead-space));
+  --tabs-bottom-padding-active: var(--tabs-overhead-space);
+  --tabs-overhead-space-active: 0px;
+  --tabs-top-border-active: 2px;
+  --tabs-height-active: calc(var(--tabs-height) - var(--tabs-top-border-active));
+  --tabs-width-padding: 5px;
+  --tabs-fontsize: 1.0em;
+  --tabs-tab-background: rgba(191, 63, 255, 0.6);
+  --tabs-text-color: var(--theme-text-color);
+  --tabs-hover-color: rgba(205, 128, 255, 1.0);
+  --tabs-border-top-color: rgba(150, 150, 150, 1.0);
+}
+body {
+  overflow-y: scroll;
+  background: rgb(18, 4, 139);
+}
+
+
+.tabIcon {
+  vertical-align: middle;
+  padding: 0px 0px 1px 0px;
+}
+
+
+
+ul.tabs {
+  height: var(--tabs-total-height);
+  margin: 0 auto;
+  list-style: none;
+  display: inline-table;
+  overflow: hidden;
+  padding: 0;
+  font-size: var(--tabs-fontsize)
+}
+ul.tabs li {
+  float: left;
+}
+ul.tabs li a {
+  position: relative;
+  display: block;
+  height: var(--tabs-height);
+  margin-top: var(--tabs-overhead-space);
+  padding: var(--tabs-top-padding) var(--tabs-width-padding) 0 var(--tabs-width-padding);
+  text-align: center;
+  text-decoration: none;
+  color: var(--tabs-text-color);
+  background: var(--tabs-tab-background);
+  -webkit-box-shadow: inset 0px 7px 10px 0px rgba(0,40,40,0.2), inset 1px 2px 2px 0px rgb(200, 250, 250);
+  -moz-box-shadow: inset 0px 7px 10px 0px rgba(0,40,40,0.2), inset 1px 2px 2px 0px rgb(200, 250, 250);
+  -box-shadow: inset 0px 7px 10px 0px rgba(0,40,40,0.2), inset 1px 2px 2px 0px rgb(200, 250, 250);
+  border: 0px solid #000;
+  -webkit-transition: padding 0.2s ease, margin 0.2s ease;
+  -moz-transition: padding 0.2s ease, margin 0.2s ease;
+  -ms-transition: padding 0.2s ease, margin 0.2s ease;
+  -o-transition: padding 0.2s ease, margin 0.2s ease;
+  transition: padding 0.2s ease, margin 0.2s ease;
+}
+
+.tabs li a {
+  -webkit-border-top-left-radius: 8px;
+  -moz-border-radius-topleft: 8px;
+  border-top-left-radius: 8px; 
+  -webkit-border-top-right-radius: 8px;
+  -moz-border-radius-topright: 8px;
+  border-top-right-radius: 8px; 
+}
+ul.tabs li a:hover {
+	margin: var(--tabs-overhead-space-active) 0 0 0;
+	padding: var(--tabs-top-padding) var(--tabs-width-padding) var(--tabs-bottom-padding-active) var(--tabs-width-padding);
+  background: var(--tabs-hover-color);
+
+}
+ul.tabs li a.activeTab {
+  font-weight: bold;
+  margin: var(--tabs-overhead-space-active) 0 0 0;
+  padding: var(--tabs-top-padding) var(--tabs-width-padding) var(--tabs-bottom-padding-active) var(--tabs-width-padding);
+  color: var(--tabs-text-color);
+  height: var(--tabs-height-active);
+  background: var(--tabs-tab-background);
+  -webkit-box-shadow: inset 0px -20px 10px -15px rgba(0,40,40,0.2), inset -1px 5px 8px 0px rgb(200, 248, 248);
+  -moz-box-shadow: inset 0px -20px 10px -15px rgba(0,40,40,0.2), inset -1px 5px 8px 0px rgb(200, 248, 248);
+  -box-shadow: inset 0px -20px 10px -15px rgba(0,40,40,0.2), inset -1px 5px 8px 0px rgb(200, 248, 248);
+  
+  border-top: var(--tabs-top-border-active) solid var(--tabs-border-top-color);
+  border-right: 1px solid var(--tabs-border-top-color);
+  border-left: 1px solid var(--tabs-border-top-color);
+  z-index: 6;
+  outline: none;
+}
+
+
+
+
+
+.content {
+
+  margin: 0 auto;
+  background: rgba(98, 138, 131, 0.233);
+  -webkit-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+  -moz-box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+  box-shadow: 2px 8px 25px -2px rgba(0,0,0,0.3);
+  -webkit-border-bottom-right-radius: 8px;
+  -webkit-border-bottom-left-radius: 8px;
+  -moz-border-radius-bottomright: 8px;
+  -moz-border-radius-bottomleft: 8px;
+  border-bottom-right-radius: 8px;
+  border-bottom-left-radius: 8px;  
+  border-bottom: 2px solid #72655F;
+  border-right: 2px solid #72655F;
+  border-left: 2px solid #72655F;
+}
+

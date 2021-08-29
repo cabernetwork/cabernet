@@ -1,0 +1,219 @@
+{
+    "logging":{
+        "id": null,
+        "icon": "article",
+        "label": "Logging",
+        "description": "Python Logging Settings",
+        "sections":{
+            "handler_loghandler":{
+                "label": "System Log Handler",
+                "sort": "1",
+                "icon": "comment",
+                "description": "Python system log settings",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "onChange": "lib.config.config_callbacks.logging_enable",
+                        "help": "Used to enable logging to the system logger"
+                    },
+                    "level":{
+                        "label": "Level",
+                        "type": "list",
+                        "values": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        "default": "WARNING",
+                        "level": 1,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Log level for system logs. Default is WARNING"
+                    },
+                    "class":{
+                        "label": "class",
+                        "type": "string",
+                        "default": "StreamHandler",
+                        "level": 4,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    },
+                    "formatter":{
+                        "label": "formatter",
+                        "type": "list",
+                        "values": ["extend", "simple"],
+                        "default": "extend",
+                        "level": 2,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Use with or without date stamps"
+                    },
+                    "args":{
+                        "label": "args",
+                        "type": "string",
+                        "default": "(sys.stdout,)",
+                        "level": 4,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    }
+                }
+            },
+            "handler_filehandler":{
+                "label": "File Log Handler",
+                "sort": "2",
+                "icon": "comment",
+                "description": "Python debug log settings",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 1,
+                        "onChange": "lib.config.config_callbacks.logging_enable",
+                        "help": "Used to enable debug logging to the data area"
+                    },
+                    "level":{
+                        "label": "Level",
+                        "type": "list",
+                        "values": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        "default": "INFO",
+                        "level": 1,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Used for debugging. Default is INFO"
+                    },
+                    "formatter":{
+                        "label": "formatter",
+                        "type": "list",
+                        "values": ["extend", "simple"],
+                        "default": "extend",
+                        "level": 2,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Use with or without date stamps"
+                    },
+                    "class":{
+                        "label": "class",
+                        "type": "string",
+                        "default": "handlers.RotatingFileHandler",
+                        "level": 4,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    },
+                    "args":{
+                        "label": "args",
+                        "type": "string",
+                        "default": "(os.getenv('LOGS_DIR','data/logs')+'/cabernet.log', 'a', 1000000, 10)",
+                        "level": 4,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Arguments are path-filename, a=append, 1000000 is max size per file, 10 is max number of files to keep"
+                    }
+                }
+            },
+            "formatter_extend":{
+                "label": "formatter_extend",
+                "sort": "3",
+                "icon": "comment",
+                "description": "Python logging setting for standard output",
+                "settings":{
+                    "format":{
+                        "label": "format",
+                        "type": "string",
+                        "default": "%(asctime)s-%(levelname)s:%(module)s %(message)s",
+                        "level": 3,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Format for extend logging"
+                    }
+                }
+            },
+            "formatter_simple":{
+                "label": "formatter_simple",
+                "sort": "4",
+                "icon": "comment",
+                "description": "Python logging settings for outputs to event log or syslog",
+                "settings":{
+                    "format":{
+                        "label": "format",
+                        "type": "string",
+                        "default": "%(levelname)s:%(module)s %(message)s",
+                        "level": 3,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Format for simple logging"
+                    }
+                }
+            },
+            "loggers":{
+                "label": "loggers",
+                "sort": "6",
+                "icon": "comment",
+                "description": "Python logging settings",
+                "settings":{
+                    "keys":{
+                        "label": "keys",
+                        "type": "string",
+                        "default": "root",
+                        "level": 4,
+                        "writable": false,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    }
+                }
+            },
+            "logger_root":{
+                "label": "logger_root",
+                "sort": "6",
+                "icon": "description",
+                "description": "Python logging settings",
+                "settings":{
+                    "level":{
+                        "label": "level",
+                        "type": "list",
+                        "values": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+                        "default": "DEBUG",
+                        "level": 4,
+                        "writable": false,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": "Default is WARNING"
+                    },
+                    "handlers":{
+                        "label": "handlers",
+                        "type": "string",
+                        "default": "loghandler",
+                        "level": 4,
+                        "writable": false,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    }
+                }
+            },
+            "handlers":{
+                "label": "handlers",
+                "sort": "6",
+                "icon": "comment",
+                "description": "Python logging settings",
+                "settings":{
+                    "keys":{
+                        "label": "keys",
+                        "type": "string",
+                        "default": "loghandler, filehandler",
+                        "level": 4,
+                        "writable": false,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    }
+                }
+            },
+            "formatters":{
+                "label": "formatters",
+                "sort": "6",
+                "icon": "comment",
+                "description": "Python logging formats",
+                "settings":{
+                    "keys":{
+                        "label": "keys",
+                        "type": "string",
+                        "default": "extend,simple",
+                        "level": 4,
+                        "onChange": "lib.config.config_callbacks.logging_refresh",
+                        "help": null
+                    }
+                }
+            }
+        }
+    }
+}

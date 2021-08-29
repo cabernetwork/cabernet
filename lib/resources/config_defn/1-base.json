@@ -1,0 +1,141 @@
+{
+    "general":{
+        "id": null,
+        "icon": "sensor_window",
+        "label": "Internal",
+        "description": "Settings that change the internals of the server",
+        "sections":{
+            "display":{
+                "label": "Display",
+                "sort": "1",
+                "icon": "tv",
+                "description": "Contains the general settings for the web GUI",
+                "settings":{
+                    "display_level":{
+                        "label": "Display Level",
+                        "type": "list",
+                        "default": "1-Standard",
+                        "values": ["0-Basic", "1-Standard", 
+                            "2-Expert", "3-Advanced"],
+                        "level": 0,
+                        "onDefnLoad": "lib.config.config_callbacks.set_theme_folders",
+                        "help": "Displays settings based on complexity"
+                    },
+                    "theme":{
+                        "label": "Theme",
+                        "type": "list",
+                        "default": "spring",
+                        "values": ["appletv", "black", "blueradiance",
+                            "dark", "dark-red", "halloween", "holiday",
+                            "light", "light-blue", "light-pink", 
+                            "light-purple", "light-red", "spring", "wmc"],
+                        "level": 0,
+                        "help": "Changes the way the page appears"
+                    },
+                    "backgrounds":{
+                        "label": "Background Folder",
+                        "type": "path",
+                        "default": null,
+                        "level": 0,
+                        "help": "Uses the images in the folder for the background"
+                    }
+                }
+            },
+            "main":{
+                "label": "Main",
+                "sort": "2",
+                "icon": "sensor_window",
+                "description": "Contains the general settings for the app",
+                "settings":{
+                    "version":{
+                        "label": "Software Version",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_version",
+                        "help": "Current version installed"
+                    },
+                    "ostype":{
+                        "label": "OS Type",
+                        "type": "string",
+                        "default": null,
+                        "level": 2,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_system",
+                        "help": "Operating System running the service"
+                    },
+                    "os":{
+                        "label": "OS Version",
+                        "type": "string",
+                        "default": null,
+                        "level": 2,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_os",
+                        "help": "Operating System running the service"
+                    },
+                    "user":{
+                        "label": "Running As",
+                        "type": "string",
+                        "default": null,
+                        "level": 2,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_user",
+                        "help": "User that is running the service"
+                    },
+                    "python_version":{
+                        "label": "Python Version",
+                        "type": "string",
+                        "default": null,
+                        "level": 2,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_python_version",
+                        "help": "Python version running service"
+                    },
+
+                    "uuid":{
+                        "label": "UUID",
+                        "type": "string",
+                        "default": null,
+                        "level": 3,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_uuid",
+                        "help": null
+                    },
+                    "encrypt_key":{
+                        "label": "encrypt_key",
+                        "type": "string",
+                        "default": null,
+                        "level": 4,
+                        "help": null
+                    },
+                    "use_encryption":{
+                        "label": "use_encryption",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 1,
+                        "onChange": "lib.config.config_callbacks.check_encryption",
+                        "help": "Will encrypt the password using a self-generated key.  Use with only one user running service."
+                    }
+                }
+            },
+            "channels":{
+                "label": "Channels",
+                "sort": "3",
+                "icon": "view_list",
+                "description": "Channels GUI properties",
+                "settings":{
+                    "thumbnail_size":{
+                        "label": "Thumbnail Size",
+                        "type": "list",
+                        "default": "Medium(128)",
+                        "values": ["None", "Tiny(16)", "Small(48)", "Medium(128)", 
+                            "Large(180)", "X-Large(270)", "Full-Size"],
+                        "level": 1,
+                        "help": "The default size of the thumbnails displayed in the Channel Editor"
+                    }
+                }
+            }
+        }
+    }
+}

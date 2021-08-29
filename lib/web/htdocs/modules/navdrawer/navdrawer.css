@@ -1,0 +1,362 @@
+.mainDrawer {
+    padding: 1em 1.1em 10vh;
+    padding-top: -webkit-calc(1em + var(--window-inset-top));
+    padding-top: calc(1em + var(--window-inset-top));
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    overscroll-behavior-y: contain;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    bottom: var(--window-inset-bottom);
+    contain: strict;
+    z-index: auto;
+    width: 40%;
+    -webkit-transform: translateX(-100%);
+    transform: translateX(-100%);
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.drawer-docked {
+    width: 13em;
+}
+.mainDrawer:not(.drawer-docked) {
+    -webkit-transition: -webkit-transform 0.33s cubic-bezier(0, 0, 0.3, 1);
+    -o-transition: transform 0.33s cubic-bezier(0, 0, 0.3, 1);
+    transition: transform 0.33s cubic-bezier(0, 0, 0.3, 1);
+}
+@media all and (min-width: 40em) {
+    .mainDrawer {
+        width: 30%;
+    }
+}
+@media all and (min-width: 55em) {
+    .mainDrawer {
+        width: 18.6em;
+    }
+}
+.drawer-open {
+    -webkit-box-shadow: 0.14em 0 0.84em rgba(0, 0, 0, 0.4);
+    box-shadow: 0.14em 0 0.84em rgba(0, 0, 0, 0.4);
+    -webkit-transform: none;
+    transform: none;
+}
+.drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    bottom: var(--window-inset-bottom);
+    background-color: #000;
+    opacity: 0;
+    z-index: 1098;
+    will-change: opacity;
+    contain: strict;
+    -webkit-animation: drawer-backdrop-fadein 0.38s ease-in-out normal both;
+    animation: drawer-backdrop-fadein 0.38s ease-in-out normal both;
+    overflow: hidden;
+    overscroll-behavior: contain;
+}
+.drawer-backdrop-fadeout {
+    -webkit-animation: drawer-backdrop-fadeout 0.38s ease-in-out normal both;
+    animation: drawer-backdrop-fadeout 0.38s ease-in-out normal both;
+}
+@-webkit-keyframes drawer-backdrop-fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.5;
+    }
+}
+@keyframes drawer-backdrop-fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.5;
+    }
+}
+@-webkit-keyframes drawer-backdrop-fadeout {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity: 0;
+    }
+}
+@keyframes drawer-backdrop-fadeout {
+    from {
+        opacity: 0.5;
+    }
+    to {
+        opacity: 0;
+    }
+}
+.navDrawerCollapseSection {
+    margin: 0.9em 0 0.3em !important;
+}
+.navDrawerCollapseButton {
+    margin: 0 !important;
+    border: 0 !important;
+    padding: 0.25em 0 !important;
+}
+.navDrawerCollapseContent {
+    border: 0 !important;
+    padding: 0 !important;
+}
+.navMenuOption {
+    display: -webkit-box !important;
+    display: -webkit-flex !important;
+    display: flex !important;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+    vertical-align: middle;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+    font-weight: 400 !important;
+    margin: 0.1em 0 !important;
+    padding: 0.6em 0 0.6em 0.7em !important;
+    -webkit-border-radius: 0.42em !important;
+    border-radius: 0.42em !important;
+}
+.navMenuOption.emby-button-focusscale:focus {
+    -webkit-transform: scale(1.025);
+    transform: scale(1.025);
+}
+.navMenuOption-selected {
+    font-weight: 700 !important;
+    background-color: var(--theme-icon-focus-background)
+    color: var(--theme-accent-text-color)
+}
+.navDrawerLogo {
+    width: 100%;
+    padding: 0.9em 0;
+    background-position: 0.4em center;
+    background-repeat: no-repeat;
+    -webkit-background-size: contain;
+    background-size: contain;
+    margin: 0 !important;
+    -webkit-box-flex: 0;
+    -webkit-flex-grow: 0;
+    flex-grow: 0;
+}
+.navDrawerHeader {
+    margin: 1.25em 0 1.5em;
+    position: relative;
+}
+.btnPinNavDrawer {
+    position: absolute !important;
+    right: -0.5em;
+    font-size: 84% !important;
+    margin: 0 !important;
+}
+.btnPinNavDrawer-iconpin {
+    -webkit-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+.navMenuOptionIcon {
+    margin-right: 0.7em;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+    font-size: 1.7em;
+}
+.navMenuOptionText {
+    overflow: hidden;
+    -o-text-overflow: ellipsis;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.navMenuHeader {
+    padding-left: 0.4em !important;
+    margin: 0.75em 0 0.25em;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-flex-shrink: 0;
+    flex-shrink: 0;
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+}
+.navDrawerCollapseIcon {
+    right: 0 !important;
+}
+@media all and (pointer: fine) and (min-width: 60em) {
+    .navDrawerCollapseIcon {
+        right: initial !important;
+        left: 8.7em;
+    }
+}
+.mainDrawer-open-partial .navMenuOptionIcon {
+    margin-right: 0;
+    font-size: 2em;
+}
+.mainDrawer-open-partial .navMenuHeader {
+    padding: 0 0.5em;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    margin: 0.75em 0;
+    font-size: inherit;
+    text-align: center;
+}
+.mainDrawer-open-partial .navMenuOption {
+    -webkit-box-orient: vertical;
+    -webkit-box-direction: normal;
+    -webkit-flex-direction: column;
+    flex-direction: column;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    justify-content: center;
+    padding: 1.1em 0.5em !important;
+    font-size: 78%;
+}
+.mainDrawer-open-partial .navMenuOptionText {
+    white-space: initial;
+    display: none;
+}
+.navDrawerListItem .listItemImageContainer {
+    width: 1.9em !important;
+    height: 1.9em !important;
+}
+.navDrawerListItem .listItemBody {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+
+
+.toggle {
+    display:none;
+}
+.wrap-collabsible {
+    margin: 1.2rem 0;
+}
+.label-toggle {
+    display: block;
+    font-weight: bold;
+    font-family: monospace;
+    font-size: 1.2rem;
+    text-align: center;
+    padding: 1rem;
+    color: #ddd;
+    background: #0069ff;
+    cursor: pointer;
+    border-radius: 7px;
+    transition: all 0.25s ease-out;
+}
+.label-toggle:hover {
+    color: #fff;
+}
+.label-toggle::before {
+    content: " ";
+    display: inline-block;
+    border-bottom: 3px solid currentColor;
+    border-left: 3px solid currentColor;
+    vertical-align: middle;
+    margin-left: 3px;
+    margin-top: -3px;
+    width: 8px;
+    height: 8px;
+    transform: rotate(230deg);
+    transition: transform 0.6s ease-in-out;
+    position: absolute;
+    right: 0.5em;
+}
+.toggle:checked + .label-toggle::before {
+    transform-origin: 50% 50%;
+    transition: transform 600ms ease-in-out;
+    position: absolute;
+    right: 0.5em;
+    transform: rotate(-45deg);
+}
+.collapsible-content {
+    max-height: 0px;
+    overflow: hidden;
+    transition: max-height 0.60s ease-in-out;
+}
+.toggle:checked + .label-toggle + .collapsible-content {
+    max-height: 600px;
+}
+.toggle:checked + .lbl-toggle {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.collapsible-content .content-inner {
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+    padding: 0.5rem 1rem;
+}
+.collapsible-content p {
+    margin-bottom: 0;
+}
+
+
+
+.navCollapsibleButton {
+    margin: 0;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    text-transform: none;
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    border-width: 0;
+    padding-left: 0.1em;
+    background: 0 0;
+    -webkit-box-shadow: none;
+    box-shadow: none;
+    -webkit-border-radius: 0 !important;
+    border-radius: 0 !important;
+}
+
+.navButton {
+    position: relative;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    align-items: center;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0 0.29em;
+    text-align: center;
+    font-size: inherit;
+    font-family: inherit;
+    color: inherit;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    cursor: pointer;
+    z-index: 0;
+    padding: 0.66em 1em;
+    vertical-align: middle;
+    border: 0;
+    vertical-align: middle;
+    -webkit-border-radius: 0.42em;
+    border-radius: 0.42em;
+    position: relative;
+    font-weight: 500;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: none;
+    line-height: inherit;
+}

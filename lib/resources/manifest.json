@@ -1,0 +1,12 @@
+{
+    "id": "cabernet",
+    "name": "Cabernet",
+    "github_repo": "https://api.github.com/repos/cabernetwork/cabernet",
+    "provider-name": "rocky4546",
+    "summary": "Cabernet allows control of IPTV streams",
+    "description": "Connect streams to your favorite media server. Cabernet is a modular-based appliance/platform that cleans, organizes and repackages IPTV streams to be compatible and digested by media clients.",
+    "license": "MIT License, Copyright (C) 2021 ROCKY4546",
+    "source": "https://github.com/cabernetwork/cabernet",
+    "forum": "https://tvheadend.org/boards/5/topics/43052",
+    "website": "https://cabernetwork.github.io/"
+}

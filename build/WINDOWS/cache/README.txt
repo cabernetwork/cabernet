@@ -1,0 +1,1 @@
+This is needed to run UpdateConfig.pyw

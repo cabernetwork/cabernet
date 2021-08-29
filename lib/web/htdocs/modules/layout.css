@@ -1,0 +1,67 @@
+:root {
+    --window-inset-top: 0px;
+    --window-inset-bottom: 0px;
+    --window-inset-left: 0px;
+    --window-inset-right: 0px;
+}
+html {
+    line-height: 1.618;
+}
+body,
+html {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-anchor: none;
+}
+
+.noScrollY {
+    overflow-y: hidden;
+}
+
+.backgroundContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    contain: strict;
+}
+
+.mainAnimatedPages { 
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    contain:layout style size;
+}
+.page { 
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    contain:layout style size;
+}
+
+.backdropContainer-withfulldrawer, .skinBody-withFullDrawer {
+        left: 18.6em;
+}
+
+@media all and (min-width: 20em) {
+    .backdropContainer-withfulldrawer, .skinBody-withFullDrawer {
+        left: 13em;
+    }
+}
+@media all and (min-width: 40em) {
+    .backdropContainer-withfulldrawer, .skinBody-withFullDrawer {
+        left: 30%;
+    }
+}
+@media all and (min-width: 55em) {
+    .backdropContainer-withfulldrawer, .skinBody-withFullDrawer {
+        left: 18.6em;
+    }
+}

@@ -1,0 +1,120 @@
+div#tablecontent {
+    overflow-x: auto;    
+}
+table thead {
+    font-size: 0.9em;
+    line-height: 1.5;
+    /* https://www.colorzilla.com/gradient-editor/ */
+    background: linear-gradient(to bottom, rgb(50, 50, 80) 0%,rgb(88, 88, 100) 36%,rgb(121, 121, 170) 87%,rgb(140, 140, 181) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+}
+td.enabled {
+    background: rgba(0,255,133,0.6);
+}
+td.disabled {
+    background: rgba(255,0,0,0.6);
+}
+td.duplicate {
+    background: rgba(255,255,0,0.7);
+}
+td.duplicate_disabled {
+    background: rgba(255,0,108,0.7);
+}
+img.filterit {
+    padding: 8px 8px 13px 5px;
+    background-image: url("asc_w.gif");
+    background-repeat: no-repeat;
+    background-position: right center;
+    float: right;
+    cursor: pointer;
+}
+img.filterit:hover {
+    padding: 8px 8px 13px 5px;
+    background-image: linear-gradient(to right, rgba(200, 200, 255, 0), rgba(255, 255, 255, 0.5)), url("asc_w.gif");
+    background-repeat: no-repeat;
+    background-position: right center;
+    float: right;
+    cursor: pointer;
+}
+img.sortit {
+    margin-bottom: -6px;
+    padding: 14px 8px 8px 5px;
+    cursor: pointer;
+}
+img.sortnone {
+    background: url("both_w.gif");
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+img.sortnone:hover {
+    background: linear-gradient(to right, rgba(200, 200, 255, 0), rgba(255, 255, 255, 0.5)), url("both_w.gif");
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+img.sortasc {
+    background: url("asc_w.gif");
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+img.sortasc:hover {
+    background: linear-gradient(to right, rgba(200, 200, 255, 0), rgba(255, 255, 255, 0.5)), url("asc_w.gif");
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+img.sortdesc {
+    background: url("desc_w.gif");
+    background-repeat: no-repeat;
+  	background-position: left center;
+}
+img.sortdesc:hover {
+    background: linear-gradient(to right, rgba(200, 200, 255, 0), rgba(255, 255, 255, 0.5)), url("desc_w.gif");
+    background-repeat: no-repeat;
+  	background-position: left center;
+}
+.vertline{
+  height: 100%;
+  float: right;
+  border-right: 1px ridge rgb(230,230,230);
+
+}
+table.sortable td, table.sortable th {
+    border:1px solid rgb(180,180,180);
+    padding: 0px;
+}
+table.sortable, th, td {
+    border-collapse: collapse;
+}
+td {
+    background: var(--docked-drawer-background);
+}
+th {
+    white-space: nowrap;
+    font-weight: normal;
+}
+table.sortable thead tr .headerSortUp {
+    background-image: url("asc.gif");
+}
+table.sortable thead tr .headerSortDown {
+    background-image: url("desc.gif");
+}
+.searchable-header {
+    border-left:1px solid #fff;
+    border-right:1px solid #fff;
+    overflow:hidden;
+    padding:10px;
+}
+div.xmenu {
+    border: 1px solid;
+    background: linear-gradient(to bottom, rgb(88, 88, 100) 0%,rgb(121, 121, 170) 36%,rgb(141, 141, 181) 87%,rgb(150, 150, 190) 100%);
+    font-size: 0.8em;
+    position: absolute;
+    left: 100px;
+    top: 250px;
+}
+div.xmenu ul {
+    padding: 3px 6px 3px 3px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+div.xmenu input {
+    font-size: 1.0em;
+}

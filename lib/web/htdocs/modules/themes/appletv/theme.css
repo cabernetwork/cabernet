@@ -1,0 +1,477 @@
+:root {
+    --theme-primary-color: #52b54b;
+    --theme-text-color: rgba(0, 0, 0, 0.87);
+    --theme-text-color-opaque: #000;
+    --theme-accent-text-color: green;
+    --theme-primary-color-lightened: #5ec157;
+    --theme-icon-focus-background: rgba(82, 181, 75, 0.2);
+    --theme-background: #d5e9f2 url(atv1-1080.png) no-repeat center center;
+    --button-background: rgba(0, 0, 0, 0.1);
+    --card-background: rgba(0, 0, 0, 0.1);
+    --header-background: var(--theme-background);
+    --header-blur-background: linear-gradient(to right, rgba(188, 188, 188, 0.7), rgba(167, 180, 183, 0.7), rgba(190, 181, 165, 0.7), rgba(173, 190, 194, 0.7), rgba(185, 199, 203, 0.7));
+    --footer-background: linear-gradient(to right, #bcbcbc, #a7b4b7, #beb5a5, #adbec2, #b9c7cb);
+    --footer-blur-background: linear-gradient(to right, rgba(188, 188, 188, 0.7), rgba(167, 180, 183, 0.7), rgba(190, 181, 165, 0.7), rgba(173, 190, 194, 0.7), rgba(185, 199, 203, 0.7));
+    --theme-body-secondary-text-color: rgba(0, 0, 0, 0.6);
+    --line-background: rgba(0, 0, 0, 0.08);
+    --line-size: 0.13em;
+    --scrollbar-thumb-background: rgba(0, 0, 0, 0.2);
+    --drawer-background: #d5e9f2 url(atv1-1080.png) no-repeat center center;
+    --docked-drawer-background: rgba(255, 255, 255, 0.2);
+    --logo-url:  /modules/themes/logodark.png;
+}
+html {
+    color: var(--theme-text-color);
+    scrollbar-color: var(--scrollbar-thumb-background) transparent;
+}
+.emby-collapsible-button {
+    border-color: var(--line-background) !important;
+}
+.skinHeader-withBackground {
+    border-bottom: 0.08em solid var(--line-background);
+}
+.skinHeader-withBackground {
+    background: var(--header-background);
+}
+.appfooter,
+.formDialogFooter:not(.formDialogFooter-clear),
+.formDialogHeader:not(.formDialogHeader-clear) {
+    background: var(--footer-background);
+}
+.formDialogFooter:not(.formDialogFooter-clear) {
+    border-top: var(--line-size) solid var(--line-background);
+}
+@supports (backdrop-filter: blur(1em)) or (-webkit-backdrop-filter: blur(1em)) {
+    .skinHeader-withBackground {
+        background: var(--header-blur-background);
+        -webkit-backdrop-filter: saturate(1.8) blur(1.5em);
+        backdrop-filter: saturate(1.8) blur(1.5em);
+    }
+    .appfooter-withbackdropfilter {
+        background: var(--footer-blur-background);
+        -webkit-backdrop-filter: saturate(1.8) blur(1.5em);
+        backdrop-filter: saturate(1.8) blur(1.5em);
+    }
+}
+.skinHeader.semiTransparent {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.3);
+    background: -webkit-gradient(linear, left top, left bottom, from(rgba(0, 0, 0, 0.6)), to(rgba(0, 0, 0, 0)));
+    background: -webkit-linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+    background: -o-linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0));
+    -webkit-box-shadow: none !important;
+    box-shadow: none !important;
+    border-bottom: 0;
+    color: rgba(255, 255, 255, 0.87);
+}
+.pageTitleWithDefaultLogo {
+    background-image: url(../logodark.png);
+}
+.dialog,
+html {
+    background: var(--theme-background);
+    -webkit-background-size: cover;
+    background-size: cover;
+}
+.backgroundContainer {
+    background: var(--theme-background);
+    -webkit-background-size: cover;
+    background-size: cover;
+}
+.backgroundContainer.withBackdrop {
+    background: -webkit-gradient(
+        linear,
+        left top,
+        left bottom,
+        from(rgba(192, 212, 222, 0.92)),
+        color-stop(rgba(235, 250, 254, 0.92)),
+        color-stop(rgba(227, 220, 212, 0.92)),
+        color-stop(rgba(206, 214, 216, 0.92)),
+        to(rgba(192, 211, 218, 0.92))
+    );
+    background: -webkit-linear-gradient(top, rgba(192, 212, 222, 0.92), rgba(235, 250, 254, 0.92), rgba(227, 220, 212, 0.92), rgba(206, 214, 216, 0.92), rgba(192, 211, 218, 0.92));
+    background: -o-linear-gradient(top, rgba(192, 212, 222, 0.92), rgba(235, 250, 254, 0.92), rgba(227, 220, 212, 0.92), rgba(206, 214, 216, 0.92), rgba(192, 211, 218, 0.92));
+    background: linear-gradient(to bottom, rgba(192, 212, 222, 0.92), rgba(235, 250, 254, 0.92), rgba(227, 220, 212, 0.92), rgba(206, 214, 216, 0.92), rgba(192, 211, 218, 0.92));
+}
+.toast {
+    background: var(--button-background);
+    color: var(--theme-text-color);
+}
+.paper-icon-button-light-tv:focus,
+.paper-icon-button-light:active {
+    color: var(--theme-primary-color);
+    background-color: var(--theme-icon-focus-background);
+}
+@media (hover: hover) and (pointer: fine) {
+    .paper-icon-button-light:focus {
+        color: var(--theme-primary-color);
+        background-color: var(--theme-icon-focus-background);
+    }
+}
+.detailButton-icon,
+.fab,
+.raised {
+    background: var(--button-background);
+    color: var(--theme-text-color);
+}
+.detailButton-icon {
+    border-color: rgba(0, 0, 0, 0.3);
+}
+.emby-select-withcolor {
+    color: inherit;
+    background: var(--button-background);
+    border: var(--line-size) solid transparent;
+}
+@supports (backdrop-filter: blur(1em)) or (-webkit-backdrop-filter: blur(1em)) {
+    .detailButton-icon,
+    .emby-select-withcolor.detailTrackSelect,
+    .fab,
+    .raised:not(.nobackdropfilter) {
+        -webkit-backdrop-filter: saturate(1.8) blur(1.5em);
+        backdrop-filter: saturate(1.8) blur(1.5em);
+    }
+    .dialog-blur,
+    .toast {
+        color: #000;
+        background: rgba(255, 255, 255, 0.7);
+        -webkit-backdrop-filter: blur(2.5em) saturate(1.8);
+        backdrop-filter: blur(2.5em) saturate(1.8);
+        -webkit-box-shadow: none !important;
+        box-shadow: none !important;
+    }
+}
+.fab:focus,
+.raised:focus {
+    background: rgba(0, 0, 0, 0.24);
+}
+.button-submit:not(.emby-button-tv) {
+    background: var(--theme-primary-color);
+    color: #fff;
+}
+.button-submit:not(.emby-button-tv):focus {
+    background: var(--theme-primary-color-lightened);
+    color: #fff;
+}
+.emby-select-withcolor > option {
+    color: inherit;
+    background: var(--button-background);
+}
+.emby-select-withcolor:focus {
+    border-color: var(--theme-primary-color) !important;
+}
+.emby-select-tv-withcolor:focus {
+    background-color: var(--theme-primary-color) !important;
+    color: #fff !important;
+}
+.checkboxLabel {
+    color: inherit;
+}
+.emby-checkbox-focusring:focus:before {
+    background-color: var(--theme-icon-focus-background);
+}
+.inputLabelFocused,
+.selectLabelFocused,
+.textareaLabelFocused {
+    color: var(--theme-accent-text-color);
+}
+.button-link {
+    color: var(--theme-accent-text-color);
+}
+.button-flat-accent {
+    color: var(--theme-accent-text-color);
+}
+.paperList,
+.visualCardBox {
+    background-color: var(--card-background);
+}
+.collapseContent {
+    border: var(--line-size) solid var(--line-background);
+}
+.cardText-secondary,
+.fieldDescription,
+.listItemBodyText-secondary,
+.secondaryText {
+    color: var(--theme-body-secondary-text-color);
+}
+.cardText-first {
+    color: var(--theme-text-color-opaque);
+}
+.actionsheetDivider {
+    background: var(--line-background);
+}
+@media (hover: hover) and (pointer: fine) {
+    .actionSheetMenuItem:hover {
+        background-color: rgba(0, 0, 0, 0.3);
+    }
+}
+.selectionCommandsPanel {
+    background: var(--theme-primary-color);
+    color: #fff;
+}
+.upNextDialog-countdownText {
+    color: var(--theme-primary-color);
+}
+.alphaPickerButton {
+    color: var(--theme-body-secondary-text-color);
+    background-color: transparent;
+}
+.alphaPickerButton-selected {
+    color: var(--theme-text-color-opaque);
+}
+.alphaPickerButton-tv:focus {
+    background-color: var(--theme-primary-color);
+    color: #fff !important;
+}
+.detailTableBodyRow-shaded:nth-child(even) {
+    background: #f8f8f8;
+    background: rgba(0, 0, 0, 0.1);
+}
+.listItem-border {
+    border-color: var(--line-background) !important;
+}
+.listItem-focusscale:focus {
+    background: rgba(0, 0, 0, 0.2);
+}
+.progressring-spiner {
+    border-color: var(--theme-primary-color);
+}
+.mediaInfoText {
+    background: var(--button-background);
+}
+.starIcon {
+    color: #cb272a;
+}
+.mediaInfoTimerIcon {
+    color: #cb272a;
+}
+.emby-input,
+.emby-textarea {
+    color: inherit;
+    background: var(--button-background);
+    border: var(--line-size) solid transparent;
+}
+.emby-input:focus,
+.emby-textarea:focus {
+    border-color: var(--theme-primary-color);
+}
+.emby-checkbox:checked + span:before {
+    border-color: currentColor;
+}
+.emby-checkbox:checked + span:before {
+    border-color: var(--theme-primary-color);
+    background-color: var(--theme-primary-color);
+}
+.itemProgressBarForeground {
+    background-color: var(--theme-primary-color);
+}
+.itemProgressBarForeground-recording {
+    background-color: #cb272a;
+}
+.countIndicator {
+    background: var(--theme-primary-color);
+}
+.playedIndicator {
+    background: var(--theme-primary-color);
+}
+.mainDrawer {
+    background: var(--drawer-background);
+    -webkit-background-size: cover;
+    background-size: cover;
+}
+.drawer-docked {
+    background: var(--docked-drawer-background);
+    border-right: var(--line-size) solid var(--line-background);
+}
+@media (hover: hover) and (pointer: fine) {
+    .navMenuOption:hover {
+        background: rgba(0, 0, 0, 0.1);
+    }
+}
+.navMenuOption-selected {
+    background-color: var(--theme-icon-focus-background) !important;
+    color: var(--theme-accent-text-color);
+}
+.emby-button-focusscale:focus,
+.emby-button-focusscale:focus .detailButton-icon {
+    background: var(--theme-primary-color);
+    color: #fff;
+}
+.emby-tab-button {
+    color: var(--theme-body-secondary-text-color);
+}
+.emby-tab-button-active {
+    color: var(--theme-accent-text-color);
+}
+.emby-tab-button-active.emby-button-tv {
+    color: var(--theme-text-color-opaque);
+}
+.emby-tab-button.emby-button-tv:focus {
+    color: var(--theme-accent-text-color);
+    background: 0 0;
+}
+.emby-button {
+    outline-color: var(--theme-primary-color);
+}
+.channelCell,
+.guide-headerTimeslots,
+.timeslotHeaders {
+    background: var(--theme-background);
+}
+@media (pointer: coarse) {
+    .channelCell-mobilefocus {
+        background: var(--theme-background) !important;
+    }
+}
+.channelCell-mobilefocus:not(:focus-visible) {
+    background: rgba(206, 214, 216, 0.92) !important;
+}
+.channelCell-mobilefocus:not(:-moz-focusring) {
+    background: rgba(206, 214, 216, 0.92) !important;
+}
+.channelCell,
+.epgRow,
+.programCell {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+.guide-currentTimeIndicatorDot {
+    border-right-color: var(--theme-icon-focus-background);
+}
+.guide-currentTimeIndicatorDot:after {
+    border-top-color: var(--theme-primary-color);
+}
+.firstChannelCell {
+    border-color: transparent;
+}
+.programCell-sports {
+    background: #3949ab !important;
+}
+.programCell-movie {
+    background: #5e35b1 !important;
+}
+.programCell-kids {
+    background: #039be5 !important;
+}
+.programCell-news {
+    background: #43a047 !important;
+}
+.channelCell:focus,
+.programCell:focus {
+    background-color: var(--theme-primary-color);
+    color: #fff;
+}
+.guide-programTextIcon {
+    color: #1e1e1e;
+    background: #555;
+}
+.infoBanner {
+    background: var(--card-background);
+    padding: 1em;
+    -webkit-border-radius: 0.3em;
+    border-radius: 0.3em;
+}
+.ratingbutton-icon-withrating {
+    color: #c33 !important;
+}
+.downloadbutton-icon-on {
+    color: #4285f4;
+}
+.downloadbutton-icon-complete {
+    color: #4285f4;
+}
+.playstatebutton-icon-played {
+    color: #c33 !important;
+}
+.repeatButton-active {
+    color: #4285f4;
+}
+.card:focus .card-focuscontent {
+    border-color: var(--theme-primary-color);
+}
+.cardContent-button {
+    background-color: transparent;
+}
+.cardContent-shadow {
+    -webkit-box-shadow: 0 0.0725em 0.29em 0 rgba(0, 0, 0, 0.37);
+    box-shadow: 0 0.0725em 0.29em 0 rgba(0, 0, 0, 0.37);
+    background-color: var(--card-background);
+}
+.defaultCardBackground0 {
+    background-color: var(--card-background);
+}
+.defaultCardBackground1 {
+    background-color: var(--card-background);
+}
+.defaultCardBackground2 {
+    background-color: var(--card-background);
+}
+.defaultCardBackground3 {
+    background-color: var(--card-background);
+}
+.defaultCardBackground4 {
+    background-color: var(--card-background);
+}
+.cardOverlayButtonIcon {
+    background-color: var(--theme-primary-color);
+}
+::-webkit-scrollbar-track-piece {
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-background);
+}
+.emby-slider-background {
+    background: var(--scrollbar-thumb-background);
+}
+.emby-slider {
+    color: var(--theme-primary-color);
+}
+.emby-slider::-moz-range-track {
+    background: #444;
+}
+.emby-slider::-moz-range-progress {
+    background: var(--theme-primary-color);
+}
+.emby-slider::-webkit-slider-thumb {
+    background: var(--theme-primary-color);
+}
+.emby-slider::-moz-range-thumb {
+    background: var(--theme-primary-color);
+}
+.emby-slider::-ms-thumb {
+    background: var(--theme-primary-color);
+}
+.emby-slider-background-lower {
+    background-color: var(--theme-primary-color);
+}
+.scrollbuttoncontainer {
+    color: #fff;
+    background: rgba(20, 20, 20, 0.5);
+}
+.recordingIcon-active {
+    color: #c33 !important;
+}
+.drawerLogo {
+    background-image: url(../logodark.png);
+    border-bottom-color: var(--line-background);
+}
+.searchTabsContainer {
+    border-bottom: var(--line-size) solid var(--line-background);
+}
+.emby-search-tab-button.emby-tab-button-active {
+    background: var(--theme-accent-text-color) !important;
+}
+.textActionButton.dragging {
+    background: var(--button-background) !important;
+}
+.dragging-over.full-drop-target {
+    background: var(--theme-primary-color) !important;
+    color: #fff !important;
+}
+.dragging-over-top:before {
+    background: var(--theme-accent-text-color);
+}
+.dragging-over-bottom:after {
+    background: var(--theme-accent-text-color);
+}

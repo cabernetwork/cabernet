@@ -1,0 +1,115 @@
+{
+    "id": {
+        "label": "ID",
+        "type": "string",
+        "default": null,
+        "level": 0,
+        "help": "Folder name of the plugin"
+    },
+    "name": {
+        "label": "Name",
+        "type": "string",
+        "default": null,
+        "level": 0,
+        "help": "Key name for the plugin"
+    },
+    "version": {
+        "label": "Version",
+        "type": "string",
+        "default": null,
+        "level": 0,
+        "help": "Version of the plugin"
+    },
+    "provider-name": {
+        "label": "Author",
+        "type": "string",
+        "default": null,
+        "level": 1,
+        "help": "Authors of the plugin"
+    },
+    "summary": {
+        "label": "Summary",
+        "type": "string",
+        "default": null,
+        "level": 1,
+        "help": "Short Description of the plugin, what it provides"
+    },
+    "description": {
+        "label": "Description",
+        "type": "string",
+        "default": null,
+        "level": 2,
+        "help": "Detailed Description of how to use the plugin"
+    },
+    "category": {
+        "label": "Category",
+        "type": "list",
+        "default": null,
+        "level": 0,
+        "help": "Type of plugin for filtering the plugin list"
+    },
+    "status": {
+        "label": "Status",
+        "type": "string",
+        "default": null,
+        "level": 0,
+        "help": "Plugin is either Enabled or Disabled"
+    },
+    "license": {
+        "label": "License",
+        "type": "string",
+        "default": null,
+        "level": 1,
+        "help": "License requirements of the plugin"
+    },
+    
+    "source": {
+        "label": "License",
+        "type": "string",
+        "default": null,
+        "level": 3,
+        "help": "License requirements of the plugin"
+    },
+    "forum": {
+        "label": "License",
+        "type": "string",
+        "default": null,
+        "level": 2,
+        "help": "License requirements of the plugin"
+    },
+    "website": {
+        "label": "License",
+        "type": "string",
+        "default": null,
+        "level": 2,
+        "help": "License requirements of the plugin"
+    },
+    "disclaimer": {
+        "label": "Disclaimer",
+        "type": "string",
+        "default": null,
+        "level": 1,
+        "help": "Any restrictions on use"
+    },
+    "icon": {
+        "label": "Icon",
+        "type": "path",
+        "default": null,
+        "level": 0,
+        "help": "Used in the list of plugins available"
+    },
+    "fanart": {
+        "label": "Fanart",
+        "type": "path",
+        "default": null,
+        "level": 0,
+        "help": "Used with the plugin information view"
+    },
+    "screenshots": {
+        "label": "Screenshots",
+        "type": "list",
+        "default": null,
+        "level": 0,
+        "help": "List of images displayed in the information view"
+    }
+}

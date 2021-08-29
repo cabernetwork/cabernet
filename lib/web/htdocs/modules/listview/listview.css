@@ -1,0 +1,348 @@
+.listItem{
+  background:0 0;
+  border:0;
+  outline:0!important;
+  color:inherit;
+  vertical-align:middle;
+  font-family:inherit;
+  font-size:inherit;
+  margin:0;
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center;
+  text-align:left;
+  padding:.25em 0;
+  overflow:hidden;
+  -webkit-flex-shrink:0;
+  flex-shrink:0;
+  text-decoration:none;
+  line-height:inherit
+}
+.listItem.dragging-over{
+  position:relative
+}
+.dragging-over-top:before{
+  content:' ';
+  height:.1em;
+  width:100%;
+  position:absolute;
+  top:0;
+  z-index:99999;
+  -webkit-border-radius:100em;
+  border-radius:100em
+}
+.dragging-over-bottom:after{
+  content:' ';
+  height:.1em;
+  width:100%;
+  position:absolute;
+  bottom:0;
+  z-index:99999;
+  -webkit-border-radius:100em;
+  border-radius:100em
+}
+.listItem-noverticalpadding{
+  padding-top:0;
+  padding-bottom:0
+}
+.listItemCursor{
+  cursor:pointer
+}
+@media (pointer:coarse){
+  .listItem-touchzoom-transition{
+    -webkit-transition:-webkit-transform .1s ease-in-out;
+    -o-transition:transform .1s ease-in-out;
+    transition:transform .1s ease-in-out;
+    -webkit-transition-delay:80ms;
+    -o-transition-delay:80ms;
+    transition-delay:80ms
+  }
+  .listItem-touchzoom:active{
+    -webkit-transform:scale(.94);
+    transform:scale(.94)
+  }
+}
+.listItem-largeImage{
+  padding:1em 0
+}
+.listItem-withContentWrapper{
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+  -webkit-flex-direction:column;
+  flex-direction:column;
+  -webkit-box-align:start;
+  -webkit-align-items:flex-start;
+  align-items:flex-start
+}
+.listItem-content{
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center;
+  width:100%
+}
+.listItem-indexnumberleft{
+  margin-right:1em;
+  margin-left:.5em
+}
+.listItem-border{
+  border-bottom-width:.08em;
+  border-bottom-style:solid
+}
+.paperListItem:last-child{
+  border-bottom-style:none
+}
+.listItemAside,.listItemIcon,.listItemImageContainer{
+  -webkit-flex-shrink:0;
+  flex-shrink:0
+}
+.listItemButton{
+  margin:0;
+  -webkit-flex-shrink:0;
+  flex-shrink:0;
+  contain:layout style
+}
+@media (pointer:coarse){
+  .listItemContextMenuButton{
+    display:none
+  }
+}
+.listItemBody{
+  -webkit-box-flex:1;
+  -webkit-flex-grow:1;
+  flex-grow:1;
+  padding:.35em .75em;
+  overflow:hidden;
+  -o-text-overflow:ellipsis;
+  text-overflow:ellipsis;
+  -webkit-box-orient:vertical;
+  -webkit-box-direction:normal;
+  -webkit-flex-direction:column;
+  flex-direction:column;
+  vertical-align:middle;
+  -webkit-box-pack:center;
+  -webkit-justify-content:center;
+  justify-content:center;
+  text-align:left;
+  -webkit-box-align:initial;
+  -webkit-align-items:initial;
+  align-items:initial;
+  margin:0
+}
+.listItemBody-noleftpadding{
+  padding-left:0!important
+}
+.listItemBody-code{
+  font-family:monospace
+}
+.listItemBody-noverticalpadding{
+  padding-top:0;
+  padding-bottom:0
+}
+.listItemBodyText{
+  margin:0;
+  overflow:hidden;
+  -o-text-overflow:ellipsis;
+  text-overflow:ellipsis
+}
+.listItemBodyText-nowrap{
+  white-space:nowrap
+}
+.listItemImageContainer{
+  width:3.26em;
+  height:3.26em;
+  position:relative;
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center;
+  -webkit-box-pack:center;
+  -webkit-justify-content:center;
+  justify-content:center;
+  -webkit-border-radius:.3em;
+  border-radius:.3em
+}
+.listItemImage{
+  -webkit-border-radius:.3em;
+  border-radius:.3em;
+  width:100%;
+  height:100%;
+  -o-object-fit:contain;
+  object-fit:contain
+}
+.listItemImage-round,.listItemImageContainer-round{
+  -webkit-border-radius:100em;
+  border-radius:100em
+}
+.listItemImageContainer-large{
+  width:20vw;
+  height:11.25vw;
+  margin-right:.35em
+}
+.listItemImageButton{
+  margin:0;
+  color:rgba(255,255,255,.6);
+  font-size:1.5em;
+  background:0 0;
+  -webkit-transition:-webkit-transform .2s ease-in-out;
+  -o-transition:transform .2s ease-in-out;
+  transition:transform .2s ease-in-out;
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  position:absolute;
+  top:50%;
+  left:50%;
+  margin-left:-2em;
+  margin-top:-2em
+}
+@media(hover:hover) and (pointer:fine){
+  .listItemImageButton:hover{
+    -webkit-transform:scale(1.2,1.2);
+    transform:scale(1.2,1.2)
+  }
+}
+.listItemImageButton-icon{
+  background:rgba(0,0,0,.4);
+  border:.08em solid currentColor;
+  -webkit-border-radius:100em;
+  border-radius:100em;
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  -webkit-box-pack:center;
+  -webkit-justify-content:center;
+  justify-content:center;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center;
+  padding:.21em
+}
+@media all and (max-width:64em){
+  .listItemImageContainer-large{
+    width:33.75vw;
+    height:18.984375vw
+  }
+  .listItemImageButton{
+    font-size:1.02em!important
+  }
+}
+.listItemImageContainer-large-tv{
+  width:30vw!important;
+  height:16.875vw!important
+}
+.listItemIcon{
+  width:1em!important;
+  height:1em!important;
+  font-size:163%;
+  padding:0 .25em
+}
+.listItemImageContainer>.listItemIcon{
+  margin:0
+}
+.listViewDragHandle{
+  touch-action:none;
+  padding:1em
+}
+.listItemProgressBar{
+  position:absolute!important;
+  bottom:0;
+  left:0;
+  right:0
+}
+.listItem:focus{
+  -webkit-border-radius:.42em;
+  border-radius:.42em
+}
+.listItem:focus .secondary{
+  color:inherit!important
+}
+.listItem-focusscale{
+  -webkit-transition:-webkit-transform .2s ease-out;
+  -o-transition:transform .2s ease-out;
+  transition:transform .2s ease-out
+}
+.listItem-focusscale:focus{
+  -webkit-transform:scale(1.025,1.025);
+  transform:scale(1.025,1.025)
+}
+.paperList{
+  margin:.5em auto;
+  -webkit-border-radius:.3em;
+  border-radius:.3em
+}
+.paperList-clear{
+  background-color:transparent!important
+}
+.paperList .listItemImageContainer{
+  margin:0 .25em 0 1em
+}
+.listItemMediaInfo{
+  display:none;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center;
+  margin-right:1em;
+  -webkit-flex-shrink:0;
+  flex-shrink:0
+}
+.listGroupHeader-first{
+  margin-top:0
+}
+.listItemIndicators{
+  right:.324em;
+  top:.324em;
+  position:absolute;
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  -webkit-box-align:center;
+  -webkit-align-items:center;
+  align-items:center
+}
+.listItem,.listItemBody,.listItemMediaInfo{
+  display:-webkit-box;
+  display:-webkit-flex;
+  display:flex;
+  contain:layout style
+}
+.listItem-bottomoverview{
+  font-size:88%;
+  margin-top:.2em
+}
+@media not all and (min-width:50em){
+  .listItem-overview{
+    display:none!important
+  }
+}
+@media all and (min-width:50em){
+  .listItem-bottomoverview{
+    display:none!important
+  }
+}
+.listItemCheckboxContainer{
+  width:auto!important
+}
+@media all and (max-width:75em){
+  .listViewUserDataButtons{
+    display:none!important
+  }
+}
+.listItemPlayedIndicator{
+  font-size:1.6em
+}
+.listItem .mediaStreamAttribute{
+  padding-left:2.3em
+}
+@media(pointer:coarse){
+  .listItem-textActionButton{
+    pointer-events:none!important
+  }
+}

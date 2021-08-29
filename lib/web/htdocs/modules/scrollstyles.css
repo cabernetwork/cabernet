@@ -1,0 +1,77 @@
+@media (hover: hover) and (pointer: fine) {
+    ::-webkit-scrollbar {
+        width: 1em;
+        height: 1em;
+    }
+    .scrollX-mini::-webkit-scrollbar {
+        height: 0.6em;
+    }
+    .scrollY-mini::-webkit-scrollbar {
+        width: 0.6em;
+    }
+    .scrollX-mini {
+        scrollbar-width: thin;
+    }
+    .scrollY-mini {
+        scrollbar-width: thin;
+    }
+}
+::-webkit-scrollbar-thumb {
+    -webkit-border-radius: 0.42em;
+    border-radius: 0.42em;
+}
+.scrollX {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+.smoothScrollX {
+    scroll-behavior: smooth;
+}
+.hiddenScrollX,
+.layout-tv .scrollX {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.hiddenScrollX::-webkit-scrollbar,
+.layout-tv .scrollX::-webkit-scrollbar {
+    height: 0 !important;
+    display: none;
+}
+.scrollY {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+}
+.smoothScrollY {
+    scroll-behavior: smooth;
+}
+.overflowYScroll {
+    overflow-y: scroll;
+}
+.hiddenScrollY,
+.layout-tv .scrollY {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.hiddenScrollY::-webkit-scrollbar,
+.layout-tv .scrollY::-webkit-scrollbar {
+    width: 0 !important;
+    display: none;
+}
+@media (hover: hover) {
+    .hiddenScrollY-hover:not(:hover) {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .hiddenScrollY-hover:not(:hover)::-webkit-scrollbar {
+        width: 0 !important;
+        display: none;
+    }
+}
+.scrollSliderY {
+    width: 100%;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}

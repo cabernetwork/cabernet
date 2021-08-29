@@ -1,0 +1,60 @@
+#!/usr/bin/env sh
+dflag=;
+vflag=;
+cflag=;
+uflag=;
+if [ "$#" -lt 1 ];
+then
+  printf "At least one option is required\n";
+  printf "Set -u [url] argument and try again\n";
+  exit 2;
+fi;
+
+while [ $# -gt 0 ];
+do
+    case "$1" in
+       -d | --description ) 
+           dflag=1
+           ;;
+       -v | --version ) 
+           vflag=1
+           ;;
+       -c | --capabilities ) 
+           cflag=1;;
+       -u | --url ) 
+           uflag=1;
+           shift;
+           url=$1;
+           ;;
+       -h )
+           printf "Usage: %s: [--description] [--version] [--capabilities] [--url url]\n" $(basename $0);
+           exit 2
+           ;;
+       * )
+           printf "unknown option: %s\n" $1;
+           printf "Usage: %s: [--description] [--version] [--capabilities] [--url url]\n" $(basename $0);
+           exit 2
+           ;;
+    esac;
+    shift;
+done;
+
+if [ "$dflag" ];
+then
+   path=$(realpath $0);
+   printf "$path -u [url]\n";
+fi;
+if [ "$vflag" ];
+then
+   printf "0.1\n";
+fi;
+if [ "$cflag" ];
+then
+   printf "baseline\n";
+fi;
+if [ "$uflag" ];
+then
+  wget -q -T 20 -O - ${url};
+fi;
+
+exit 0;

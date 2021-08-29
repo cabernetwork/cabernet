@@ -1,0 +1,42 @@
+.backdropContainer {
+    contain: style size;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    touch-action: none;
+}
+.backdropImage {
+    background-repeat: no-repeat;
+    background-position: center center;
+    -webkit-background-size: cover;
+    background-size: cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    contain: strict;
+}
+.backdropImageFadeIn {
+    -webkit-animation: backdrop-fadein 0.8s ease-in-out normal both;
+    animation: backdrop-fadein 0.8s ease-in-out normal both;
+}
+@-webkit-keyframes backdrop-fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@keyframes backdrop-fadein {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

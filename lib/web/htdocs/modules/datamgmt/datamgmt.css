@@ -1,0 +1,51 @@
+td a {
+    color: inherit;
+    text-decoration: none;
+}
+.dmTable{
+    background: var(--docked-drawer-background);
+    width: 95%;
+}
+.dmIcon{
+    min-width: 2em;
+    font-size: 150%;
+    text-align: center;
+    display: table-cell;
+}
+
+@media not all and (min-width:50em){
+    .dmIcon{
+        min-width:1.3em;
+    }
+    .dmTable{
+        width: 99%;
+    }
+}
+@media not all and (max-width:60em){
+    .dmIcon{
+        min-width:3em;
+    }
+}
+.dmItem{
+    width:95%;
+}
+.dmItemTitle{
+    font-size: 110%;
+    font-weight: bold;
+}
+.dmSection{
+    font-size: 130%;
+    font-weight: bold;
+    width:95%;
+
+}
+.dmButton{
+    white-space: nowrap;
+    height: 2em;
+    width: 50%;
+}
+@media not all and (min-width:50em){
+    .dmButton{
+        min-width:15em;
+    }
+}

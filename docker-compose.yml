@@ -1,0 +1,8 @@
+locast2plex:
+    image: tgorg/locast2plex
+    ports:
+      - "6077:6077"
+      - "1900:1900/udp"
+    restart: unless-stopped
+    volumes:
+      - ./config.ini:/app/config/config.ini

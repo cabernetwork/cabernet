@@ -1,0 +1,24 @@
+POST https://api.locastnet.org/api/user/login
+Login to locast
+POSTDATA {"username":"xxxxxxxx","password":"xxxxxxxx"}
+
+
+GET https://api.locastnet.org/api/user/me
+Get user information about logged in user
+HEADERS {'Content-Type': 'application/json', 'authorization': 'Bearer xxxxxxxx'}
+
+
+GET https://api.locastnet.org/api/watch/dma/<latitude>/<longitude>
+Get the city that locast serves based on a given latitude or longitude
+HEADERS {'Content-Type': 'application/json'}
+
+
+GET https://api.locastnet.org/api/watch/epg/<dma_code>
+Get the stations and recent EPG data that is available to a given city
+HEADERS {'Content-Type': 'application/json', 'authorization': 'Bearer xxxxxxxx'}
+
+
+
+GET https://api.locastnet.org/api/watch/station/<station_code>/<latitude>/<longitude>
+Get the m3u stream for a given station - NOTE This will count against locast's stream counter (will replace station stream with "Stream count exceeded" warning video).  Stream counter does time out, but be sure to use with care!
+HEADERS {'Content-Type': 'application/json', 'authorization': 'Bearer xxxxxxxx'}
