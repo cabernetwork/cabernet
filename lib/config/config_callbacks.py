@@ -238,13 +238,15 @@ def load_encrypted_setting(_config_obj, _section, _key):
 def set_ip(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] == '0.0.0.0':
         _config_obj.data['web']['bind_ip'] = '0.0.0.0'
-        _config_obj.data['web']['plex_accessible_ip'] \
-            = utils.get_ip()
+        if _config_obj.data['web']['plex_accessible_ip'] == '0.0.0.0':
+            _config_obj.data['web']['plex_accessible_ip'] \
+                = utils.get_ip()
     else:
         _config_obj.data['web']['bind_ip'] \
             = _config_obj.data[_section][_key]
-        _config_obj.data['web']['plex_accessible_ip'] \
-            = _config_obj.data[_section][_key]
+        if _config_obj.data['web']['plex_accessible_ip'] == '0.0.0.0':
+            _config_obj.data['web']['plex_accessible_ip'] \
+                = _config_obj.data[_section][_key]
 
 
 def set_netmask(_config_obj, _section, _key):

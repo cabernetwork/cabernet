@@ -24,7 +24,6 @@
                         "type": "string",
                         "default": "0.0.0.0",
                         "level": 1,
-                        "writable": false,
                         "help": "The IP provided to the clients for http requests"
                     },
                     "bind_ip":{

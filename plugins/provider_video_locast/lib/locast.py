@@ -43,8 +43,8 @@ class Locast(PluginObj):
         All tasks are namespace based so instance is ignored. 
         This calls the scheduler to run the task.
         """
-        self.web_admin_url = 'http://' + self.config_obj.data['web']['plex_accessible_ip'] + \
-            ':' + str(self.config_obj.data['web']['web_admin_port'])
+        self.web_admin_url = 'http://localhost:' + \
+            str(self.config_obj.data['web']['web_admin_port'])
         task = self.scheduler_db.get_tasks('Channels', 'Refresh Locast Channels')[0]
         url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
                .format(task['taskid']))
@@ -68,8 +68,8 @@ class Locast(PluginObj):
         All tasks are namespace based so instance is ignored.
         This calls the scheduler to run the task.
         """
-        self.web_admin_url = 'http://' + self.config_obj.data['web']['plex_accessible_ip'] + \
-            ':' + str(self.config_obj.data['web']['web_admin_port'])
+        self.web_admin_url = 'http://localhost:' + \
+            str(self.config_obj.data['web']['web_admin_port'])
         task = self.scheduler_db.get_tasks('EPG', 'Refresh Locast EPG')[0]
         url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
                .format(task['taskid']))
