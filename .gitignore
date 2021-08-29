@@ -21,6 +21,7 @@ lib/web/htdocs/temp/*
 !lib/web/htdocs/temp/__init__.py
 build/*/cabernet*.exe
 ffmpeg/
+misc/
 #IntelliJ
 .idea/
 cabernet.iml
