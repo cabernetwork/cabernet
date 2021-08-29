@@ -56,13 +56,14 @@ class CabernetUpgrade:
         from github for cabernet and plugins loaded
         """
         manifest = self.import_manifest()
-        release_data_list = self.github_releases()
+        release_data_list = self.github_releases(manifest)
         current_version = utils.VERSION
         last_version = release_data_list[0]['tag_name']
         next_version = self.get_next_release(release_data_list)
         manifest['version'] = current_version
         manifest['next_version'] = next_version
         manifest['latest_version'] = last_version
+        print(manifest)
         self.save_manifest(manifest)
 
     def import_manifest(self):
@@ -91,13 +92,9 @@ class CabernetUpgrade:
         
     @handle_json_except 
     @handle_url_except 
-    def github_releases(self):
-        json_releases = importlib.resources.read_text(self.config['paths']['resources_pkg'], 'github_releases.json')
-        releases = json.loads(json_releases)
-        return releases
-
+    def github_releases(self, _manifest):
         url = ''.join([
-            self.manifest['github_repo'], '/releases'
+            _manifest['github_repo'], '/releases'
             ])
         login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
         release_req = urllib.request.Request(url, headers=login_headers)
