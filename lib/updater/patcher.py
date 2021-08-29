@@ -22,7 +22,7 @@ import time
 
 import lib.common.utils as utils
 
-REQUIRED_VERSION = '0.8.8g'
+REQUIRED_VERSION = '0.9.0'
 
 def patch_upgrade(_config, _new_version):
     """
