@@ -63,7 +63,6 @@ class CabernetUpgrade:
         manifest['version'] = current_version
         manifest['next_version'] = next_version
         manifest['latest_version'] = last_version
-        print(manifest)
         self.save_manifest(manifest)
 
     def import_manifest(self):
