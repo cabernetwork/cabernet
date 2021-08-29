@@ -184,16 +184,17 @@ class Backups:
                     os.path.join(self.config['paths']['main_dir'], rel_dirname))
 
     def check_code_write_permissions(self):
-        global STATUS
-        response = True
+        result = ''
         for dirname, subdirs, files in os.walk(self.config['paths']['main_dir']):
             for d in CODE_DIRS_TO_IGNORE:
                 if d in subdirs:
                     subdirs.remove(d)
             if not os.access(dirname, os.W_OK):
                 self.logger.info('Aborting upgrade, folder not writable: {}'.format(dirname))
-                STATUS += '#### Folder not writeable, aborting upgrade. FOLDER: {}<br>\r\n'.format(dirname)
-                response = False
-        return response
+                result += '#### Folder not writeable, aborting upgrade. FOLDER: {}<br>\r\n'.format(dirname)
+        if result == '':
+            return None
+        else:
+            return result
 
 

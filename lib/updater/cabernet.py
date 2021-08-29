@@ -140,7 +140,9 @@ class CabernetUpgrade:
         
         # recursively check all folders from the basedir to see if they are writable
         STATUS += 'Checking write permissions...<br>\r\n'
-        if not b.check_code_write_permissions():
+        resp = b.check_code_write_permissions()
+        if resp is not None:
+            STATUS += resp
             return False
         
         
@@ -153,7 +155,7 @@ class CabernetUpgrade:
         
         STATUS += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
-                c_manifest['github_repo_' +  + self.config['main']['upgrade_quality'] ], 
+                c_manifest['github_repo_' + self.config['main']['upgrade_quality'] ], 
                 'zipball', c_manifest['next_version']
                 ])):
             STATUS += 'Download of the new version failed, aborting upgrade<br>\r\n'
