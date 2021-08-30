@@ -1,8 +1,9 @@
-locast2plex:
-    image: tgorg/locast2plex
+cabernet:
+    image: ghcr.io/cabernetwork/cabernet:latest
+    container_name: cabernet
+    volumes:
+      - /path/to/cabernet/on/host:/app/data
     ports:
       - "6077:6077"
-      - "1900:1900/udp"
+      - "5004:5004"
     restart: unless-stopped
-    volumes:
-      - ./config.ini:/app/config/config.ini
