@@ -180,14 +180,10 @@ class Backups:
                     subdirs.remove(d)
             rel_dirname = dirname.replace(new_code_path, '.')
             for filename in files:
-                try:
-                    shutil.move(os.path.join(dirname, filename), 
-                        os.path.join(self.config['paths']['main_dir'], rel_dirname))
-                except (NotADirectoryError, FileNotFoundError):
-                    os.makedirs(os.path.join(self.config['paths']['main_dir'], rel_dirname), \
-                        exist_ok=True)
-                    shutil.move(os.path.join(dirname, filename), 
-                        os.path.join(self.config['paths']['main_dir'], rel_dirname))
+                os.makedirs(os.path.join(self.config['paths']['main_dir'], rel_dirname), \
+                    exist_ok=True)
+                shutil.move(os.path.join(dirname, filename), 
+                    os.path.join(self.config['paths']['main_dir'], rel_dirname))
 
     def check_code_write_permissions(self):
         result = ''
