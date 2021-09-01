@@ -33,7 +33,7 @@ from lib.common.decorators import Restore
 from lib.db.db_config_defn import DBConfigDefn
 
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
-CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', 'build', 'misc']
+CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', '.github', 'build', 'misc']
 
 def scheduler_tasks(config):
     scheduler_db = DBScheduler(config)
