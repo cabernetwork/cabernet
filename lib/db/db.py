@@ -82,6 +82,7 @@ class DB:
             return None
 
     def delete(self, _table, _values):
+        cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_DELETE])]
         try:
             cur = self.sql_exec(sqlcmd, _values)
@@ -97,6 +98,7 @@ class DB:
             return None
 
     def update(self, _table, _values=None):
+        cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_UPDATE])]
         try:
             cur = self.sql_exec(sqlcmd, _values)

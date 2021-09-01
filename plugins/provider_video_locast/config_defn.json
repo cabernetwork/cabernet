@@ -8,7 +8,7 @@
             "locast":{
                 "label": "Locast",
                 "sort": "Locast1",
-                "icon": "cast_connected",
+                "icon": "cast",
                 "description": "Settings for Locast",
                 "settings":{
                     "enabled":{
@@ -21,9 +21,9 @@
                     "channel_update_timeout":{
                         "label": "Channel Update Timeout",
                         "type": "integer",
-                        "default": 1,
+                        "default": 23,
                         "level": 3,
-                        "help": "Default pulls channel data from locast day"
+                        "help": "Default pulls channel data from locast in hours"
                     },
                     "client_id":{
                         "label": "Locast Client ID",

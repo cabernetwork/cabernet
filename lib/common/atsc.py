@@ -158,7 +158,7 @@ class ATSCMsg:
         # byte string of the service name
         # crc
         if _sdt_msg[:3] != b'\x47\x40\x11':
-            self.logger.info('WRONG ATSC MSG {}'.format(bytes(_sdt_msg[:20]).hex()))
+            self.logger.debug('Missing ATSC Msg, found {}'.format(bytes(_sdt_msg[:20]).hex()))
             return _sdt_msg
 
         descr = b'\x01' \

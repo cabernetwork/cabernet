@@ -1,0 +1,115 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "plutotv":{
+                "label": "PlutoTV",
+                "sort": "PlutoTV1",
+                "icon": "cast",
+                "description": "Settings for PlutoTV",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
+                    },
+                    "channel_update_timeout":{
+                        "label": "Channel Update Timeout",
+                        "type": "integer",
+                        "default": 23,
+                        "level": 3,
+                        "help": "Default pulls channel data from PlutoTV in hours"
+                    },
+                    "channel_thumbnail":{
+                        "label": "Channel Thumbnail",
+                        "type": "list",
+                        "default": "colorLogoPNG",
+                        "values": ["colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
+                            "solidLogoPNG", "thumbnail", "logo",
+                            "featuredImage"],
+                        "level": 1,
+                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                    },
+                    "program_thumbnail":{
+                        "label": "Program Thumbnail",
+                        "type": "list",
+                        "default": "featuredImage",
+                        "values": ["featuredImage", "poster", "thumbnail"],
+                        "level": 1,
+                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                    },
+                    "player-tuner_count":{
+                        "label": "tuner_count",
+                        "type": "integer",
+                        "default": 4,
+                        "level": 2,
+                        "help": "Number of streams active at one time"
+                    },
+                    "player-stream_type":{
+                        "label": "stream_type",
+                        "type": "list",
+                        "default": "internalproxy",
+                        "values": ["m3u8redirect", "ffmpegproxy", "internalproxy"],
+                        "level": 1,
+                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                    },
+                    "player-enable_url_filter":{
+                        "label": "Enable URL Filtering",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 3,
+                        "help": "Filters out streams from URL addresses based on regular expression"
+                    },
+                    "player-url_filter":{
+                        "label": "URL Filter",
+                        "type": "string",
+                        "default": "^.*(_ad/|google.com|Pluto_TV_OandO).*$",
+                        "level": 3,
+                        "help": "Only used with stream_type=internalproxy"
+                    },
+                    "player-enable_pts_filter":{
+                        "label": "Enable PTS Filtering",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 3,
+                        "help": "Filters out corrupted PTS packets.  Requires ffprobe.exe"
+                    },
+                    "player-pts_minimum":{
+                        "label": "pts_minimum",
+                        "type": "integer",
+                        "default": 10000000,
+                        "level": 3,
+                        "help": "Used for PTS Filtering"
+                    },
+                    "player-pts_max_delta":{
+                        "label": "pts_max_delta",
+                        "type": "integer",
+                        "default": 3000000,
+                        "level": 3,
+                        "help": "Used for PTS Filtering"
+                    },
+                    "epg-hours":{
+                        "label": "EPG Hours to Pull",
+                        "type": "integer",
+                        "default": 14,
+                        "level": 3,
+                        "help": "PlutoTV max is 14 hours including 2 hours in the past."
+                    },
+                    "epg-min_refresh_rate":{
+                        "label": "EPG Min Refresh Rate",
+                        "type": "integer",
+                        "default": 3600,
+                        "level": 2,
+                        "help": "Default=3600 seconds (1 hours). When a HTTP request for epg data is received, will refresh the data if older than this value."
+                    }
+                }
+            }
+        }
+    }
+}
+

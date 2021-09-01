@@ -38,4 +38,3 @@ def patch_upgrade(_config, _new_version):
         path = os.path.join(_config['paths']['db_dir'], 
             _config['datamgmt']['db_files-plugins_db'] + '.db')
         os.remove(path)
-        time.sleep(10)

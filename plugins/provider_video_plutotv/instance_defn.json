@@ -1,0 +1,63 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "plutotv":{
+                "label": "PlutoTV",
+                "sort": "PlutoTV2",
+                "icon": "cast_connected",
+                "description": "Settings for PlutoTV Instances",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 0,
+                        "help": "Will disable this instance only"
+                    },
+                    "label":{
+                        "label": "Label",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "onChange": "lib.config.config_callbacks.update_instance_label",
+                        "help": "Defines the tab name for this instance"
+                    },
+                    "epg-enabled":{
+                        "label": "EPG Collection Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "Disable if you have multiple instances for the same city"
+                    },
+                    "epg-prefix":{
+                        "label": "EPG Channel Prefix",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "help": "Used with channel number to order channel list"
+                    },
+                    "epg-suffix":{
+                        "label": "EPG Channel Suffix",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "help": "If a number will ADD to the display channel number; otherwise, will prepend to the channel number as a string"
+                    },
+                    "epg-episode_adjustment":{
+                        "label": "Adjusts Episode number",
+                        "type": "list",
+                        "default": 0,
+                        "values": [1000, 2000, 3000, 4000, 5000],
+                        "level": 1,
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and PlutoTV at the same time."
+                    }
+                }
+            }
+        }
+    }
+}
+

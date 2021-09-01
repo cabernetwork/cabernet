@@ -84,8 +84,8 @@ sqlcmds = {
         """
         INSERT INTO channels (
             namespace, instance, enabled, uid, number, display_number, display_name,
-            thumbnail, thumbnail_size, updated, json
-            ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
+            group_tag, thumbnail, thumbnail_size, updated, json
+            ) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? )
         """,
     'channels_update':
         """
@@ -106,7 +106,7 @@ sqlcmds = {
     'channels_del':
         """
         DELETE FROM channels WHERE updated LIKE ?
-        AND namespace=? AND instance=?
+        AND namespace LIKE ? AND instance LIKE ?
         """,
     'channels_get':
         """
@@ -166,6 +166,7 @@ class DBChannels(DB):
                     ch['number'],
                     ch['number'],
                     ch['name'],
+                    ch['groups_other'],
                     ch['thumbnail'],
                     str(ch['thumbnail_size']),
                     True,
@@ -201,6 +202,10 @@ class DBChannels(DB):
         ))
 
     def del_channels(self, _namespace, _instance):
+        if not _namespace:
+            _namespace = '%'
+        if not _instance:
+            _instance = '%'
         self.delete(DB_CHANNELS_TABLE, ('%', _namespace, _instance,))
     
     def del_status(self, _namespace=None, _instance=None):

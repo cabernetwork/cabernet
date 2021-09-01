@@ -22,8 +22,9 @@ import http
 import re
 import urllib.request
 import time
-
 from collections import OrderedDict
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 
 import lib.m3u8 as m3u8
 from lib.common.atsc import ATSCMsg
@@ -76,7 +77,17 @@ class InternalProxy(Stream):
             try:
                 added = 0
                 removed = 0
-                playlist = m3u8.load(stream_uri)
+                i = 3
+                while i > 0:
+                    try:
+                        playlist = m3u8.load(stream_uri)
+                        break
+                    except urllib.error.HTTPError as e:
+                        self.logger.info('M3U8 Exception caught, retrying: {}'.format(e))
+                        time.sleep(1.5)
+                        i -= 1
+                if i < 1:
+                    break
                 removed += self.remove_from_stream_queue(playlist, play_queue)
                 added += self.add_to_stream_queue(playlist, play_queue)
                 if added == 0 and duration > 0:
@@ -100,7 +111,13 @@ class InternalProxy(Stream):
 
     def add_to_stream_queue(self, _playlist, _play_queue):
         total_added = 0
-        for m3u8_segment in _playlist.segments:
+        if _playlist.keys != [None]:
+            keys = [{"uri": key.absolute_uri, "method": key.method, "iv": key.iv} \
+                for key in _playlist.keys if key]
+        else:
+            keys = [None for i in range(0, len(_playlist.segments))]
+            
+        for m3u8_segment, key in zip(_playlist.segments, keys):
             uri = m3u8_segment.absolute_uri
             if uri not in _play_queue:
                 played = False
@@ -110,7 +127,8 @@ class InternalProxy(Stream):
                         played = True
                 _play_queue[uri] = {
                     'played': played,
-                    'duration': m3u8_segment.duration
+                    'duration': m3u8_segment.duration,
+                    'key': key
                 }
                 self.logger.debug(f"Added {uri} to play queue")
                 total_added += 1
@@ -150,11 +168,34 @@ class InternalProxy(Stream):
                     except http.client.IncompleteRead as e:
                         self.logger.info('Provider gave partial stream, trying again. {}'.format(e, len(e.partial)))
                         chunk = e.partial
-                        time.sleep(1)
+                        time.sleep(1.5)
                 data['played'] = True
                 if not chunk:
                     self.logger.warning(f"Segment {uri} not available. Skipping..")
                     continue
+
+                if data["key"]:
+                    i = 3
+                    while i > 0:
+                        try:
+                            if data["key"]["uri"]:
+                                key_data = None
+                                req = urllib.request.Request(data["key"]["uri"])
+                                with urllib.request.urlopen(req) as resp:
+                                    key_data = resp.read()
+                                        
+                                if data["key"]["iv"].startswith('0x'):
+                                    iv = bytearray.fromhex(data["key"]["iv"][2:])
+                                else:
+                                    iv = bytearray.fromhex(data["key"]["iv"])
+                                cipher = Cipher(algorithms.AES(key_data), modes.CBC(iv), default_backend())
+                                decryptor = cipher.decryptor()
+                                chunk = decryptor.update(chunk)
+                            break
+                        except urllib.error.URLError as e:
+                            self.logger.info('Key Exception caught, retrying: {}'.format(e))
+                            i -= 1
+                            time.sleep(1)
                 if not self.is_pts_valid(chunk):
                     continue
                 

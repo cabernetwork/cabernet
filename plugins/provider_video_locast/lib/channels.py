@@ -54,7 +54,7 @@ class Channels:
             update_needed = True
         else:
             delta = datetime.datetime.now() - last_update
-            if delta.days >= self.locast_instance.config_obj.data[self.locast.name.lower()]['channel_update_timeout']:
+            if delta.total_seconds() / 3600 >= self.locast_instance.config_obj.data[self.locast.name.lower()]['channel_update_timeout']:
                 update_needed = True
         if update_needed or force:
             ch_dict = self.get_locast_channels()

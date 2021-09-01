@@ -85,8 +85,8 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
             # if a ';' is used in group-title, tvheadend will use the 
             # entire string as a tag
             groups = sid_data['namespace']
-            if sid_data['json']['groups_other']:
-                groups += '|' + '|'.join(sid_data['json']['groups_other'])
+            if sid_data['group_tag']:
+                groups += '|' + '|'.join([sid_data['group_tag']])
             if sid_data['json']['HD']:
                 if sid_data['json']['group_hdtv']:
                     groups += '|' + sid_data['json']['group_hdtv']

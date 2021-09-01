@@ -114,6 +114,7 @@ class Scheduler(Thread):
                 _trigger['area'], _trigger['title']))
             return
 
+        self.plugins.config_obj.refresh_config_data()
         self.scheduler_db.start_task(_trigger['area'], _trigger['title'])
         if _trigger['threadtype'] == 'thread':
             self.logger.info('Running threaded task {}:{}'.format(

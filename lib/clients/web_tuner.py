@@ -58,11 +58,8 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.warning('########## ConnectionResetError occurred, will try again')
             time.sleep(1)
             super().__init__(*args)
-        except ValueError:
-            self.logger.warning('ValueError occurred, Bad stream recieved.  Could be HTTPS or the stream was disconnected early')
-
-
-
+        except ValueError as e:
+            self.logger.warning('ValueError occurred, Bad stream recieved.  {}'.format(e))
 
     def do_GET(self):
         content_path, query_data = self.get_query_data()
@@ -154,7 +151,6 @@ class TunerHttpHandler(WebHTTPHandler):
         self.logger.info('1 Provider Connection Closed')
         WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
 
-
     def get_ns_inst_station(self, _station_data):
         ns = []
         inst = []
@@ -192,7 +188,6 @@ class TunerHttpHandler(WebHTTPHandler):
                 station = one_station
                 break
         return lowest_namespace, lowest_instance, station
-
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _sched_queue):

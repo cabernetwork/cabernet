@@ -60,7 +60,7 @@ def post_data_mgmt_html(_webserver):
         action = _webserver.query_data['action'][0]
         if action == 'reset_channel':
             html = reset_channels(_webserver.plugins.config_obj.data, 
-                _webserver.query_data['name'][0])
+                _webserver.query_data['name'][0], _webserver.query_data['resetedits'][0])
         elif action == 'reset_epg':
             html = reset_epg(_webserver.plugins.config_obj.data, 
                 _webserver.query_data['name'][0])
@@ -75,9 +75,11 @@ def post_data_mgmt_html(_webserver):
     _webserver.do_mime_response(200, 'text/html', html)
 
 
-def reset_channels(_config, _name):
+def reset_channels(_config, _name, _reset_edits):
     db_channel = DBChannels(_config)
     db_channel.del_status(_name)
+    if _reset_edits == '1':
+        db_channel.del_channels(_name, None)
     if _name is None:
         return 'Channels updated and will refresh all data on next request'
     else:
@@ -338,7 +340,9 @@ class DataMgmtHTML:
         db_channel = DBChannels(self.config)
         plugins_channel = db_channel.get_channel_names()
         html_option = ''.join([
-            '<td nowrap>Plugin: <select id="name" name="name"</select>',
+            '<td nowrap>Reset Edits: <select id="resetedits" name="resetedits"</select>',
+            '<option value="0">No</option><option value="1">Yes</option></select> &nbsp; ',
+            'Plugin: <select id="name" name="name"</select>',
             '<option value="">ALL</option>'
             ])
         for name in plugins_channel:

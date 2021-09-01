@@ -17,10 +17,10 @@ substantial portions of the Software.
 """
 
 import lib.plugins.plugin as plugin
-from .lib.locast import Locast
+from .lib.plutotv import PlutoTV
 
 
 # register the init plugin function
 @plugin.register
 def start(plugin):
-    return Locast(plugin)
+    return PlutoTV(plugin)
