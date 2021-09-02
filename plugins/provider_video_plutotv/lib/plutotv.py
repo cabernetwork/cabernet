@@ -35,56 +35,6 @@ class PlutoTV(PluginObj):
             self.instances[inst] = PlutoTVInstance(self, inst)
         self.scheduler_tasks()
 
-    def refresh_channels_ext(self, _instance=None):
-        """
-        External request to refresh channels. Called from the plugin manager.
-        All tasks are namespace based so instance is ignored. 
-        This calls the scheduler to run the task.
-        """
-        self.web_admin_url = 'http://localhost:' + \
-            str(self.config_obj.data['web']['web_admin_port'])
-        task = self.scheduler_db.get_tasks('Channels', 'Refresh PlutoTV Channels')[0]
-        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
-               .format(task['taskid']))
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as resp:
-            result = resp.read()
-
-        # wait for the last run to update indicating the task has completed.
-        while True:
-            task_status = self.scheduler_db.get_task(task['taskid'])
-            x = datetime.datetime.utcnow() - task_status['lastran']
-            # If updated in the last 20 minutes, then ignore
-            # Many media servers will request this multiple times.
-            if x.total_seconds() < 1200:
-                break
-            time.sleep(0.5)
-
-    def refresh_epg_ext(self, _instance=None):
-        """
-        External request to refresh epg. Called from the plugin manager.
-        All tasks are namespace based so instance is ignored.
-        This calls the scheduler to run the task.
-        """
-        self.web_admin_url = 'http://localhost:' + \
-            str(self.config_obj.data['web']['web_admin_port'])
-        task = self.scheduler_db.get_tasks('EPG', 'Refresh PlutoTV EPG')[0]
-        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
-               .format(task['taskid']))
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as resp:
-            result = resp.read()
-
-        # wait for the last run to update indicating the task has completed.
-        while True:
-            task_status = self.scheduler_db.get_task(task['taskid'])
-            x = datetime.datetime.utcnow() - task_status['lastran']
-            # If updated in the last 20 minutes, then ignore
-            # Many media servers will request this multiple times.
-            if x.total_seconds() < 1200:
-                break
-            time.sleep(0.5)
-
     def get_channel_uri_ext(self, sid, _instance=None):
         """
         External request to return the uri for a m3u8 stream.

@@ -96,6 +96,10 @@ class EPG:
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req) as resp:
             results = json.load(resp)
+        if len(results) == 0:
+            self.logger.warning('Locast HTTP EPG Request Failed for instance {}'.format(self.instance))
+            raise exceptions.CabernetException('Locast HTTP EPG Request Failed')
+        
         if len(results[0]['listings']) == 0:
             self.logger.warning('EPG Days to collect is too high.  {} has no data'.format(_day.isoformat()))
             return None

@@ -32,17 +32,6 @@ class PluginObj:
     # Plugin may have the following methods
     # used to interface to the app.
 
-    #def refresh_channels_ext(self, _instance=None):
-    """
-    External request to refresh channel list. Called from the 
-    plugin manager and only if method is present in the plugin.
-    """
-    
-    #def refresh_epg_ext(self, _instance=None):
-    """
-    External request to refresh epg list.  Called from the 
-    plugin manager and only if method is present in the plugin.
-    """
 
     #def get_channel_uri_ext(self, sid, _instance=None):
     """

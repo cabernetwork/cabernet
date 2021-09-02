@@ -62,6 +62,8 @@ class Channels:
         else:
             self.logger.debug('Channel data still new for {} {}, not refreshing'.format(self.locast.name, self.instance))
 
+
+
     @handle_json_except
     @handle_url_except
     def get_locast_channels(self):
@@ -74,7 +76,6 @@ class Channels:
         req = urllib.request.Request(channels_url, headers=url_headers)
         with urllib.request.urlopen(req) as resp:
             ch_json = json.load(resp)
-
         ch_list = []
         if len(ch_json) == 0:
             self.logger.warning('Locast HTTP Channel Request Failed for instance {}'.format(self.instance))

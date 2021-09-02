@@ -22,6 +22,7 @@ import urllib.request
 
 from lib.db.db_scheduler import DBScheduler
 from lib.plugins.plugin_obj import PluginObj
+import lib.common.exceptions as exceptions
 
 from .authenticate import Authenticate
 from .locast_instance import LocastInstance
@@ -31,36 +32,12 @@ class Locast(PluginObj):
 
     def __init__(self, _plugin):
         super().__init__(_plugin)
+        self.plugin = _plugin
         self.auth = Authenticate(_plugin.config_obj, self.namespace.lower())
         self.scheduler_db = DBScheduler(self.config_obj.data)
         for inst in _plugin.instances:
             self.instances[inst] = LocastInstance(self, inst)
         self.scheduler_tasks()
-
-    def refresh_channels_ext(self, _instance=None):
-        """
-        External request to refresh channels. Called from the plugin manager.
-        All tasks are namespace based so instance is ignored. 
-        This calls the scheduler to run the task.
-        """
-        self.web_admin_url = 'http://localhost:' + \
-            str(self.config_obj.data['web']['web_admin_port'])
-        task = self.scheduler_db.get_tasks('Channels', 'Refresh Locast Channels')[0]
-        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
-               .format(task['taskid']))
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as resp:
-            result = resp.read()
-
-        # wait for the last run to update indicating the task has completed.
-        while True:
-            task_status = self.scheduler_db.get_task(task['taskid'])
-            x = datetime.datetime.utcnow() - task_status['lastran']
-            # If updated in the last 20 minutes, then ignore
-            # Many media servers will request this multiple times.
-            if x.total_seconds() < 1200:
-                break
-            time.sleep(0.5)
 
     def refresh_epg_ext(self, _instance=None):
         """
@@ -106,21 +83,38 @@ class Locast(PluginObj):
         """
         Called from the scheduler
         """
-        if _instance is None:
-            for key, instance in self.instances.items():
-                instance.refresh_channels()
-        else:
-            self.instances[_instance].refresh_channels()
+        try:
+            if not self.plugin.enabled:
+                self.logger.info('Plugin disabled, not refreshing channels')
+                return
+            if _instance is None:
+                for key, instance in self.instances.items():
+                    instance.refresh_channels()
+            else:
+                self.instances[_instance].refresh_channels()
+        except exceptions.CabernetException:
+            self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
+            self.config_obj.data[self.plugin.name.lower()]['enabled'] = False
+            self.plugin.enabled = False
+
 
     def refresh_epg(self, _instance=None):
         """
         Called from the scheduler
         """
-        if _instance is None:
-            for key, instance in self.instances.items():
-                instance.refresh_epg()
-        else:
-            self.instances[_instance].refresh_epg()
+        try:
+            if not self.plugin.enabled:
+                self.logger.info('Plugin disabled, not refreshing EPG')
+                return
+            if _instance is None:
+                for key, instance in self.instances.items():
+                    instance.refresh_epg()
+            else:
+                self.instances[_instance].refresh_epg()
+        except exceptions.CabernetException:
+            self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
+            self.config_obj.data[self.plugin.name.lower()]['enabled'] = False
+            self.plugin.enabled = False
 
     def scheduler_tasks(self):
         if self.scheduler_db.save_task(
