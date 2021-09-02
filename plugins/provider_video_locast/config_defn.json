@@ -88,9 +88,9 @@
                     "player-refresh_rate":{
                         "label": "refresh_rate",
                         "type": "integer",
-                        "default": 800,
+                        "default": 0,
                         "level": 3,
-                        "help": "Must be less than 15 minute Locast timeout for free accounts"
+                        "help": "0 means no refresh. Recommend less than 15 minute Locast timeout for free accounts"
                     },
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",

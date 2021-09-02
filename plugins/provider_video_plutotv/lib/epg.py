@@ -154,9 +154,9 @@ class EPG:
 
 
         if 'firstAired' in _program_data['episode'].keys():
-            air_date_sec = datetime.datetime.fromisoformat(_program_data['episode']['firstAired'].replace('Z', '+00:00')).timestamp()
-            air_date = utils.date_parse(air_date_sec, '%Y%m%d')
-            formatted_date = utils.date_parse(air_date_sec, '%Y/%m/%d')
+            air_date_msec = datetime.datetime.fromisoformat(_program_data['episode']['firstAired'].replace('Z', '+00:00')).timestamp() * 1000
+            air_date = utils.date_parse(air_date_msec, '%Y%m%d')
+            formatted_date = utils.date_parse(air_date_msec, '%Y/%m/%d')
         else:
             air_date = None
             formatted_date = None

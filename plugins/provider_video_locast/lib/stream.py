@@ -30,10 +30,9 @@ class Stream:
         if self.locast_instance.config_obj.data[self.locast_instance.config_section]['is_free_account']:
             delta_time = time.time() - _last_refresh
             refresh_rate = int(self.locast_instance.config_obj.data[self.locast_instance.locast.name.lower()]['player-refresh_rate'])
-            if refresh_rate > 0 and delta_time > int(
-                    self.locast_instance.config_obj.data[self.locast_instance.locast.name.lower()]['player-refresh_rate']):
+            if refresh_rate > 0 and delta_time > refresh_rate:
                 self.logger.info('Refresh time expired. Refresh rate is {} seconds'
-                    .format(self.locast_instance.config_obj.data[self.locast_instance.locast.name.lower()]['player-refresh_rate']))
+                    .format(refresh_rate))
                 return True
         return False
 
