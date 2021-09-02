@@ -29,7 +29,7 @@ from lib.db.db_channels import DBChannels
 import lib.clients.channels.channels as channels
 
 from . import constants
-
+from .translations import plutotv_groups
 
 class Channels:
     logger = None
@@ -48,7 +48,7 @@ class Channels:
             update_needed = True
         else:
             delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel_update_timeout']:
+            if delta.total_seconds() / 3600 >= self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-update_timeout']:
                 update_needed = True
         if update_needed or force:
             ch_dict = self.get_plutotv_channels()
@@ -88,7 +88,7 @@ class Channels:
                 ch_callsign = plutotv_channel['name']
                 thumbnail = None
                 thumbnail_size = None
-                for tn in [self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel_thumbnail'],
+                for tn in [self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-thumbnail'],
                     "colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
                     "solidLogoPNG", "thumbnail", "logo", "featuredImage"]:
                     if tn in plutotv_channel.keys():
@@ -107,6 +107,16 @@ class Channels:
                 counter += 1
                 channel = plutotv_channel['number']
                 friendly_name = plutotv_channel['name']
+                if self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-import_groups']:
+                    if plutotv_channel['category'] in plutotv_groups:
+                        groups_other = plutotv_groups[plutotv_channel['category']]
+                    else:
+                        groups_other = [ plutotv_channel['category'] ]
+                        self.logger.info('Missing plutotv category translation for: {}' \
+                            .format(plutotv_channel['category']))
+                else:
+                    groups_other = None
+                
                 channel = {
                     'id': ch_id,
                     'enabled': True,
@@ -116,7 +126,7 @@ class Channels:
                     'HD': hd,
                     'group_hdtv': None,
                     'group_sdtv': None,
-                    'groups_other': plutotv_channel['category'],  # array list of groups/categories
+                    'groups_other': groups_other,
                     'thumbnail': thumbnail,
                     'thumbnail_size': thumbnail_size,
                     'stream_url': stream_url

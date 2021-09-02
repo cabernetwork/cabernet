@@ -18,14 +18,15 @@
                         "level": 1,
                         "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
                     },
-                    "channel_update_timeout":{
-                        "label": "Channel Update Timeout",
-                        "type": "integer",
-                        "default": 23,
-                        "level": 3,
-                        "help": "Default pulls channel data from PlutoTV in hours"
+                    "program_thumbnail":{
+                        "label": "Program Thumbnail",
+                        "type": "list",
+                        "default": "featuredImage",
+                        "values": ["featuredImage", "poster", "thumbnail"],
+                        "level": 1,
+                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
                     },
-                    "channel_thumbnail":{
+                    "channel-thumbnail":{
                         "label": "Channel Thumbnail",
                         "type": "list",
                         "default": "colorLogoPNG",
@@ -35,13 +36,19 @@
                         "level": 1,
                         "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
                     },
-                    "program_thumbnail":{
-                        "label": "Program Thumbnail",
-                        "type": "list",
-                        "default": "featuredImage",
-                        "values": ["featuredImage", "poster", "thumbnail"],
+                    "channel-update_timeout":{
+                        "label": "Channel Update Timeout",
+                        "type": "integer",
+                        "default": 23,
+                        "level": 3,
+                        "help": "Default pulls channel data from PlutoTV in hours"
+                    },
+                    "channel-import_groups":{
+                        "label": "Import Channel Groups",
+                        "type": "boolean",
+                        "default": true,
                         "level": 1,
-                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                        "help": "Imports groups from PlutoTV into the group other column"
                     },
                     "player-tuner_count":{
                         "label": "tuner_count",

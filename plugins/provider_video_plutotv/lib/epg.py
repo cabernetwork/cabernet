@@ -29,6 +29,7 @@ from lib.common.decorators import handle_json_except
 from lib.db.db_epg import DBepg
 
 from . import constants
+from .translations import plutotv_tv_genres
 
 
 class EPG:
@@ -177,8 +178,13 @@ class EPG:
         else:
             rating = None
 
-        if 'genre' in _program_data.keys():
-            genres = [x.strip() for x in _program_data['genres'].split(' and ')]
+        if 'genre' in _program_data['episode'].keys():
+            if _program_data['episode']['genre'] in plutotv_tv_genres:
+                genres = plutotv_tv_genres[_program_data['episode']['genre']]
+            else:
+                self.logger.info('Missing plutotv genre translation for: {}' \
+                        .format(_program_data['episode']['genre']))
+                genres = [x.strip() for x in _program_data['episode']['genre'].split(' and ')]
         else:
             genres = None
 

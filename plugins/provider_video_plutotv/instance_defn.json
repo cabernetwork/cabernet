@@ -38,14 +38,14 @@
                         "type": "string",
                         "default": null,
                         "level": 1,
-                        "help": "Used with channel number to order channel list"
+                        "help": "If a number will ADD to the display channel number; otherwise, will prepend to the channel number as a string"
                     },
                     "epg-suffix":{
                         "label": "EPG Channel Suffix",
                         "type": "string",
                         "default": null,
                         "level": 1,
-                        "help": "If a number will ADD to the display channel number; otherwise, will prepend to the channel number as a string"
+                        "help": "Will append to the channel number as a string"
                     },
                     "epg-episode_adjustment":{
                         "label": "Adjusts Episode number",
