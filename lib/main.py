@@ -114,8 +114,10 @@ def main(script_dir):
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
         LOGGER.info('Initiating Cabernet v{}'.format(utils.get_version_str()))
 
-        if args.restart:
+        if args.restart and config['main']['maintenance_mode']:
+            LOGGER.info('In maintenance mode, applying patches')
             patcher.patch_upgrade(config, utils.VERSION)
+            config_obj.write('main', 'maintenance_mode', False)
             time.sleep(0.01)
 
         utils.cleanup_web_temp(config)

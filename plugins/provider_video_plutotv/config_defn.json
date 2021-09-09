@@ -75,7 +75,7 @@
                     "player-url_filter":{
                         "label": "URL Filter",
                         "type": "string",
-                        "default": "^.*(_ad/|google.com|Pluto_TV_OandO).*$",
+                        "default": "^.*(_ad/|google.com|plutotv_filler|Well_be_right|_AdPod|_Promo).*$",
                         "level": 3,
                         "help": "Only used with stream_type=internalproxy"
                     },

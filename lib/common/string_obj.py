@@ -16,14 +16,19 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import subprocess
-import time
 
-from lib.common.string_obj import StringObj
+class StringObj:
 
-class Video(StringObj):
+    def __init__(self):
+        self.byte_string = None
 
-    def __init__(self, _config):
-        super().__init__()
-        self.config = _config
+    def terminate(self):
+        self.byte_string = None
 
+    @property
+    def data(self):
+        return self.byte_string
+
+    @data.setter
+    def data(self, _data):
+        self.byte_string = _data

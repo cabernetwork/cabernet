@@ -99,7 +99,6 @@ def logging_enable(_config_obj, _section, _key):
         handler_list.append('loghandler')
     handlers = ','.join(handler_list)
     _config_obj.write('logger_root', 'handlers', handlers)
-    _config_obj.data['logger_root']['handlers'] = handlers
     logging_refresh(_config_obj, _section, _key)
 
 
@@ -271,25 +270,17 @@ def enable_ssdp(_config_obj, _section, _key):
 
 def set_hdhomerun_id(_config_obj, _section, _key):
     if _config_obj.data['hdhomerun']['hdhr_id'] is None:
-        _config_obj.data['hdhomerun']['hdhr_id'] \
-            = hdhr_server.hdhr_gen_device_id()
         _config_obj.write(
-            'hdhomerun', 'hdhr_id',
-            _config_obj.data["hdhomerun"]['hdhr_id'])
-    else:
-        if not hdhr_server.hdhr_validate_device_id(
-                _config_obj.data['hdhomerun']['hdhr_id']):
-            _config_obj.data['hdhomerun']['hdhr_id'] \
-                = hdhr_server.hdhr_gen_device_id()
-            _config_obj.write(
-                'hdhomerun', 'hdhr_id',
-                _config_obj.data["hdhomerun"]['hdhr_id'])
+            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
+    elif not hdhr_server.hdhr_validate_device_id(
+            _config_obj.data['hdhomerun']['hdhr_id']):
+        _config_obj.write(
+            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
 
 
 def set_uuid(_config_obj, _section, _key):
     if _config_obj.data["main"]["uuid"] is None:
-        _config_obj.data["main"]["uuid"] = str(uuid.uuid1()).upper()
-        _config_obj.write('main', 'uuid', _config_obj.data["main"]["uuid"])
+        _config_obj.write('main', 'uuid', str(uuid.uuid1()).upper())
 
 
 def update_instance_label(_config_obj, _section, _key):

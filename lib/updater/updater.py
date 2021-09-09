@@ -26,6 +26,7 @@ import urllib.request
 from threading import Thread
 
 import lib.common.utils as utils
+import lib.updater.cabernet as cabernet
 from lib.db.db_scheduler import DBScheduler
 from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import handle_url_except
@@ -33,11 +34,10 @@ from lib.common.decorators import handle_json_except
 from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
 from lib.updater.cabernet import CabernetUpgrade
-import lib.updater.cabernet as cabernet
+from lib.common.string_obj import StringObj
 
-STATUS = ''
+STATUS = StringObj()
 IS_UPGRADING = False
-
 
 @getrequest.route('/api/upgrade')
 def upgrade(_webserver):
@@ -53,11 +53,10 @@ def upgrade(_webserver):
             if not IS_UPGRADING:
                 IS_UPGRADING = True
                 v.sched_queue = _webserver.sched_queue
-                STATUS = ''
-                cabernet.STATUS = ''
+                STATUS.data = ''
                 t = Thread(target=v.upgrade_app, args=(_webserver.query_data['id'],))
                 t.start()
-            _webserver.do_mime_response(200, 'text/html', ''.join([cabernet.STATUS, STATUS]))
+            _webserver.do_mime_response(200, 'text/html', ''.join([STATUS.data]))
             return
         else:
             _webserver.do_mime_response(501, 'text/html',
@@ -150,22 +149,27 @@ class Updater:
         global STATUS
         global IS_UPGRADING
 
+        STATUS.data = 'Starting upgrade...<br>\r\n'
+
         app = CabernetUpgrade(self.plugins)
-        if not app.upgrade_app():
-            STATUS += '<script type="text/javascript">upgrading = "failed"</script>'
+        if not app.upgrade_app(STATUS):
+            STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'
             time.sleep(1)
             IS_UPGRADING = False
             return
 
         # what do we do with plugins?  They go here if necessary
-        STATUS += '(TBD) Upgrading plugins...<br>\r\n'
+        STATUS.data += '(TBD) Upgrading plugins...<br>\r\n'
 
-        STATUS += 'Restarting app in 3...<br>\r\n'
+        STATUS.data += 'Entering Maintenance Mode...<br>\r\n'
+        self.config_obj.write('main', 'maintenance_mode', True)
+
+        STATUS.data += 'Restarting app in 3...<br>\r\n'
         time.sleep(0.8)
-        STATUS += '2...<br>\r\n'
+        STATUS.data += '2...<br>\r\n'
         time.sleep(0.8)
-        STATUS += '1...<br>\r\n'
-        STATUS += '<script type="text/javascript">upgrading = "success"</script>'
+        STATUS.data += '1...<br>\r\n'
+        STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         IS_UPGRADING = False
         self.restart_app()

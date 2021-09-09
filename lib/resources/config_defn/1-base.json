@@ -64,6 +64,13 @@
                         "level": 1,
                         "help": "Version upgrade quality"
                     },
+                    "maintenance_mode":{
+                        "label": "Maintenance Mode",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 1,
+                        "help": "Used during upgrades.  When enabled, causes the patch upgrades to be re-applied on a scheduler restart"
+                    },                    
                     "ostype":{
                         "label": "OS Type",
                         "type": "string",
@@ -100,7 +107,6 @@
                         "onInit": "lib.config.config_callbacks.set_python_version",
                         "help": "Python version running service"
                     },
-
                     "uuid":{
                         "label": "UUID",
                         "type": "string",

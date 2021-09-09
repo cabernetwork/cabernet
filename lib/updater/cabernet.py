@@ -37,7 +37,6 @@ from lib.common.decorators import handle_json_except
 
 
 MANIFEST_FILE = 'manifest.json'
-STATUS = ''
 TMP_ZIPFILE = utils.CABERNET_NAMESPACE + '.zip'
 
 class CabernetUpgrade:
@@ -114,62 +113,60 @@ class CabernetUpgrade:
             prev_version = data['tag_name']
         return prev_version
 
-    def upgrade_app(self):
+    def upgrade_app(self, _web_status):
         """
         Initial request to perform an upgrade
         """
-        global STATUS
         c_manifest = self.load_manifest()
         if c_manifest is None:
             return False
         if c_manifest['next_version'] == c_manifest['version']:
             self.logger.info('Cabernet is on the current version, not upgrading')
-            STATUS = 'Cabernet is on the current version, not upgrading<br>\r\n'
+            _web_status.data += 'Cabernet is on the current version, not upgrading<br>\r\n'
             return False
         
-        STATUS = 'Starting upgrade...<br>\r\n'
         
         # This checks to see if additional files or folders are in the 
         # basedir area. if so, abort upgrade.
         # It is basically for the case where we have the wrong directory
-        STATUS += 'Checking current install area for expected files...<br>\r\n'
-        if not self.check_expected_files():
+        _web_status.data += 'Checking current install area for expected files...<br>\r\n'
+        if not self.check_expected_files(_web_status):
             return False
         
         b = backups.Backups(self.plugins)
         
         # recursively check all folders from the basedir to see if they are writable
-        STATUS += 'Checking write permissions...<br>\r\n'
+        _web_status.data += 'Checking write permissions...<br>\r\n'
         resp = b.check_code_write_permissions()
         if resp is not None:
-            STATUS += resp
+            _web_status.data += resp
             return False
         
         
         # simple call to run a backup of the data and source
         # use a direct call to the backup methods instead of calling the scheduler
-        STATUS += 'Creating backup of code and data...<br>\r\n'
+        _web_status.data += 'Creating backup of code and data...<br>\r\n'
         if not b.backup_all():
-            STATUS += 'Backup failed, aborting upgrade<br>\r\n'
+            _web_status.data += 'Backup failed, aborting upgrade<br>\r\n'
             return False
         
-        STATUS += 'Downloading new version from website...<br>\r\n'
+        _web_status.data += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
                 c_manifest['github_repo_' + self.config['main']['upgrade_quality'] ], 
                 'zipball', c_manifest['next_version']
                 ])):
-            STATUS += 'Download of the new version failed, aborting upgrade<br>\r\n'
+            _web_status.data += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False
 
         # skip integrity checks using SHA256 or SHA512 for now
 
         # Unzips the downloaded file to a temp area and check the version
         # contained in the utils.py that it is the same as expected.
-        STATUS += 'Extracting zip...<br>\r\n'
+        _web_status.data += 'Extracting zip...<br>\r\n'
         # folder is relative to tmp folder
         unpacked_code = self.extract_code()
         if unpacked_code is None:
-            STATUS += 'Extracting from zip failed, aborting upgrade<br>\r\n'
+            _web_status.data += 'Extracting from zip failed, aborting upgrade<br>\r\n'
             return False
 
         # Deletes the non-data and non-plugin files
@@ -178,30 +175,25 @@ class CabernetUpgrade:
         # it can still be removed and added.
         # *.py, *.html, *.js, *.png, ...
 
-        STATUS += 'Deleting old code...<br>\r\n'
+        _web_status.data += 'Deleting old code...<br>\r\n'
         if b.delete_code() is None:
-            STATUS += 'Deleting old files failed, aborting upgrade<br>\r\n'
+            _web_status.data += 'Deleting old files failed, aborting upgrade<br>\r\n'
             return False
 
         # does a move of the unzipped files to the source area
-        STATUS += 'Moving new code in place...<br>\r\n'
+        _web_status.data += 'Moving new code in place...<br>\r\n'
         b.restore_code(unpacked_code)
 
-        # at this point, we need to cleanup the temp area.
-        STATUS += 'Cleaning tmp area...<br>\r\n'
-        self.cleanup_tmp()
-
         # at this point, we modify the data if needed
-        STATUS += 'Patching cabernet...<br>\r\n'
+        _web_status.data += 'Patching cabernet...<br>\r\n'
         patcher.patch_upgrade(self.config, c_manifest['next_version'])
 
         return True
 
-    def check_expected_files(self):
+    def check_expected_files(self, _web_status):
         """
         Check the base directory files to see if all are expected.
         """
-        global STATUS
         files_present = ['build', 'lib', 'misc', 'plugins',
             '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
             'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
@@ -214,7 +206,7 @@ class CabernetUpgrade:
         response = True
         for file in filelist:
             if file not in files_present:
-                STATUS += '#### Extra file(s) found in install directory, aborting upgrade. FILE: {}<br>\r\n'.format(file)
+                _web_status.data += '#### Extra file(s) found in install directory, aborting upgrade. FILE: {}<br>\r\n'.format(file)
                 response = False
         return response
 

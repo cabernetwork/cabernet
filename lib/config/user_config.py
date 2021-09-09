@@ -289,10 +289,10 @@ class TVHUserConfig:
     def write(self, _section, _key, _value):
         self.data[_section][_key] = _value
         try:
-            self.config_handler.set(_section, _key, _value)
+            self.config_handler.set(_section, _key, str(_value))
         except configparser.NoSectionError:
             self.config_handler.add_section(_section)
-            self.config_handler.set(_section, _key, _value)
+            self.config_handler.set(_section, _key, str(_value))
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
 

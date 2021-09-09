@@ -34,6 +34,7 @@ from lib.db.db_config_defn import DBConfigDefn
 
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
 CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', '.github', 'build', 'misc']
+CODE_FILES_TO_IGNORE = ['config.ini']
 
 def scheduler_tasks(config):
     scheduler_db = DBScheduler(config)
@@ -66,7 +67,6 @@ class Backups:
         self.plugins = _plugins
         self.config = _plugins.config_obj.data
 
-
     def backup_data(self):
         # get the location where the backups will be stored
         # also deal with the number of backup folder limit and clean up
@@ -87,9 +87,6 @@ class Backups:
         for key in Backup.backup2func.keys():
             Backup.call_backup(key, self.config, backup_folder=new_backup_path)
         return new_backup_folder
-
-
-
 
     def restore_data(self, _folder, _key):
         """
@@ -113,14 +110,11 @@ class Backups:
             bkup_defn[key] = dm_section['datamgmt']['settings'][key]
         return bkup_defn
 
-    
     def backup_all(self):
         backup_folder = self.backup_data()
         if backup_folder is None:
             return False
         return self.backup_code(backup_folder)
-
-
 
     def backup_code(self, _backup_folder):
         """
@@ -154,7 +148,6 @@ class Backups:
         zf.close()
         return True
 
-
     def delete_code(self):
         for dirname, subdirs, files in os.walk(
                 self.config['paths']['main_dir']):
@@ -162,9 +155,9 @@ class Backups:
                 if d in subdirs:
                     subdirs.remove(d)
             for filename in files:
-                os.remove(os.path.join(dirname, filename))
+                if filename not in CODE_FILES_TO_IGNORE:
+                    os.remove(os.path.join(dirname, filename))
         return True
-
 
     def restore_code(self, _folder):
         """
