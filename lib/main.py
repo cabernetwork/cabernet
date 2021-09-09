@@ -40,7 +40,7 @@ from lib.common.pickling import Pickling
 from lib.schedule.scheduler import Scheduler
 from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
-
+import lib.updater.patcher as patcher
 
 try:
     import pip
@@ -99,8 +99,6 @@ def main(script_dir):
 
     # Gather args
     args = get_args()
-    if args.restart:
-        time.sleep(0.01)
 
     # Get Operating system
     opersystem = platform.system()
@@ -115,6 +113,10 @@ def main(script_dir):
         LOGGER.warning('#########################################')
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
         LOGGER.info('Initiating Cabernet v{}'.format(utils.get_version_str()))
+
+        if args.restart:
+            patcher.patch_upgrade(config, utils.VERSION)
+            time.sleep(0.01)
 
         utils.cleanup_web_temp(config)
         plugins = init_plugins(config_obj)
