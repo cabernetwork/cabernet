@@ -34,7 +34,7 @@ import time
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.1.8'
+VERSION = '0.9.2.0'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0'
@@ -108,6 +108,17 @@ def date_obj_parse(date_obj, format_str):
         return date_obj
     dt_str = str(date_obj.strftime(format_str))
     return dt_str
+
+def is_time_between(begin_time, end_time, check_time=None):
+    """
+    Check if current GMT time is between 10:30a and 4:30p
+    EX: is_time_between(time(10,30), time(16,30))
+    """
+    check_time = check_time or datetime.datetime.utcnow().time()
+    if begin_time < end_time:
+        return check_time >= begin_time and check_time <= end_time
+    else: # crosses midnight
+        return check_time >= begin_time or check_time <= end_time
 
 
 def is_file_expired(filepath, days=0, hours=0):

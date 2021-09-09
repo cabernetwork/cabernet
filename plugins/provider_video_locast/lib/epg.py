@@ -19,7 +19,6 @@ substantial portions of the Software.
 
 import datetime
 import json
-import logging
 import urllib.request
 
 import lib.common.exceptions as exceptions
@@ -27,65 +26,18 @@ import lib.common.utils as utils
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.db.db_epg import DBepg
+from lib.plugins.plugin_epg import PluginEPG
 
 from . import constants
 
 
-class EPG:
-    logger = None
+class EPG(PluginEPG):
 
-    def __init__(self, _locast_instance):
-        self.locast_instance = _locast_instance
-        self.instance = _locast_instance.instance
-        self.db = DBepg(self.locast_instance.config_obj.data)
-        self.config_section = _locast_instance.config_section
-        self.episode_adj = int(self.locast_instance.config_obj.data \
-            [self.locast_instance.config_section]['epg-episode_adjustment'])
+    def __init__(self, _instance_obj):
+        super().__init__(_instance_obj)
         if self.locast_instance.location.has_dma_changed:
             self.db.del_instance(
-                self.locast_instance.locast.name, self.instance)
-
-    def refresh_epg(self):
-        if not self.is_refresh_expired():
-            self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.locast_instance.locast.name, self.instance))
-            return
-        if not self.locast_instance.config_obj.data[self.locast_instance.config_section]['epg-enabled']:
-            self.logger.debug('EPG collection not enabled for {} {}'
-                .format(self.locast_instance.locast.name, self.instance))
-            return
-        forced_dates, aging_dates = self.dates_to_pull()
-        self.db.del_old_programs(self.locast_instance.locast.name, self.instance)
-        for epg_day in forced_dates:
-            self.refresh_programs(epg_day, False)
-        for epg_day in aging_dates:
-            self.refresh_programs(epg_day, True)
-
-    def is_refresh_expired(self):
-        """
-        Makes it so the minimum epg update rate
-        can only occur based on epg_min_refresh_rate
-        """
-        checking_date = datetime.date.today()
-        last_update = self.db.get_last_update(self.locast_instance.locast.name, self.instance, checking_date)
-        if not last_update:
-            return True
-        expired_date = datetime.datetime.now() - datetime.timedelta(
-            seconds=self.locast_instance.config_obj.data[
-                self.locast_instance.locast.name.lower()]['epg-min_refresh_rate'])
-        if last_update < expired_date:
-            return True
-        return False
-
-    def dates_to_pull(self):
-        todaydate = datetime.date.today()
-        forced_days = []
-        aging_days = []
-        for x in range(0, self.locast_instance.config_obj.data[self.locast_instance.locast.name.lower()]['epg-days']):
-            if x < self.locast_instance.config_obj.data[self.locast_instance.locast.name.lower()]['epg-days_start_refresh']:
-                forced_days.append(todaydate + datetime.timedelta(days=x))
-            else:
-                aging_days.append(todaydate + datetime.timedelta(days=x))
-        return forced_days, aging_days
+                self.locast_instance.plugin_obj.name, self.instance_key)
 
     @handle_json_except
     @handle_url_except
@@ -97,7 +49,7 @@ class EPG:
         with urllib.request.urlopen(req) as resp:
             results = json.load(resp)
         if len(results) == 0:
-            self.logger.warning('Locast HTTP EPG Request Failed for instance {}'.format(self.instance))
+            self.logger.warning('Locast HTTP EPG Request Failed for instance {}'.format(self.instance_key))
             raise exceptions.CabernetException('Locast HTTP EPG Request Failed')
         
         if len(results[0]['listings']) == 0:
@@ -108,12 +60,12 @@ class EPG:
 
     def refresh_programs(self, _day, use_cache):
         if use_cache:
-            last_update = self.db.get_last_update(self.locast_instance.locast.name, self.instance, _day)
+            last_update = self.db.get_last_update(self.locast_instance.plugin_obj.name, self.instance_key, _day)
             if last_update:
                 todaydate = datetime.datetime.now()
                 use_cache_after = todaydate - datetime.timedelta(
                     days=self.locast_instance.config_obj.data[
-                        self.locast_instance.locast.name.lower()]['epg-days_aging_refresh'])
+                        self.locast_instance.plugin_obj.name.lower()]['epg-days_aging_refresh'])
                 if last_update > use_cache_after:
                     return
 
@@ -126,9 +78,9 @@ class EPG:
                     program_list.append(program_json)
 
             # push the update to the database
-            self.db.save_program_list(self.locast_instance.locast.name, self.instance, _day, program_list)
-            self.logger.debug('Refreshing EPG data for {}:{} day:{}'
-                .format(self.locast_instance.locast.name, self.instance, _day))
+            self.db.save_program_list(self.locast_instance.plugin_obj.name, self.instance_key, _day, program_list)
+            self.logger.debug('Refreshed EPG data for {}:{} day:{}'
+                .format(self.locast_instance.plugin_obj.name, self.instance_key, _day))
 
     def get_program(self, _program_data):
         # https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd
@@ -280,6 +232,3 @@ class EPG:
             'season': season, 'episode': episode, 'se_common': se_common, 'se_xmltv_ns': se_xmltv_ns,
             'se_progid': se_prog_id}
         return json_result
-
-
-EPG.logger = logging.getLogger(__name__)

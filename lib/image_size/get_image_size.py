@@ -408,7 +408,7 @@ def main(argv=None):
 
     if len(args) < 1:
         prs.print_help()
-        print('')
+        print('\n')
         prs.error("You must specify one or more paths to image files")
 
     errors = []

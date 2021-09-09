@@ -37,7 +37,7 @@ def playlist(_webserver):
 
 @getrequest.route('/channels.m3u')
 def channels_m3u(_webserver):
-    _webserver.plugins.refresh_channels(_webserver.query_data['name'])
+    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'audio/x-mpegurl', get_channels_m3u(
         _webserver.config, _webserver.stream_url, 
         _webserver.query_data['name'], 
@@ -46,7 +46,7 @@ def channels_m3u(_webserver):
 
 @getrequest.route('/lineup.xml')
 def lineup_xml(_webserver):
-    _webserver.plugins.refresh_channels(_webserver.query_data['name'])
+    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'application/xml', get_channels_xml(
         _webserver.config, _webserver.stream_url, _webserver.query_data['name'], 
         _webserver.query_data['instance']))
@@ -54,7 +54,7 @@ def lineup_xml(_webserver):
 
 @getrequest.route('/lineup.json')
 def lineup_json(_webserver):
-    _webserver.plugins.refresh_channels(_webserver.query_data['name'])
+    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'application/json', get_channels_json(
         _webserver.config, _webserver.stream_url, _webserver.query_data['name'], 
         _webserver.query_data['instance']))
@@ -80,6 +80,13 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
+            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            if stream == 'm3u8redirect':
+                uri = sid_data['json']['stream_url']
+            else:
+                uri = '{}{}/{}/watch/{}'.format(
+                        'http://', _base_url, sid_data['namespace'], str(sid))
+                        
             # NOTE tvheadend supports '|' separated names in two attributes
             # either 'group-title' or 'tvh-tags'
             # if a ';' is used in group-title, tvheadend will use the 
@@ -113,8 +120,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
             fakefile.write(
                 '%s\n' % (
                     (
-                        '%s%s/%s/watch/%s' %
-                        ('http://', _base_url, sid_data['namespace'], str(sid))
+                        uri
                     )
                 )
             )
@@ -125,7 +131,6 @@ def get_channels_json(_config, _base_url, _namespace, _instance):
     db = DBChannels(_config)
     ch_data = db.get_channels(_namespace, _instance)
     return_json = ''
-
     sids_processed = []
     for sid, sid_data_list in ch_data.items():
         for sid_data in sid_data_list:
@@ -134,6 +139,11 @@ def get_channels_json(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
+            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            if stream == 'm3u8redirect':
+                uri = sid_data['json']['stream_url']
+            else:
+                uri = _base_url + '/' + sid_data['namespace'] + '/watch/' + sid
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'], 
                 sid_data['instance'], _config)
@@ -141,7 +151,7 @@ def get_channels_json(_config, _base_url, _namespace, _instance):
                 ch_templates['jsonLineup'].format(
                     updated_chnum,
                     sid_data['display_name'],
-                    _base_url + '/' + sid_data['namespace'] + '/watch/' + sid,
+                    uri,
                     sid_data['json']['HD'])
             return_json = return_json + ','
     return "[" + return_json[:-1] + "]"
@@ -159,6 +169,11 @@ def get_channels_xml(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
+            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            if stream == 'm3u8redirect':
+                uri = sid_data['json']['stream_url']
+            else:
+                uri = _base_url + '/' + sid_data['namespace'] + '/watch/' + sid
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'], 
                 sid_data['instance'], _config)
@@ -166,7 +181,7 @@ def get_channels_xml(_config, _base_url, _namespace, _instance):
                 ch_templates['xmlLineup'].format(
                     updated_chnum,
                     escape(sid_data['display_name']),
-                    _base_url + '/' + sid_data['namespace'] + '/watch/' + sid,
+                    uri,
                     sid_data['json']['HD'])
     return "<Lineup>" + return_xml + "</Lineup>"
 

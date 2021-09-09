@@ -27,10 +27,12 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 
 import lib.m3u8 as m3u8
+from lib.streams.video import Video
+from lib.db.db_config_defn import DBConfigDefn
+from lib.db.db_channels import DBChannels
 from lib.common.atsc import ATSCMsg
 from .stream import Stream
 from .pts_validation import PTSValidation
-from lib.db.db_config_defn import DBConfigDefn
 
 
 class InternalProxy(Stream):
@@ -42,11 +44,16 @@ class InternalProxy(Stream):
         self.file_filter = None
         self.pts_validation = None
         self.duration = 6
+        self.last_ts_index = -1
         super().__init__(_plugins, _hdhr_queue)
         self.config = self.plugins.config_obj.data
         self.db_configdefn = DBConfigDefn(self.config)
+        self.db_channels = DBChannels(self.config)
+        self.video = Video(self.config)
+        self.atsc_msg = ATSCMsg()
+        self.initialized_psi = False
 
-    def stream_direct(self, _channel_dict, _write_buffer):
+    def stream(self, _channel_dict, _write_buffer):
         """
         Processes m3u8 interface without using ffmpeg
         """
@@ -54,7 +61,7 @@ class InternalProxy(Stream):
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         duration = 6
-        play_queue = OrderedDict()
+        play_queue_dict = OrderedDict()
         self.last_refresh = time.time()
         stream_uri = self.get_stream_uri(_channel_dict)
         if not stream_uri:
@@ -88,8 +95,8 @@ class InternalProxy(Stream):
                         i -= 1
                 if i < 1:
                     break
-                removed += self.remove_from_stream_queue(playlist, play_queue)
-                added += self.add_to_stream_queue(playlist, play_queue)
+                removed += self.remove_from_stream_queue(playlist, play_queue_dict)
+                added += self.add_to_stream_queue(playlist, play_queue_dict)
                 if added == 0 and duration > 0:
                     time.sleep(duration * 0.3)
                 elif self.plugins.plugins[_channel_dict['namespace']].plugin_obj \
@@ -97,7 +104,7 @@ class InternalProxy(Stream):
                     stream_uri = self.get_stream_uri(_channel_dict)
                     self.logger.debug('M3U8: {}'.format(stream_uri))
                     self.last_refresh = time.time()
-                self.play_queue(play_queue)
+                self.play_queue(play_queue_dict)
             except IOError as e:
                 # Check we hit a broken pipe when trying to write back to the client
                 if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
@@ -109,7 +116,8 @@ class InternalProxy(Stream):
                         '3 UNEXPECTED EXCEPTION=', e))
                     raise
 
-    def add_to_stream_queue(self, _playlist, _play_queue):
+
+    def add_to_stream_queue(self, _playlist, _play_queue_dict):
         total_added = 0
         if _playlist.keys != [None]:
             keys = [{"uri": key.absolute_uri, "method": key.method, "iv": key.iv} \
@@ -119,14 +127,17 @@ class InternalProxy(Stream):
             
         for m3u8_segment, key in zip(_playlist.segments, keys):
             uri = m3u8_segment.absolute_uri
-            if uri not in _play_queue:
+            if uri not in _play_queue_dict.keys():
                 played = False
+                filtered = False
                 if self.file_filter is not None:
                     m = self.file_filter.match(uri)
                     if m:
-                        played = True
-                _play_queue[uri] = {
+                        filtered = True
+                _play_queue_dict[uri] = {
+                    'uid': self.channel_dict['uid'],
                     'played': played,
+                    'filtered': filtered,
                     'duration': m3u8_segment.duration,
                     'key': key
                 }
@@ -134,9 +145,9 @@ class InternalProxy(Stream):
                 total_added += 1
         return total_added
 
-    def remove_from_stream_queue(self, _playlist, _play_queue):
+    def remove_from_stream_queue(self, _playlist, _play_queue_dict):
         total_removed = 0
-        for segment_key in list(_play_queue.keys()):
+        for segment_key in list(_play_queue_dict.keys()):
             is_found = False
             for segment_m3u8 in _playlist.segments:
                 uri = segment_m3u8.absolute_uri
@@ -144,7 +155,7 @@ class InternalProxy(Stream):
                     is_found = True
                     break
             if not is_found:
-                del _play_queue[segment_key]
+                del _play_queue_dict[segment_key]
                 total_removed += 1
                 self.logger.debug(f"Removed {segment_key} from play queue")
                 continue
@@ -152,25 +163,40 @@ class InternalProxy(Stream):
                 break
         return total_removed
 
-    def play_queue(self, _play_queue):
-        for uri, data in _play_queue.items():
-            if not data["played"]:
+    def play_queue(self, _play_queue_dict):
+        for uri, data in _play_queue_dict.items():
+            if data['filtered'] and not data['played']:
+                if self.channel_dict['atsc'] is not None:
+                    self.write_buffer.write(
+                        self.atsc_msg.format_video_packets(self.channel_dict['atsc']))
+                else:
+                    self.logger.info(''.join([
+                        'No ATSC msg available during filtered content, ',
+                        'recommend running this channel again to catch the ATSC msg.']))
+                    self.write_buffer.write(
+                        self.atsc_msg.format_video_packets())
+                time.sleep(0.3 * self.duration)
+                data['played'] = True
+            elif not data['played']:
+                data['played'] = True
                 start_download = datetime.datetime.utcnow()
-                chunk = None
+                self.video.data = None
                 count = 5
                 while count > 0:
                     count -= 1
                     try:
                         req = urllib.request.Request(uri)
                         with urllib.request.urlopen(req) as resp:
-                            chunk = resp.read()
+                            self.video.data = resp.read()
                             break
                     except http.client.IncompleteRead as e:
-                        self.logger.info('Provider gave partial stream, trying again. {}'.format(e, len(e.partial)))
-                        chunk = e.partial
+                        self.logger.info('Provider gave partial stream, trying again. {}'
+                            .format(e, len(e.partial)))
+                        self.video.data = e.partial
                         time.sleep(1.5)
-                data['played'] = True
-                if not chunk:
+                    except urllib.error.URLError as e:
+                        self.logger.info('HTTP Error, trying again. {}'.format(e))
+                if not self.video.data:
                     self.logger.warning(f"Segment {uri} not available. Skipping..")
                     continue
 
@@ -190,32 +216,52 @@ class InternalProxy(Stream):
                                     iv = bytearray.fromhex(data["key"]["iv"])
                                 cipher = Cipher(algorithms.AES(key_data), modes.CBC(iv), default_backend())
                                 decryptor = cipher.decryptor()
-                                chunk = decryptor.update(chunk)
+                                self.video.data = decryptor.update(self.video.data)
                             break
                         except urllib.error.URLError as e:
                             self.logger.info('Key Exception caught, retrying: {}'.format(e))
                             i -= 1
                             time.sleep(1)
-                if not self.is_pts_valid(chunk):
+                if not self.is_pts_valid():
                     continue
                 
-                atsc_msg = ATSCMsg()
-                chunk_updated = atsc_msg.update_sdt_names(chunk[:80], self.channel_dict['namespace'].encode(),
+                chunk_updated = self.atsc_msg.update_sdt_names(self.video.data[:80], 
+                    self.channel_dict['namespace'].encode(),
                     self.set_service_name(self.channel_dict).encode())
-                chunk = chunk_updated + chunk[80:]
+                if self.channel_dict['atsc'] is None:
+                    self.initialized_psi = True
+                    p_list = self.atsc_msg.extract_psip(self.video.data)
+                    if len(p_list) != 0:
+                        self.channel_dict['atsc'] = p_list
+                        self.db_channels.update_channel_atsc(
+                            self.channel_dict)
+                elif not self.initialized_psi:
+                    self.initialized_psi = True
+                    p_list = self.atsc_msg.extract_psip(self.video.data)
+                    for i in range(len(p_list)):
+                        if p_list[i][4:] != self.channel_dict['atsc'][i][4:]:
+                            self.channel_dict['atsc'] = p_list
+                            self.db_channels.update_channel_atsc(
+                                self.channel_dict)
+                            break
+                
+                self.video.data = chunk_updated + self.video.data[80:]
                 self.duration = data['duration']
                 runtime = (datetime.datetime.utcnow() - start_download).total_seconds()
                 target_diff = 0.3 * self.duration
                 wait = target_diff - runtime
-                self.logger.info(f"Serving {uri} ({self.duration}s) ({len(chunk)}B)")
-                self.write_buffer.write(chunk)
+                self.check_ts_counter(uri)
+                self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
+                self.write_buffer.write(self.video.data)
                 if wait > 0:
                     time.sleep(wait)
+        self.video.terminate()
 
-    def is_pts_valid(self, video_data):
+    def is_pts_valid(self):
         if not self.config[self.channel_dict['namespace'].lower()]['player-enable_pts_filter']:
             return True
-        results = self.pts_validation.check_pts(video_data)
+        before = len(self.video.data)
+        results = self.pts_validation.check_pts(self.video)
         if results['byteoffset'] != 0:
             return False
         if results['refresh_stream']:
@@ -223,3 +269,21 @@ class InternalProxy(Stream):
         if results['reread_buffer']:
             return False
         return True
+
+    def get_ts_counter(self, _uri):
+        r = re.compile( r'(\d+)\.ts' )
+        m = r.findall(_uri)
+        if len(m) == 0:
+            return 0
+        else:
+            return int(m[len(m)-1])
+
+    def check_ts_counter(self, _uri):
+        ts_counter = self.get_ts_counter(_uri)
+        if ts_counter-1 != self.last_ts_index:
+            if self.last_ts_index != -1:
+                self.logger.info('TC Counter Discontinuity {} vs {} next uri: {}' \
+                    .format(self.last_ts_index, ts_counter, _uri))
+        self.last_ts_index = ts_counter
+
+

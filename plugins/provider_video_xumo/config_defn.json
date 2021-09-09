@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "plutotv":{
-                "label": "PlutoTV",
-                "sort": "PlutoTV1",
+            "xumo":{
+                "label": "XUMO",
+                "sort": "XUMO1",
                 "icon": "cast",
-                "description": "Settings for PlutoTV",
+                "description": "Settings for XUMO",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -18,37 +18,35 @@
                         "level": 1,
                         "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
                     },
-                    "program_thumbnail":{
-                        "label": "Program Thumbnail",
-                        "type": "list",
-                        "default": "featuredImage",
-                        "values": ["featuredImage", "poster", "thumbnail"],
-                        "level": 1,
-                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                    "geoid": {
+                        "label": "geoId",
+                        "type": "string",
+                        "default": null,
+                        "level": 4,
+                        "writable": false,
+                        "help": "Set by XUMO"
                     },
-                    "channel-thumbnail":{
-                        "label": "Channel Thumbnail",
-                        "type": "list",
-                        "default": "colorLogoPNG",
-                        "values": ["colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
-                            "solidLogoPNG", "thumbnail", "logo",
-                            "featuredImage"],
-                        "level": 1,
-                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                    "channelListId": {
+                        "label": "channelListId",
+                        "type": "string",
+                        "default": null,
+                        "level": 4,
+                        "writable": false,
+                        "help": "Set by XUMO"
                     },
                     "channel-update_timeout":{
                         "label": "Channel Update Timeout",
                         "type": "integer",
                         "default": 23,
                         "level": 3,
-                        "help": "Default pulls channel data from PlutoTV in hours"
+                        "help": "Default pulls channel data from provider in hours"
                     },
                     "channel-import_groups":{
                         "label": "Import Channel Groups",
                         "type": "boolean",
                         "default": true,
                         "level": 1,
-                        "help": "Imports groups from PlutoTV into the group other column"
+                        "help": "Imports groups from provider into the group other column"
                     },
                     "player-tuner_count":{
                         "label": "tuner_count",
@@ -65,6 +63,7 @@
                         "level": 1,
                         "help": "M3U8 send m3u8 file directly to client.  ffmpeg uses ffmpeg for m3u8 urls. streamlink uses the python module streamlink. internal uses internally coded modules."
                     },
+
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
                         "type": "boolean",
@@ -75,7 +74,7 @@
                     "player-url_filter":{
                         "label": "URL Filter",
                         "type": "string",
-                        "default": "^.*(_ad/|google.com|Pluto_TV_OandO).*$",
+                        "default": null,
                         "level": 3,
                         "help": "Only used with stream_type=internalproxy"
                     },
@@ -99,13 +98,6 @@
                         "default": 3000000,
                         "level": 3,
                         "help": "Used for PTS Filtering"
-                    },
-                    "epg-hours":{
-                        "label": "EPG Hours to Pull",
-                        "type": "integer",
-                        "default": 14,
-                        "level": 3,
-                        "help": "PlutoTV max is 14 hours including 2 hours in the past."
                     },
                     "epg-min_refresh_rate":{
                         "label": "EPG Min Refresh Rate",

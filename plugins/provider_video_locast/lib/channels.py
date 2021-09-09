@@ -16,9 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import json
-import logging
 import urllib.request
 
 import lib.m3u8 as m3u8
@@ -27,63 +25,42 @@ from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.db.db_channels import DBChannels
 import lib.clients.channels.channels as channels
+from lib.plugins.plugin_channels import PluginChannels
 
 from . import constants
 # from .fcc_data import FCCData
 
 
-class Channels:
-    logger = None
+class Channels(PluginChannels):
 
-    def __init__(self, _locast_instance):
-        self.locast_instance = _locast_instance
-        self.locast = _locast_instance.locast
-        self.instance = _locast_instance.instance
-        self.db = DBChannels(self.locast_instance.config_obj.data)
-        self.config_section = self.locast_instance.config_section
-        if self.locast_instance.location.has_dma_changed:
+    def __init__(self, _instance_obj):
+        super().__init__(_instance_obj)
+        if self.instance_obj.location.has_dma_changed:
             self.db.del_channels( 
-                self.locast.name, self.instance)
+                self.plugin_obj.name, self.instance_key)
             self.db.del_status( 
-                self.locast.name, self.instance)
-
-    def refresh_channels(self, force=False):
-        last_update = self.db.get_status(self.locast.name, self.instance)
-        update_needed = False
-        if not last_update:
-            update_needed = True
-        else:
-            delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.locast_instance.config_obj.data[self.locast.name.lower()]['channel_update_timeout']:
-                update_needed = True
-        if update_needed or force:
-            ch_dict = self.get_locast_channels()
-            self.db.save_channel_list(self.locast.name, self.instance, ch_dict)
-        else:
-            self.logger.debug('Channel data still new for {} {}, not refreshing'.format(self.locast.name, self.instance))
-
-
+                self.plugin_obj.name, self.instance_key)
 
     @handle_json_except
     @handle_url_except
     def get_locast_channels(self):
         channels_url = 'https://api.locastnet.org/api/watch/epg/{}' \
-            .format(self.locast_instance.location.dma)
+            .format(self.instance_obj.location.dma)
         url_headers = {
             'Content-Type': 'application/json',
-            'authorization': 'Bearer {}'.format(self.locast_instance.token),
+            'authorization': 'Bearer {}'.format(self.instance_obj.token),
             'User-agent': constants.DEFAULT_USER_AGENT}
         req = urllib.request.Request(channels_url, headers=url_headers)
         with urllib.request.urlopen(req) as resp:
             ch_json = json.load(resp)
         ch_list = []
         if len(ch_json) == 0:
-            self.logger.warning('Locast HTTP Channel Request Failed for instance {}'.format(self.instance))
+            self.logger.warning('Locast HTTP Channel Request Failed for instance {}'.format(self.instance_key))
             raise exceptions.CabernetException('Locast HTTP Channel Request Failed')
 
         self.logger.info("{}: Found {} stations for DMA {} on instance {}"
-            .format(self.locast.name, len(ch_json),
-            str(self.locast_instance.location.dma), self.instance))
+            .format(self.plugin_obj.name, len(ch_json),
+            str(self.instance_obj.location.dma), self.instance_key))
 
         for locast_channel in ch_json:
             hd = 0
@@ -117,8 +94,8 @@ class Channels:
                     'number': channel,
                     'name': friendly_name,
                     'HD': hd,
-                    'group_hdtv': self.locast_instance.config_obj.data[self.config_section]['m3u-group_hdtv'],
-                    'group_sdtv': self.locast_instance.config_obj.data[self.config_section]['m3u-group_sdtv'],
+                    'group_hdtv': self.instance_obj.config_obj.data[self.config_section]['m3u-group_hdtv'],
+                    'group_sdtv': self.instance_obj.config_obj.data[self.config_section]['m3u-group_sdtv'],
                     'groups_other': None,  # array list of groups/categories
                     'thumbnail': thumbnail,
                     'thumbnail_size': thumbnail_size
@@ -133,14 +110,14 @@ class Channels:
     @handle_json_except
     @handle_url_except
     def get_channel_uri(self, _channel_id):
-        self.logger.info(self.locast.name + ": Getting station info for " + _channel_id)
+        self.logger.info(self.plugin_obj.name + ": Getting station info for " + _channel_id)
         stream_url = ''.join([
             'https://api.locastnet.org/api/watch/station/',
             str(_channel_id), '/',
-            self.locast_instance.location.latitude, '/',
-            self.locast_instance.location.longitude])
+            self.instance_obj.location.latitude, '/',
+            self.instance_obj.location.longitude])
         stream_headers = {'Content-Type': 'application/json',
-            'authorization': 'Bearer ' + self.locast_instance.token,
+            'authorization': 'Bearer ' + self.instance_obj.token,
             'User-agent': constants.DEFAULT_USER_AGENT}
         req = urllib.request.Request(stream_url, headers=stream_headers)
         with urllib.request.urlopen(req) as resp:
@@ -150,7 +127,7 @@ class Channels:
 
         # find the heighest stream url resolution and save it to the list
         videoUrlM3u = m3u8.load(stream_result['streamUrl'],
-            headers={'authorization': 'Bearer ' + self.locast_instance.token,
+            headers={'authorization': 'Bearer ' + self.instance_obj.token,
                 'User-agent': constants.DEFAULT_USER_AGENT})
         self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
 
@@ -158,7 +135,6 @@ class Channels:
             for videoStream in videoUrlM3u.playlists:
                 if bestStream is None:
                     bestStream = videoStream
-
                 elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
                       (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
                     bestStream = videoStream
@@ -181,4 +157,3 @@ class Channels:
             return stream_result['streamUrl']
 
 
-Channels.logger = logging.getLogger(__name__)

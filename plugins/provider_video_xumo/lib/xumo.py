@@ -23,17 +23,18 @@ import urllib.request
 
 from lib.plugins.plugin_obj import PluginObj
 
-from .plutotv_instance import PlutoTVInstance
+from .geo import Geo
+from .xumo_instance import XUMOInstance
 
 
-class PlutoTV(PluginObj):
+class XUMO(PluginObj):
 
     def __init__(self, _plugin):
         super().__init__(_plugin)
-        if not self.config_obj.data[_plugin.name.lower()]['enabled']:
-            return
+        self.geo = Geo(_plugin.config_obj, self.namespace.lower())
+        
         for inst in _plugin.instances:
-            self.instances[inst] = PlutoTVInstance(self, inst)
+            self.instances[inst] = XUMOInstance(self, inst)
 
     def refresh_channels_ext(self, _instance=None):
         """
@@ -41,7 +42,7 @@ class PlutoTV(PluginObj):
         All tasks are namespace based so instance is ignored. 
         This calls the scheduler to run the task.
         """
-        self.refresh_obj('Channels', 'Refresh PlutoTV Channels')
+        self.refresh_obj('Channels', 'Refresh XUMO Channels')
 
     def refresh_epg_ext(self, _instance=None):
         """
@@ -49,7 +50,7 @@ class PlutoTV(PluginObj):
         All tasks are namespace based so instance is ignored.
         This calls the scheduler to run the task.
         """
-        self.refresh_obj('EPG', 'Refresh PlutoTV EPG')
+        self.refresh_obj('EPG', 'Refresh XUMO EPG')
 
     def get_channel_uri_ext(self, sid, _instance=None):
         """
@@ -64,49 +65,52 @@ class PlutoTV(PluginObj):
         be refreshed.
         Called from stream object.
         """
-        return False
-        
+        return self.instances[_instance].is_time_to_refresh(_last_refresh)
+
     def scheduler_tasks(self):
+        sched_epg_hours = self.utc_to_local_time(0)
+        sched_epg_mins = random.randint(1,55)
+        sched_epg = '{:0>2d}:{:0>2d}'.format(sched_epg_hours, sched_epg_mins)
         sched_ch_hours = self.utc_to_local_time(23)
         sched_ch_mins = random.randint(1,55)
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
-        if self.scheduler_db.save_task(
-                'Channels',
-                'Refresh PlutoTV Channels',
-                self.name,
-                None,
-                'refresh_channels',
-                20,
-                'inline',
-                'Pulls channel lineup from PlutoTV'
-                ):
-            self.scheduler_db.save_trigger(
-                'Channels',
-                'Refresh PlutoTV Channels',
-                'startup')
-            self.scheduler_db.save_trigger(
-                'Channels',
-                'Refresh PlutoTV Channels',
-                'daily',
-                timeofday=sched_ch
-                )
-        if self.scheduler_db.save_task(
-                'EPG',
-                'Refresh PlutoTV EPG',
-                self.name,
-                None,
-                'refresh_epg',
-                10,
-                'thread',
-                'Pulls channel program data from PlutoTV'
-                ):
-            self.scheduler_db.save_trigger(
-                'EPG',
-                'Refresh PlutoTV EPG',
-                'startup')
-            self.scheduler_db.save_trigger(
-                'EPG',
-                'Refresh PlutoTV EPG',
-                'interval',
-                interval=120
-                )
+        # if self.scheduler_db.save_task(
+                # 'Channels',
+                # 'Refresh XUMO Channels',
+                # self.name,
+                # None,
+                # 'refresh_channels',
+                # 20,
+                # 'inline',
+                # 'Pulls channel lineup from XUMO'
+                # ):
+            # self.scheduler_db.save_trigger(
+                # 'Channels',
+                # 'Refresh XUMO Channels',
+                # 'startup')
+            # self.scheduler_db.save_trigger(
+                # 'Channels',
+                # 'Refresh XUMO Channels',
+                # 'daily',
+                # timeofday=sched_ch
+                # )
+        # if self.scheduler_db.save_task(
+                # 'EPG',
+                # 'Refresh XUMO EPG',
+                # self.name,
+                # None,
+                # 'refresh_epg',
+                # 10,
+                # 'thread',
+                # 'Pulls channel program data from XUMO'
+                # ):
+            # self.scheduler_db.save_trigger(
+                # 'EPG',
+                # 'Refresh XUMO EPG',
+                # 'startup')
+            # self.scheduler_db.save_trigger(
+                # 'EPG',
+                # 'Refresh XUMO EPG',
+                # 'daily',
+                # timeofday=sched_epg
+                # )

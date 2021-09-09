@@ -16,7 +16,14 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import datetime
 import logging
+import time
+import urllib.request
+
+import lib.common.exceptions as exceptions
+from lib.db.db_scheduler import DBScheduler
+
 
 class PluginObj:
 
@@ -25,14 +32,31 @@ class PluginObj:
     def __init__(self, _plugin):
         if PluginObj.logger is None:
             PluginObj.logger = logging.getLogger(__name__)
+        self.plugin = _plugin
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.instances = {}
+        self.scheduler_db = DBScheduler(self.config_obj.data)
+        self.scheduler_tasks()
+        self.enabled = True
 
     # Plugin may have the following methods
     # used to interface to the app.
 
-
+    #def refresh_channels_ext(self, _instance=None):
+    """
+    External request to refresh channels. Called from the plugin manager.
+    All tasks are namespace based so instance is ignored. 
+    This calls the scheduler to run the task.
+    """
+    
+    #def refresh_epg_ext(self, _instance=None):
+    """
+    External request to refresh epg. Called from the plugin manager.
+    All tasks are namespace based so instance is ignored.
+    This calls the scheduler to run the task.
+    """
+    
     #def get_channel_uri_ext(self, sid, _instance=None):
     """
     Required for streaming
@@ -47,3 +71,88 @@ class PluginObj:
     should be called again.  Called from the 
     stream sub-classes object.  
     """
+
+    def scheduler_tasks(self):
+        """
+        dummy routine that will be overridden by subclass
+        """
+        pass
+
+    def refresh_obj(self, _topic, _task_name):
+        if not self.enabled:
+            self.logger.debug('{} Plugin disabled, not refreshing {}' \
+                .format(self.plugin.name, _topic))
+            return
+        self.web_admin_url = 'http://localhost:' + \
+            str(self.config_obj.data['web']['web_admin_port'])
+        task = self.scheduler_db.get_tasks(_topic, _task_name)[0]
+        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
+               .format(task['taskid']))
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req) as resp:
+            result = resp.read()
+
+        # wait for the last run to update indicating the task has completed.
+        while True:
+            task_status = self.scheduler_db.get_task(task['taskid'])
+            x = datetime.datetime.utcnow() - task_status['lastran']
+            # If updated in the last 20 minutes, then ignore
+            # Many media servers will request this multiple times.
+            if x.total_seconds() < 1200:
+                break
+            time.sleep(0.5)
+
+    def refresh_channels(self, _instance=None):
+        """
+        Called from the scheduler
+        """
+        self.refresh_it('Channels', _instance)
+
+    def refresh_epg(self, _instance=None):
+        """
+        Called from the scheduler
+        """
+        self.refresh_it('EPG', _instance)
+
+    def refresh_it(self, _what_to_refresh, _instance=None):
+        """
+        _what_to_refresh is either 'EPG' or 'Channels' for now
+        """
+        try:
+            if not self.enabled:
+                self.logger.debug('{} Plugin disabled, not refreshing {}' \
+                    .format(self.plugin.name, _what_to_refresh))
+                return
+            if _instance is None:
+                for key, instance in self.instances.items():
+                    if _what_to_refresh == 'EPG':
+                        instance.refresh_epg()
+                    elif _what_to_refresh == 'Channels':
+                        instance.refresh_channels()
+            else:
+                if _what_to_refresh == 'EPG':
+                    self.instances[_instance].refresh_epg()
+                elif _what_to_refresh == 'Channels':
+                    self.instances[_instance].refresh_channels()
+        except exceptions.CabernetException:
+            self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
+            self.enabled = False
+            self.plugin.enabled = False
+
+    def utc_to_local_time(self, _hours):
+        """
+        Used for scheduler on daily events
+        """
+        tz_delta = datetime.datetime.now() - datetime.datetime.utcnow()
+        tz_hours = round(tz_delta.total_seconds()/3610)
+        local_hours = tz_hours + _hours
+        if local_hours < 0:
+            local_hours += 24
+        elif local_hours > 23:
+            local_hours -= 24
+        return local_hours
+
+    @property
+    def name(self):
+        return self.namespace
+

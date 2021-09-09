@@ -318,6 +318,11 @@ class ChannelsFormHTML:
                 display_image = ''
                 image_size = 'UNK'
                 img_width = 0
+
+            if sid_data['json']['groups_other'] is None:
+                groups_other = ''
+            else:
+                groups_other = sid_data['json']['groups_other']
                 
             if sid_data['json']['thumbnail_size'] is not None:
                 original_size = sid_data['json']['thumbnail_size']
@@ -347,7 +352,9 @@ class ChannelsFormHTML:
                 'size=', str(image_size), '   original_size=', str(original_size),
                 '</td></tr></table></td>',
                 '<td style="text-align: center">', quality, ' ',
-                sid_data['json']['callsign'], ' ', sid, '</td>',
+                sid_data['json']['callsign'], ' ', sid, '<br>',
+                groups_other,
+                '</td>',
                 '</tr>'
                 ])
             table_html += row

@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "plutotv":{
-                "label": "PlutoTV",
-                "sort": "PlutoTV2",
+            "xumo":{
+                "label": "XUMO",
+                "sort": "XUMO2",
                 "icon": "cast_connected",
-                "description": "Settings for PlutoTV Instances",
+                "description": "Settings for XUMO Instances",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -53,21 +53,7 @@
                         "default": 0,
                         "values": [1000, 2000, 3000, 4000, 5000],
                         "level": 1,
-                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and PlutoTV at the same time."
-                    },
-                    "epg-start_adjustment":{
-                        "label": "Start Time Adjustment",
-                        "type": "integer",
-                        "default": 60,
-                        "level": 2,
-                        "help": "Used to start each program x seconds after the program is suppose to start."
-                    },
-                    "epg-end_adjustment":{
-                        "label": "End Time Adjustment",
-                        "type": "integer",
-                        "default": -60,
-                        "level": 2,
-                        "help": "Used to start each program x seconds before the program is suppose to end."
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and provider at the same time."
                     }
                 }
             }

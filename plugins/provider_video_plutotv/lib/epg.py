@@ -19,7 +19,6 @@ substantial portions of the Software.
 
 import datetime
 import json
-import logging
 import urllib.request
 
 import lib.common.exceptions as exceptions
@@ -27,48 +26,24 @@ import lib.common.utils as utils
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.db.db_epg import DBepg
+from lib.plugins.plugin_epg import PluginEPG
 
 from . import constants
 from .translations import plutotv_tv_genres
 
 
-class EPG:
-    logger = None
+class EPG(PluginEPG):
 
-    def __init__(self, _plutotv_instance):
-        self.plutotv_instance = _plutotv_instance
-        self.instance = _plutotv_instance.instance
-        self.db = DBepg(self.plutotv_instance.config_obj.data)
-        self.config_section = _plutotv_instance.config_section
-        self.episode_adj = int(self.plutotv_instance.config_obj.data \
-            [self.plutotv_instance.config_section]['epg-episode_adjustment'])
+    def __init__(self, _instance_obj):
+        super().__init__(_instance_obj)
 
-    def refresh_epg(self):
-        if not self.is_refresh_expired():
-            self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.plutotv_instance.plutotv.name, self.instance))
-            return
-        if not self.plutotv_instance.config_obj.data[self.plutotv_instance.config_section]['epg-enabled']:
-            self.logger.debug('EPG collection not enabled for {} {}'
-                .format(self.plutotv_instance.plutotv.name, self.instance))
-            return
-        self.db.del_old_programs(self.plutotv_instance.plutotv.name, self.instance)
-        self.refresh_programs()
-
-    def is_refresh_expired(self):
+    def dates_to_pull(self):
         """
-        Makes it so the minimum epg update rate
-        can only occur based on epg_min_refresh_rate
+        Since epg is less than one day, return a forced day item with no
+        aging items        
         """
-        checking_date = datetime.date.today()
-        last_update = self.db.get_last_update(self.plutotv_instance.plutotv.name, self.instance, checking_date)
-        if not last_update:
-            return True
-        expired_date = datetime.datetime.now() - datetime.timedelta(
-            seconds=self.plutotv_instance.config_obj.data[
-                self.plutotv_instance.plutotv.name.lower()]['epg-min_refresh_rate'])
-        if last_update < expired_date:
-            return True
-        return False
+        return [1], []
+
 
     @handle_json_except
     @handle_url_except
@@ -98,20 +73,23 @@ class EPG:
                 results[stime.date()] = json.load(resp)
         return results
 
-    def refresh_programs(self):
-        json_data = self.get_url_data()
-        for day, day_data in json_data.items():
-            program_list = []
-            for ch_data in day_data:
-                for listing_data in ch_data['timelines']:
-                    program_json = self.get_program(ch_data, listing_data)
-                    if program_json is not None:
-                        program_list.append(program_json)
+    def refresh_programs(self, _epg_day, use_cache=True):
+        try:
+            json_data = self.get_url_data()
+            for day, day_data in json_data.items():
+                program_list = []
+                for ch_data in day_data:
+                    for listing_data in ch_data['timelines']:
+                        program_json = self.get_program(ch_data, listing_data)
+                        if program_json is not None:
+                            program_list.append(program_json)
 
-            # push the update to the database
-            self.db.save_program_list(self.plutotv_instance.plutotv.name, self.instance, day, program_list)
-            self.logger.debug('Refreshing EPG data for {}:{} day {}'
-                .format(self.plutotv_instance.plutotv.name, self.instance, day))
+                # push the update to the database
+                self.db.save_program_list(self.plugin_obj.name, self.instance_key, day, program_list)
+                self.logger.debug('Refreshed EPG data for {}:{} day {}'
+                    .format(self.plugin_obj.name, self.instance_key, day))
+        except KeyError as e:
+            self.logger.info('Unable to update PlutoTV EPG, no timelines. {}'.format(e))
 
     def get_program(self, _ch_data, _program_data):
         # https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd
@@ -123,9 +101,13 @@ class EPG:
         dur_min = int(_program_data['episode']['duration'] / 60 / 1000)
 
         sid = str(_ch_data['_id'])
-        start_time = datetime.datetime.fromisoformat(_program_data['start'].replace('Z', '+00:00')).timestamp()
+        start_time = datetime.datetime.fromisoformat(_program_data['start'] \
+            .replace('Z', '+00:00')).timestamp() \
+            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment']
         start_time = utils.tm_local_parse(start_time * 1000)
-        end_time = datetime.datetime.fromisoformat(_program_data['stop'].replace('Z', '+00:00')).timestamp()
+        end_time = datetime.datetime.fromisoformat(_program_data['stop'] \
+            .replace('Z', '+00:00')).timestamp() \
+            + self.instance_obj.config_obj.data[self.config_section]['epg-end_adjustment']
         end_time = utils.tm_local_parse(end_time * 1000)
         title = _program_data['title']
         entity_type = None
@@ -152,7 +134,6 @@ class EPG:
         finale = False
         premiere = False
 
-
         if 'firstAired' in _program_data['episode'].keys():
             air_date_msec = datetime.datetime.fromisoformat(_program_data['episode']['firstAired'].replace('Z', '+00:00')).timestamp() * 1000
             air_date = utils.date_parse(air_date_msec, '%Y%m%d')
@@ -162,7 +143,7 @@ class EPG:
             formatted_date = None
 
         icon = None
-        icon_type = self.plutotv_instance.config_obj.data[self.plutotv_instance.plutotv.name.lower()]['program_thumbnail']
+        icon_type = self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['program_thumbnail']
         if icon_type == 'featuredImage' and \
             icon_type in _program_data['episode']['series'].keys():
                 icon = _program_data['episode']['series'][icon_type]['path']
@@ -182,7 +163,7 @@ class EPG:
             if _program_data['episode']['genre'] in plutotv_tv_genres:
                 genres = plutotv_tv_genres[_program_data['episode']['genre']]
             else:
-                self.logger.info('Missing plutotv genre translation for: {}' \
+                self.logger.info('Missing PlutoTV genre translation for: {}' \
                         .format(_program_data['episode']['genre']))
                 genres = [x.strip() for x in _program_data['episode']['genre'].split(' and ')]
         else:
@@ -248,5 +229,3 @@ class EPG:
             'se_progid': se_prog_id}
         return json_result
 
-
-EPG.logger = logging.getLogger(__name__)

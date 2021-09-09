@@ -80,6 +80,11 @@ sqlcmds = {
         SELECT * FROM epg WHERE
             namespace LIKE ? AND instance LIKE ? ORDER BY day
         """,
+    'epg_one_get':
+        """
+        SELECT * FROM epg WHERE
+            namespace=? AND instance=? AND day=?
+        """,
     'epg_name_get':
         """
         SELECT DISTINCT namespace FROM epg
@@ -140,6 +145,9 @@ class DBepg(DB):
 
     def get_epg_names(self):
         return self.get_dict(DB_EPG_TABLE + '_name')
+
+    def get_epg_one(self, _namespace, _instance, _day):
+        return self.get_dict(DB_EPG_TABLE + '_one', (_namespace, _instance, _day))
 
     def init_get_query(self, _namespace, _instance):
         if not _namespace:

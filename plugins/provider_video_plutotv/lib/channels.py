@@ -16,9 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import json
-import logging
 import urllib.request
 
 import lib.m3u8 as m3u8
@@ -27,38 +25,19 @@ from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.db.db_channels import DBChannels
 import lib.clients.channels.channels as channels
+from lib.plugins.plugin_channels import PluginChannels
 
 from . import constants
 from .translations import plutotv_groups
 
-class Channels:
-    logger = None
+class Channels(PluginChannels):
 
-    def __init__(self, _plutotv_instance):
-        self.plutotv_instance = _plutotv_instance
-        self.plutotv = _plutotv_instance.plutotv
-        self.instance = _plutotv_instance.instance
-        self.db = DBChannels(self.plutotv_instance.config_obj.data)
-        self.config_section = self.plutotv_instance.config_section
-
-    def refresh_channels(self, force=False):
-        last_update = self.db.get_status(self.plutotv.name, self.instance)
-        update_needed = False
-        if not last_update:
-            update_needed = True
-        else:
-            delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-update_timeout']:
-                update_needed = True
-        if update_needed or force:
-            ch_dict = self.get_plutotv_channels()
-            self.db.save_channel_list(self.plutotv.name, self.instance, ch_dict)
-        else:
-            self.logger.debug('Channel data still new for {} {}, not refreshing'.format(self.plutotv.name, self.instance))
+    def __init__(self, _instance_obj):
+        super().__init__(_instance_obj)
 
     @handle_json_except
     @handle_url_except
-    def get_plutotv_channels(self):
+    def get_channels(self):
         channels_url = 'https://api.pluto.tv/v2/channels.json'
         url_headers = {
             'Content-Type': 'application/json',
@@ -69,12 +48,12 @@ class Channels:
 
         ch_list = []
         if len(ch_json) == 0:
-            self.logger.warning('plutotv HTTP Channel Request Failed for instance {}'.format(self.instance))
-            raise exceptions.CabernetException('plutotv HTTP Channel Request Failed')
+            self.logger.warning('PlutoTV HTTP Channel Request Failed for instance {}'.format(self.instance_key))
+            raise exceptions.CabernetException('PlutoTV HTTP Channel Request Failed')
 
         self.logger.info("{}: Found {} stations on instance {}"
-            .format(self.plutotv.name, len(ch_json),
-            self.instance))
+            .format(self.plugin_obj.name, len(ch_json),
+            self.instance_key))
 
         counter=0
         for plutotv_channel in ch_json:
@@ -88,7 +67,7 @@ class Channels:
                 ch_callsign = plutotv_channel['name']
                 thumbnail = None
                 thumbnail_size = None
-                for tn in [self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-thumbnail'],
+                for tn in [self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['channel-thumbnail'],
                     "colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
                     "solidLogoPNG", "thumbnail", "logo", "featuredImage"]:
                     if tn in plutotv_channel.keys():
@@ -102,20 +81,17 @@ class Channels:
                     .replace('&deviceModel=', '&deviceModel=Chrome') \
                     .replace('&deviceType=', '&deviceType=web') \
                     .replace('&sid=', '&sid=' + \
-                    self.plutotv_instance.config_obj.data['main']['uuid'] + \
+                    self.instance_obj.config_obj.data['main']['uuid'] + \
                     str(counter))
                 counter += 1
                 channel = plutotv_channel['number']
                 friendly_name = plutotv_channel['name']
-                if self.plutotv_instance.config_obj.data[self.plutotv.name.lower()]['channel-import_groups']:
-                    if plutotv_channel['category'] in plutotv_groups:
-                        groups_other = plutotv_groups[plutotv_channel['category']]
-                    else:
-                        groups_other = [ plutotv_channel['category'] ]
-                        self.logger.info('Missing plutotv category translation for: {}' \
-                            .format(plutotv_channel['category']))
+                if plutotv_channel['category'] in plutotv_groups:
+                    groups_other = plutotv_groups[plutotv_channel['category']]
                 else:
-                    groups_other = None
+                    groups_other = [ plutotv_channel['category'] ]
+                    self.logger.info('Missing PlutoTV category translation for: {}' \
+                        .format(plutotv_channel['category']))
                 
                 channel = {
                     'id': ch_id,
@@ -137,7 +113,7 @@ class Channels:
     @handle_json_except
     @handle_url_except
     def get_channel_uri(self, _channel_id):
-        self.logger.info(self.plutotv.name + ": Getting station info for " + _channel_id)
+        self.logger.info(self.plugin_obj.name + ": Getting station info for " + _channel_id)
         ch_dict = self.db.get_channel(_channel_id, None, None)
         stream_url = ch_dict['json']['stream_url']
 
@@ -153,7 +129,7 @@ class Channels:
         # find the heighest stream url bandwidth and save it to the list
         videoUrlM3u = m3u8.load(stream_url,
             headers={'User-agent': constants.DEFAULT_USER_AGENT})
-        self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
+        self.logger.debug('Found ' + str(len(videoUrlM3u.playlists)) + ' Playlists')
 
         if len(videoUrlM3u.playlists) > 0:
             for videoStream in videoUrlM3u.playlists:
@@ -163,12 +139,10 @@ class Channels:
                     bestStream = videoStream
 
             if bestStream is not None:
-                self.logger.debug(_channel_id + " will use " +
-                    " bandwidth at " + str(bestStream.stream_info.bandwidth) + " bps")
+                self.logger.debug(_channel_id + ' will use ' +
+                    'bandwidth at ' + str(bestStream.stream_info.bandwidth) + ' bps')
                 return bestStream.absolute_uri
         else:
-            self.logger.debug("No variant streams found for this station.  Assuming single stream only.")
+            self.logger.debug('No variant streams found for this station.  Assuming single stream only.')
             return stream_url
 
-
-Channels.logger = logging.getLogger(__name__)

@@ -19,6 +19,7 @@ substantial portions of the Software.
 import json
 import logging
 import sys
+import socket
 import urllib
 import urllib.error
 from functools import update_wrapper
@@ -36,6 +37,11 @@ def handle_url_except(f):
             logger = logging.getLogger(f.__name__)
             logger.error("URLError in function {}(): {}".format(f.__name__, str(urlError)))
             return None
+        except socket.timeout as timeout:
+            logger = logging.getLogger(f.__name__)
+            logger.error("socket.timeout in function {}(): {}".format(f.__name__, str(timeout)))
+            return None
+            
     return update_wrapper(wrapper_func, f)
 
 

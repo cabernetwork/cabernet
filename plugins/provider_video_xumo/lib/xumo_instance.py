@@ -20,18 +20,18 @@ import logging
 
 import lib.common.utils as utils
 import lib.common.exceptions as exceptions
-from .channels import Channels
-from .epg import EPG
 from lib.plugins.plugin_instance_obj import PluginInstanceObj
 
+from .channels import Channels
+from .epg import EPG
 
-class PlutoTVInstance(PluginInstanceObj):
 
-    def __init__(self, _plutotv, _instance):
-        super().__init__(_plutotv, _instance)
-        self.config_obj = _plutotv.config_obj
+class XUMOInstance(PluginInstanceObj):
+
+    def __init__(self, _xumo, _instance):
+        super().__init__(_xumo, _instance)
         if not self.config_obj.data[self.config_section]['enabled']:
             return
+
         self.channels = Channels(self)
         self.epg = EPG(self)
-        

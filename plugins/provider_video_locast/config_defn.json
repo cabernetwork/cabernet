@@ -81,9 +81,9 @@
                         "label": "stream_type",
                         "type": "list",
                         "default": "internalproxy",
-                        "values": ["m3u8redirect", "ffmpegproxy", "internalproxy"],
+                        "values": ["m3u8redirect", "internalproxy", "streamlinkproxy", "ffmpegproxy"],
                         "level": 1,
-                        "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from Locast. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
+                        "help": "M3U8 send m3u8 file directly to client.  ffmpeg uses ffmpeg for m3u8 urls. streamlink uses the python module streamlink. internal uses internally coded modules."
                     },
                     "player-refresh_rate":{
                         "label": "refresh_rate",

@@ -19,6 +19,7 @@ substantial portions of the Software.
 import json
 import logging
 import subprocess
+import time
 
 
 class PTSValidation:
@@ -42,17 +43,17 @@ class PTSValidation:
         if PTSValidation.logger is None:
             PTSValidation.logger = logging.getLogger(__name__)
 
-    def check_pts(self, _video_data):
+    def check_pts(self, _video):
         """
         Checks the PTS in the video stream.  If a bad PTS packet is found, 
         it will update the video stream until the stream is valid.
         returns a dict containing 3 values
         byteoffset (if >0, then write the offset before continuing)
         refresh_stream (if True, then refresh the stream)
-        reread_buffer (if True, then drop current video_data and re-read buffer)
+        reread_buffer (if True, then drop current video.data and re-read buffer)
         The items should be processed in the order listed above
         """
-        self.pts_json = self.get_probe_results(_video_data)
+        self.pts_json = self.get_probe_results(_video)
         if self.pts_json is None:
             return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': False}
         pkt_len = self.check_for_video_pkts()
@@ -85,14 +86,12 @@ class PTSValidation:
         elif pts_data['last_pts'] < pts_minimum:
             self.logger.debug('RARE CASE: Large PTS on front with small PTS on end.')
             return {'refresh_stream': True, 'byteoffset': 0, 'reread_buffer': False}
-
         elif pts_data['delta_from_prev'] > \
                 int(self.config[self.channel_dict['namespace'].lower()]['player-pts_max_delta']):
             self.logger.debug('{} {}{}'.format(
                 'Large delta PTS between reads. Refreshing Stream',
                 'DELTA=', pts_data['delta_from_prev']))
             return {'refresh_stream': True, 'byteoffset': 0, 'reread_buffer': False}
-
         elif pts_data['pts_size'] > \
                 int(self.config[self.channel_dict['namespace'].lower()]['player-pts_max_delta']):
             byte_offset = self.find_bad_pkt_offset(from_front=True)
@@ -125,23 +124,6 @@ class PTSValidation:
         else:
             self.prev_last_pts = pts_data['last_pts']
             return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': False}
-
-    def get_probe_results(self, _video_data):
-        ffprobe_command = [self.config['paths']['ffprobe_path'],
-            '-print_format', 'json',
-            '-v', 'quiet', '-show_packets',
-            '-select_streams', 'v:0',
-            '-show_entries', 'side_data=:packet=pts,pos,duration,size',
-            '-']
-        cmdpts = subprocess.Popen(ffprobe_command,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        ptsout = cmdpts.communicate(_video_data)[0]
-        exit_code = cmdpts.wait()
-        if exit_code != 0:
-            self.logger.warning('FFPROBE failed to execute with error code: {}'
-                .format(exit_code))
-            return None
-        return json.loads(ptsout)
 
     def check_for_video_pkts(self):
         try:
@@ -229,3 +211,21 @@ class PTSValidation:
                 break
             i += 1
         return byte_offset
+
+
+    def get_probe_results(self, _video):
+        ffprobe_command = [self.config['paths']['ffprobe_path'],
+            '-print_format', 'json',
+            '-v', 'quiet', '-show_packets',
+            '-select_streams', 'v:0',
+            '-show_entries', 'side_data=:packet=pts,pos,duration,size',
+            '-']
+        cmdpts = subprocess.Popen(ffprobe_command,
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        ptsout = cmdpts.communicate(_video.data)[0]
+        exit_code = cmdpts.wait()
+        if exit_code != 0:
+            self.logger.warning('FFPROBE failed to execute with error code: {}'
+                .format(exit_code))
+            return None
+        return json.loads(ptsout)

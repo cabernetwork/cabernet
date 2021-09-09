@@ -27,10 +27,10 @@ from .stream_queue import StreamQueue
 from .pts_validation import PTSValidation
 
 
-class FFMpegProxy(Stream):
+class StreamlinkProxy(Stream):
 
     def __init__(self, _plugins, _hdhr_queue):
-        self.ffmpeg_proc = None
+        self.streamlink_proc = None
         self.last_refresh = None
         self.block_prev_time = None
         self.buffer_prev_time = None
@@ -58,19 +58,20 @@ class FFMpegProxy(Stream):
         if not channel_uri:
             self.logger.warning('Unknown Channel')
             return
-        self.ffmpeg_proc = self.open_ffmpeg_proc(channel_uri)
+        self.streamlink_proc = self.open_streamlink_proc(channel_uri)
         time.sleep(0.01)
         self.last_refresh = time.time()
         self.block_prev_time = self.last_refresh
         self.buffer_prev_time = self.last_refresh
-        self.video.data = self.read_buffer()
+        self.read_buffer()
         while True:
-            if not self.video.data:
-                self.logger.debug('No Video Data, refreshing stream')
-                self.ffmpeg_proc = self.refresh_stream()
+            if self.video.data is None:
+                self.logger.debug('No Video Data, waiting')
+                break
+                #self.streamlink_proc = self.refresh_stream()
             else:
                 try:
-                    self.validate_stream(self.video)
+                    self.validate_stream()
                     self.write_buffer.write(self.video.data)
                 except IOError as e:
                     if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
@@ -81,15 +82,15 @@ class FFMpegProxy(Stream):
                             '1 ################ UNEXPECTED EXCEPTION=', e))
                         raise
             try:
-                self.video.data = self.read_buffer()
+                self.read_buffer()
             except Exception as e:
                 self.logger.error('{}{}'.format(
                     '2 ################ UNEXPECTED EXCEPTION=', e))
                 raise
-        self.logger.debug('Terminating ffmpeg stream')
-        self.ffmpeg_proc.terminate()
+        self.logger.debug('Terminating streamlink stream')
+        self.streamlink_proc.terminate()
         try:
-            self.ffmpeg_proc.communicate()
+            self.streamlink_proc.communicate()
         except ValueError:
             pass
 
@@ -100,7 +101,7 @@ class FFMpegProxy(Stream):
         has_changed = True
         while has_changed:
             has_changed = False
-            results = self.pts_validation.check_pts(self.video.data)
+            results = self.pts_validation.check_pts(self.video)
             if results['byteoffset'] != 0:
                 if results['byteoffset'] < 0:
                     self.write_buffer.write(self.video.data[-results['byteoffset']:len(self.video.data) - 1])
@@ -108,99 +109,72 @@ class FFMpegProxy(Stream):
                     self.write_buffer.write(self.video.data[0:results['byteoffset']])
                 has_changed = True
             if results['refresh_stream']:
-                self.ffmpeg_proc = self.refresh_stream()
-                self.video.data = self.read_buffer()
+                self.streamlink_proc = self.refresh_stream()
+                self.read_buffer()
                 has_changed = True
             if results['reread_buffer']:
-                self.video.data = self.read_buffer()
+                self.read_buffer()
                 has_changed = True
         return 
 
     def read_buffer(self):
         data_found = False
         self.video.data = None
-        idle_timer = 2
+        idle_timer = 5
         while not data_found:
             self.video.data = self.stream_queue.read()
             if self.video.data:
                 data_found = True
             else:
-                time.sleep(0.2)
+                time.sleep(0.5)
                 idle_timer -= 1
                 if idle_timer == 0:
                     if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
                             .is_time_to_refresh_ext(self.last_refresh, self.channel_dict['instance']):
-                        self.ffmpeg_proc = self.refresh_stream()
-        return
+                        self.streamlink_proc = self.refresh_stream()
+                    idle_timer = 2
 
     def refresh_stream(self):
         self.last_refresh = time.time()
         channel_uri = self.get_stream_uri(self.channel_dict)
         try:
-            self.ffmpeg_proc.terminate()
-            self.ffmpeg_proc.wait(timeout=0.1)
-            self.logger.debug('Previous ffmpeg terminated')
+            self.streamlink_proc.terminate()
+            self.streamlink_proc.wait(timeout=0.1)
+            self.logger.debug('Previous streamlink terminated')
         except ValueError:
             pass
         except subprocess.TimeoutExpired:
-            self.ffmpeg_proc.terminate()
+            self.streamlink_proc.terminate()
             time.sleep(0.01)
 
         self.logger.debug('{}{}'.format(
             'Refresh Stream channelUri=', channel_uri))
-        ffmpeg_process = self.open_ffmpeg_proc(channel_uri)
-        # make sure the previous ffmpeg is terminated before exiting        
+        streamlink_process = self.open_streamlink_proc(channel_uri)
+        # make sure the previous streamlink is terminated before exiting        
         self.buffer_prev_time = time.time()
-        return ffmpeg_process
+        return streamlink_process
 
-    def open_ffmpeg_proc_locast(self, _channel_uri):
+    def open_streamlink_proc(self, _channel_uri):
         """
-        ffmpeg drops the first 9 frame/video packets when the program starts.
+        streamlink drops the first 9 frame/video packets when the program starts.
         this means everytime a refresh occurs, 9 frames will be dropped.  This is
         visible by looking at the video packets for a 6 second window being 171
         instead of 180.  Following the first read, the packets increase to 180.
         """
-        ffmpeg_command = [self.config['paths']['ffmpeg_path'],
-            '-i', str(_channel_uri),
-            '-f', 'mpegts',
-            '-nostats',
-            '-hide_banner',
-            '-loglevel', 'warning',
-            '-copyts',
-            'pipe:1']
-        ffmpeg_process = subprocess.Popen(ffmpeg_command,
+        uri = '{}'.format(_channel_uri)
+        streamlink_command = ['streamlink',
+            '--stdout',
+            '--quiet',
+            '--hds-segment-threads', '2',
+            '--ffmpeg-fout', 'mpegts',
+            '--hls-segment-attempts', '2',
+            '--hls-segment-timeout', '5',
+            uri,
+            '720,best'
+            ]
+        streamlink_process = subprocess.Popen(streamlink_command,
             stdout=subprocess.PIPE,
             bufsize=-1)
-        self.stream_queue = StreamQueue(188, ffmpeg_process, self.channel_dict['uid'])
-        time.sleep(0.1)
-        return ffmpeg_process
-
-    def open_ffmpeg_proc(self, _channel_uri):
-        """
-        ffmpeg drops the first 9 frame/video packets when the program starts.
-        this means everytime a refresh occurs, 9 frames will be dropped.  This is
-        visible by looking at the video packets for a 6 second window being 171
-        instead of 180.  Following the first read, the packets increase to 180.
-        """
-        ffmpeg_command = [self.config['paths']['ffmpeg_path'],
-            '-i', str(_channel_uri),
-            '-nostats',
-            '-hide_banner',
-            '-fflags', '+genpts+ignidx+igndts',
-            '-threads', '2',
-            '-loglevel', 'warning',
-            '-vcodec', 'copy',
-            '-acodec', 'copy',
-            '-mpegts_copyts', '1',
-            '-f', 'mpegts',
-            '-tune', 'zerolatency',
-            '-mpegts_flags', '+initial_discontinuity',
-            '-c', 'copy',
-            '-mpegts_service_type', 'advanced_codec_digital_hdtv',
-            'pipe:1']
-        ffmpeg_process = subprocess.Popen(ffmpeg_command,
-            stdout=subprocess.PIPE,
-            bufsize=-1)
-        self.stream_queue = StreamQueue(188, ffmpeg_process, self.channel_dict['uid'])
-        time.sleep(0.1)
-        return ffmpeg_process
+        self.stream_queue = StreamQueue(188, streamlink_process, self.channel_dict['uid'])
+        time.sleep(1)
+        return streamlink_process

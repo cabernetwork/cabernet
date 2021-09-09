@@ -30,6 +30,7 @@ from lib.db.db_config_defn import DBConfigDefn
 from lib.streams.m3u8_redirect import M3U8Redirect
 from lib.streams.internal_proxy import InternalProxy
 from lib.streams.ffmpeg_proxy import FFMpegProxy
+from lib.streams.streamlink_proxy import StreamlinkProxy
 from .web_handler import WebHTTPHandler
 
 
@@ -51,6 +52,7 @@ class TunerHttpHandler(WebHTTPHandler):
         self.m3u8_redirect = M3U8Redirect(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
         self.internal_proxy = InternalProxy(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
         self.ffmpeg_proxy = FFMpegProxy(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
+        self.streamlink_proxy = StreamlinkProxy(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
         self.db_configdefn = DBConfigDefn(self.config)
         try:
             super().__init__(*args)
@@ -135,14 +137,21 @@ class TunerHttpHandler(WebHTTPHandler):
             if resp['tuner'] < 0:
                 return
             else:
-                self.internal_proxy.stream_direct(station_data, self.wfile)
+                self.internal_proxy.stream(station_data, self.wfile)
         elif self.config[self.real_namespace.lower()]['player-stream_type'] == 'ffmpegproxy':
             resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
-                self.ffmpeg_proxy.stream_ffmpeg(station_data, self.wfile)
+                self.ffmpeg_proxy.stream(station_data, self.wfile)
+        elif self.config[self.real_namespace.lower()]['player-stream_type'] == 'streamlinkproxy':
+            resp = self.streamlink_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
+            self.do_dict_response(resp)
+            if resp['tuner'] < 0:
+                return
+            else:
+                self.streamlink_proxy.stream(station_data, self.wfile)
         else:
             self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Unknown streamtype'))
             self.logger.error('Unknown [player-stream_type] {}'

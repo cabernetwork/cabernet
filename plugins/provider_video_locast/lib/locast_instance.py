@@ -16,8 +16,8 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import logging
 
+from lib.plugins.plugin_instance_obj import PluginInstanceObj
 import lib.common.utils as utils
 import lib.common.exceptions as exceptions
 from .authenticate import Authenticate
@@ -27,18 +27,18 @@ from .epg import EPG
 from .stream import Stream
 
 
-class LocastInstance:
+class LocastInstance(PluginInstanceObj):
 
-    logger = None
-
-    def __init__(self, _locast, _instance):
+    def __init__(self, _locast, _instance_key):
+        super().__init__(_locast, _instance_key)
         self.config_obj = _locast.config_obj
-        self.instance = _instance
-        self.locast = _locast
+        self.instance_key = _instance_key
+        self.plugin_obj = _locast
         if not self.config_obj.data[self.config_section]['enabled']:
+            self.enabled = False
             return
         
-        if self.locast.auth.token is None:
+        if self.plugin_obj.auth.token is None:
             try:
                 self.auth = Authenticate(self.config_obj, self.config_section)
                 if self.auth.token is None:
@@ -46,18 +46,19 @@ class LocastInstance:
                 self.token = self.auth.token
                 self.is_free_account = self.auth.is_free_account
             except exceptions.CabernetException:
-                self.config_obj.data[self.config_section]['enabled'] = False
+                self.logger.error('Setting Locast instance {} to disabled'.format(self.instance_key))
+                self.enabled = False
                 self.token = None
                 self.is_free_account = False
                 return
         else:
-            self.token = self.locast.auth.token
-            self.is_free_account = self.locast.auth.is_free_account
+            self.token = self.plugin_obj.auth.token
+            self.is_free_account = self.plugin_obj.auth.is_free_account
         try:
             self.location = Location(self)
         except exceptions.CabernetException:
-            self.logger.error('Setting Locast instance {} to disabled'.format(self.instance))
-            self.config_obj.data[self.config_section]['enabled'] = False
+            self.logger.error('Setting Locast instance {} to disabled'.format(self.instance_key))
+            self.enabled = False
             self.token = None
             self.is_free_account = False
             return
@@ -65,21 +66,6 @@ class LocastInstance:
         self.channels = Channels(self)
         self.stream = Stream(self)
         self.epg = EPG(self)
-        
-
-    def refresh_channels(self):
-        if self.config_obj.data[self.config_section]['enabled']:
-            self.channels.refresh_channels()
-
-    def get_channel_uri(self, sid):
-        if self.config_obj.data[self.config_section]['enabled']:
-            return self.channels.get_channel_uri(sid)
-        else:
-            return None
-
-    def refresh_epg(self):
-        if self.config_obj.data[self.config_section]['enabled']:
-            self.epg.refresh_epg()
 
     def is_time_to_refresh(self, _last_refresh):
         return self.stream.is_time_to_refresh(_last_refresh)
@@ -87,7 +73,4 @@ class LocastInstance:
 
     @property
     def config_section(self):
-        return utils.instance_config_section(self.locast.name, self.instance)
-
-
-LocastInstance.logger = logging.getLogger(__name__)
+        return utils.instance_config_section(self.plugin_obj.name, self.instance_key)

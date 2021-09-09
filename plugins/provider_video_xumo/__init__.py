@@ -7,7 +7,7 @@ https://github.com/rocky4546
 This file is part of Cabernet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the “Software”), to deal in the Software without restriction,
+and associated documentation files (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge, publish, distribute,
 sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
 is furnished to do so, subject to the following conditions:
@@ -16,18 +16,11 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import logging
-import time
+import lib.plugins.plugin as plugin
+from .lib.xumo import XUMO
 
 
-class Stream:
-    logger = None
-
-    def __init__(self, _locast_instance):
-        self.locast_instance = _locast_instance
-
-    def is_time_to_refresh(self, _last_refresh):
-        return False
-
-
-Stream.logger = logging.getLogger(__name__)
+# register the init plugin function
+@plugin.register
+def start(plugin):
+    return XUMO(plugin)

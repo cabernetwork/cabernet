@@ -55,6 +55,7 @@ class EPG:
         self.plugins = _webserver.plugins
         self.namespace = _webserver.query_data['name']
         self.instance = _webserver.query_data['instance']
+        self.tv_tag = False
 
     def get_epg_xml(self, _webserver):
         try:
@@ -63,7 +64,7 @@ class EPG:
                 'headers': {'Content-type': 'application/xml; Transfer-Encoding: chunked'},
                 'text': None})
 
-            self.plugins.refresh_epg(self.namespace, self.instance)
+            #self.plugins.refresh_epg(self.namespace, self.instance)
             xml_out = self.gen_header_xml()
             channel_list = self.channels_db.get_channels(self.namespace, self.instance)
             self.gen_channel_xml(xml_out, channel_list)
@@ -73,18 +74,13 @@ class EPG:
             self.epg_db.init_get_query(self.namespace, self.instance)
             day_data, ns, inst = self.epg_db.get_next_row()
             self.prog_processed = []
-            data_written = False
             while day_data:
                 xml_out = self.gen_minimal_header_xml()
                 self.gen_program_xml(xml_out, day_data, channel_list, ns, inst)
-                did_write_data = self.write_xml(xml_out)
-                data_written = did_write_data or data_written
+                self.write_xml(xml_out)
                 day_data, ns, inst = self.epg_db.get_next_row()
             self.epg_db.close_query()
-            if data_written:
-                self.webserver.wfile.write(b'</tv>\r\n')
-            else:
-                self.webserver.wfile.write(b'<tv/>\r\n')
+            self.webserver.wfile.write(b'</tv>\r\n')
             self.webserver.wfile.flush()
         except MemoryError as e:
             self.logger.error('MemoryError parsing large xml')
@@ -155,13 +151,11 @@ class EPG:
                             and ch_data['instance'] == _inst \
                             and not ch_data['enabled']:
                         skip = True
-                        break
             except KeyError:
                 skip = True
             if skip:
                 continue
             self.prog_processed.append(proginfo)
-    
             prog_out = EPG.sub_el(_et_root, 'programme', 
                 start=prog_data['start'], 
                 stop=prog_data['stop'], 

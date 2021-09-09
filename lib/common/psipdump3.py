@@ -3,6 +3,7 @@
 # Show PSIP data (and other packets) from MPEG TS streams from ATSC broadcasts
 # Warning: very rough, incomplete, you're probably better off using VLC 3.0 (show Media Information,
 # go to Codec Details, then scroll down to the EPG (electronic program guide) sections)
+# https://gist.github.com/rxseger/caa0f1839ad87d6c1d5aaf667d86bf20
 
 import sys
 import struct

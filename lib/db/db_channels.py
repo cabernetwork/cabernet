@@ -47,6 +47,7 @@ sqlcmds = {
             updated   BOOLEAN NOT NULL,
             thumbnail VARCHAR(255),
             thumbnail_size VARCHAR(255),
+            atsc      VARCHAR(1500),
             json TEXT NOT NULL,
             UNIQUE(namespace, instance, uid)
             )
@@ -103,6 +104,12 @@ sqlcmds = {
         """
         UPDATE channels SET updated = False
         """,
+    'channels_atsc_update':
+        """
+        UPDATE channels SET 
+            atsc=?
+            WHERE namespace=? AND instance=? AND uid=?
+        """,        
     'channels_del':
         """
         DELETE FROM channels WHERE updated LIKE ?
@@ -151,12 +158,16 @@ class DBChannels(DB):
     def __init__(self, _config):
         super().__init__(_config, _config['datamgmt'][DB_CONFIG_NAME], sqlcmds)
 
-    def save_channel_list(self, _namespace, _instance, _ch_dict):
+    def save_channel_list(self, _namespace, _instance, _ch_dict, save_edit_groups=True):
         """
         Assume the list is complete and will remove any old channels not updated
         """
-        self.update(DB_CHANNELS_TABLE + '_updated')
+        self.update(DB_CHANNELS_TABLE + '_updated')        
         for ch in _ch_dict:
+            if save_edit_groups:
+                edit_groups = ch['groups_other']
+            else:
+                edit_groups = None
             try:
                 self.add(DB_CHANNELS_TABLE, (
                     _namespace,
@@ -166,7 +177,7 @@ class DBChannels(DB):
                     ch['number'],
                     ch['number'],
                     ch['name'],
-                    ch['groups_other'],
+                    edit_groups,
                     ch['thumbnail'],
                     str(ch['thumbnail_size']),
                     True,
@@ -239,12 +250,15 @@ class DBChannels(DB):
             ch = json.loads(row['json'])
             row['json'] = ch
             row['thumbnail_size'] = ast.literal_eval(row['thumbnail_size'])
+            if row['atsc'] is not None:
+                row['atsc'] = ast.literal_eval(row['atsc'])
             # handles the uid multiple times across instances
             if row['uid'] in rows_dict.keys():
                 rows_dict[row['uid']].append(row)
             else:
                 rows_dict[row['uid']] = []
                 rows_dict[row['uid']].append(row)
+                
         return rows_dict
 
     def get_channel_names(self):
@@ -252,7 +266,6 @@ class DBChannels(DB):
 
     def get_channel_instances(self):
         return self.get_dict(DB_CHANNELS_TABLE + '_instance')
-
 
     def get_channel(self, _uid, _namespace, _instance):
         if not _namespace:
@@ -264,8 +277,22 @@ class DBChannels(DB):
         for row in rows:
             ch = json.loads(row['json'])
             row['json'] = ch
+            if row['atsc'] is not None:
+                row['atsc'] = ast.literal_eval(row['atsc'])
             return row
         return None
+
+    def update_channel_atsc(self, _ch):
+        """
+        Updates the editable fields for one channel
+        """
+        atsc_str = str(_ch['atsc'])
+        self.update(DB_CHANNELS_TABLE+'_atsc', (
+            atsc_str,
+            _ch['namespace'],
+            _ch['instance'],
+            _ch['uid']
+        ))
 
     def get_sorted_channels(self, _namespace, _instance, _first_sort_key=[None, True], _second_sort_key=[None, True]):
         """

@@ -16,6 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import binascii
 import struct
 import datetime
 import logging
@@ -57,6 +58,7 @@ class ATSCMsg:
         self.crc_xor_out = crc32_mpeg_model['xor_out']
         self.crc_table_idx_width = 8
         self.atsc_blank_section = b'\x47\x1f\xff\x10\x00'.ljust(188, b'\xff')
+        self.type_strings = []
 
     def gen_crc_mpeg(self, _msg):
         alg = Crc(
@@ -549,7 +551,7 @@ class ATSCMsg:
         # search 0x0020.*0001  ...
         return b'\x00\x01\xb0\x09\xff\xff\xc3\x00\x00\xd5\xdc\xfb\x4c'
 
-    def format_video_packets(self, _msgs):
+    def format_video_packets(self, _msgs=None):
         # atsc packets are 1316 in length with 7 188 sections
         # each section has a 471f ff10 00 when no data is present
 
@@ -574,6 +576,9 @@ class ATSCMsg:
             self.atsc_blank_section,
         ]
 
+        if _msgs is None:
+            return b''.join(sections)
+        
         # for now assume the msgs are less than 1316
         if len(_msgs) > 7:
             self.logger.error('ATSC: TOO MANY MESSAGES={}'.format(len(_msgs)))
@@ -586,5 +591,156 @@ class ATSCMsg:
                 sections[i] = _msgs[i].ljust(188, b'\xff')
 
         return b''.join(sections)
-
         # TBD need to handle large msg and more than 7 msgs
+
+    def extract_psip(self, _video_data):
+        packet_list = []
+        if _video_data is None:
+            return
+        i = 0
+        video_len = len(_video_data)
+        prev_pid = -1
+        pmt_pids = None
+        pat_found = False
+        pmt_found = False
+        while True:
+            if i+188 > video_len: 
+                break
+            packet = _video_data[i:i+188]
+            i += 188
+            program_fields = self.decode_ts_packet(packet)
+            if program_fields is None:
+                continue
+            if program_fields['transport_error_indicator']:
+                continue
+            if program_fields['pid'] == 0x0000:
+                pmt_pids = self.decode_pat(program_fields['payload'])
+                if not pat_found:
+                    packet_list.append(packet)
+                    pat_found = True
+            if pmt_pids and program_fields['pid'] in pmt_pids.keys():
+                program = pmt_pids[program_fields['pid']]
+                self.decode_pmt(program_fields['pid'], program, program_fields['payload'])
+                if not pmt_found:
+                    packet_list.append(packet)
+                    pmt_found = True
+                continue
+            if program_fields['pid'] == 0x1ffb:
+                self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
+                continue
+            prev_pid = program_fields['pid']
+        return packet_list
+        
+    def decode_ts_packet(self, _packet_188):
+        fields = {}
+        word = struct.unpack('!I', _packet_188[0:4])[0]
+        sync = (word & 0xff000000) >> 24
+        if sync != 0x47:
+            return None
+
+        fields['transport_error_indicator'] = (word & 0x800000) != 0
+        # Set when a demodulator can't correct errors from FEC data; indicating the packet is corrupt
+        # print transport_error_indicator
+
+        # Set when a PES, PSI, or DVB-MIP packet begins immediately following the header.
+        fields['payload_unit_start_indicator'] = (word & 0x400000) != 0
+
+        # "Set when the current packet has a higher priority than other packets with the same PID.
+        fields['transport_priority'] = (word & 0x200000) != 0
+
+        # Packet Identifier, describing the payload data.
+        fields['pid'] = (word & 0x1fff00) >> 8
+        # '00' = Not scrambled.
+        # For DVB-CSA and ATSC DES only:[8]
+        # '01' (0x40) = Reserved for future use
+        # '10' (0x80) = Scrambled with even key
+        # '11' (0xC0) = Scrambled with odd key
+        fields['scrambling_control'] = (word & 0xc0) >> 6
+
+        # 01 – no adaptation field, payload only,
+        # 10 – adaptation field only, no payload,
+        # 11 – adaptation field followed by payload,
+        # 00 - RESERVED for future use [9]
+        fields['adaptation_field_control'] = (word & 0x30) >> 4
+
+        if fields['adaptation_field_control'] == 1:
+            has_adapt = False
+            has_payload = True
+        elif fields['adaptation_field_control'] == 2:
+            has_adapt = True
+            has_payload = False
+        elif fields['adaptation_field_control'] == 3:
+            has_adapt = True
+            has_payload = True
+        else:
+            # 00 - RESERVED for future use
+            # hence tstools "### Packet PID 14ae has adaptation field control = 0
+            #    which is a reserved value (no payload, no adaptation field)"
+            # just assume payload, don't spam, and mark it corrupted
+            has_adapt = False
+            has_payload = True
+            fields['corrupted_adaption_control_field'] = True
+
+        # Sequence number of payload packets (0x00 to 0x0F) within each stream (except PID 8191)
+        # Incremented per-PID, only when a payload flag is set.
+        fields['cont_counter'] = word & 0xf
+
+        payload_start = 5
+        if has_adapt:
+            adapt_length = struct.unpack('b', bytes([_packet_188[5]]))[0]
+            if 6 + adapt_length > len(_packet_188):
+                return None
+
+            fields['adapt'] = _packet_188[6:6 + adapt_length]
+            payload_start = 6 + adapt_length
+
+        if has_payload:
+            fields['payload'] = _packet_188[payload_start:]
+        else:
+            # No payload here according to the bitfields - save it anyways
+            extra = _packet_188[payload_start:]
+            if len(extra) != 0:
+                fields['corrupt_payload'] = extra
+
+        return fields
+
+    def decode_pmt(self, pid, program, payload):
+        t = binascii.b2a_hex(payload)
+        if t not in self.type_strings:
+            self.type_strings.append(t)
+
+        pcr_pid = struct.unpack("!H", payload[8:10])[0]
+        reserved = (pcr_pid & 0xe000) >> 13
+        pcr_pid &= 0x1fff
+        desc1 = payload[12:]
+        #descriptors = decode_descriptors(desc1)
+
+
+    def decode_pat(self, payload):
+        t = binascii.b2a_hex(payload)
+        if t not in self.type_strings:
+            self.type_strings.append(t)
+
+        # http://www.etherguidesystems.com/Help/SDOs/MPEG/Syntax/TableSections/Pat.aspx
+
+        section_length = (payload[1] & 0xf << 8) | payload[2]  # 12-bit field
+
+        # after extra fields (transport_stream_id to last_section_num, by size, minus CRC-32 at end
+        program_count = (section_length - 5) / 4 - 1
+
+        program_map_pids = {}
+
+        for i in range(0, int(program_count)):
+            at = 8 + (i * 4)  # skip headers, just get to the program numbers table
+            program_number = struct.unpack("!H", payload[at:at + 2])[0]
+            if at + 2 > len(payload):
+                break
+            program_map_pid = struct.unpack("!H", payload[at + 2:at + 2 + 2])[0]
+
+            # the pid is only 13 bits, upper 3 bits of this field are 'reserved' (I see 0b111)
+            reserved = (program_map_pid & 0xe000) >> 13
+            program_map_pid &= 0x1fff
+
+            program_map_pids[program_map_pid] = program_number
+            i += 1
+        return program_map_pids
