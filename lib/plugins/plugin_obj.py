@@ -27,11 +27,8 @@ from lib.db.db_scheduler import DBScheduler
 
 class PluginObj:
 
-    logger = None
-
     def __init__(self, _plugin):
-        if PluginObj.logger is None:
-            PluginObj.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace

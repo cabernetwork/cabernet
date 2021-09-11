@@ -108,5 +108,6 @@ class PlutoTV(PluginObj):
                 'EPG',
                 'Refresh PlutoTV EPG',
                 'interval',
-                interval=120
+                interval=110,
+                randdur=20
                 )

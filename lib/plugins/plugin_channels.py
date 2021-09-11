@@ -23,11 +23,9 @@ from lib.db.db_channels import DBChannels
 
 
 class PluginChannels:
-    logger = None
 
     def __init__(self, _instance_obj):
-        if PluginChannels.logger is None:
-            PluginChannels.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.instance_obj = _instance_obj
         self.plugin_obj = _instance_obj.plugin_obj
         self.instance_key = _instance_obj.instance_key

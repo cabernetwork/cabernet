@@ -22,6 +22,10 @@ from threading import Thread
 
 
 class StreamQueue:
+    """
+    This works when we run a process that has an output of a continuous stream.
+    Used with ffmpeg and streamlink
+    """
 
     logger = None
 

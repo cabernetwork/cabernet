@@ -26,11 +26,8 @@ import lib.common.utils as utils
 
 class PluginInstanceObj:
 
-    logger = None
-
     def __init__(self, _plugin_obj, _instance_key):
-        if PluginInstanceObj.logger is None:
-            PluginInstanceObj.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.config_obj = _plugin_obj.config_obj
         self.plugin_obj = _plugin_obj
         self.instance_key = _instance_key

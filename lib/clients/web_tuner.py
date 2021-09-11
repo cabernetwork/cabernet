@@ -57,7 +57,7 @@ class TunerHttpHandler(WebHTTPHandler):
         try:
             super().__init__(*args)
         except ConnectionResetError:
-            self.logger.warning('########## ConnectionResetError occurred, will try again')
+            self.logger.warning('ConnectionResetError occurred, will try again')
             time.sleep(1)
             super().__init__(*args)
         except ValueError as e:

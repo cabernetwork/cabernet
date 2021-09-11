@@ -34,7 +34,7 @@ import time
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.2.3'
+VERSION = '0.9.2.4'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0'
@@ -67,8 +67,11 @@ def logging_setup(_config):
     logger = logging.getLogger(__name__)
 
 def clean_exit(exit_code=0):
-    sys.stderr.flush()
-    sys.stdout.flush()
+    try:
+        sys.stderr.flush()
+        sys.stdout.flush()
+    except BrokenPipeError:
+        pass
     sys.exit(exit_code)
 
 
@@ -218,7 +221,7 @@ def process_image_url(_config, _thumbnail_url):
                             # standard windows path exception.  remove '/'
                             shutil.copyfile(old_path[1:], new_path)                
                         else:
-                            logging.warning('3 OSError:{}'.format(e))
+                            logging.warning('OSError:{}'.format(e))
                             return '/temp/FILENOTFOUND'
                     except FileNotFoundError:
                         logging.warning('FileNotFoundError: Image file not found: {}'.format(old_path[1:]))

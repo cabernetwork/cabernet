@@ -23,11 +23,9 @@ from lib.db.db_epg import DBepg
 
 
 class PluginEPG:
-    logger = None
 
     def __init__(self, _instance_obj):
-        if PluginEPG.logger is None:
-            PluginEPG.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
         self.instance_obj = _instance_obj
         self.instance_key = _instance_obj.instance_key
         self.plugin_obj = _instance_obj.plugin_obj
