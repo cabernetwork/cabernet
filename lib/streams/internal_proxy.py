@@ -200,7 +200,7 @@ class InternalProxy(Stream):
                 self.video.data = chunk_updated + self.video.data[80:]
                 self.duration = data['duration']
                 wait = 0.3 * self.duration
-                self.check_ts_counter(uri)
+                write_this = self.check_ts_counter(uri)
                 self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
                 data['played'] = True
                 self.write_buffer.write(self.video.data)
@@ -218,10 +218,14 @@ class InternalProxy(Stream):
 
     def check_ts_counter(self, _uri):
         ts_counter = self.get_ts_counter(_uri)
+        if ts_counter == self.last_ts_index:
+            self.logger.info('TC Counter Same episode being transmitted, ignore {} uri: {}' \
+                .format(ts_counter, _uri))
+            return False
         if ts_counter-1 != self.last_ts_index:
             if self.last_ts_index != -1:
                 self.logger.info('TC Counter Discontinuity {} vs {} next uri: {}' \
                     .format(self.last_ts_index, ts_counter, _uri))
         self.last_ts_index = ts_counter
-
+        return True
 

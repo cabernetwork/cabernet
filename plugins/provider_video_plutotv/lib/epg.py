@@ -51,23 +51,27 @@ class EPG(PluginEPG):
         stime = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
         # back up 2 hours
         start = str(stime.strftime('%Y-%m-%dT%H:00:00.000Z'))
-        etime = stime + datetime.timedelta(hours=14)
+        etime = stime + datetime.timedelta(
+            hours=self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['epg-hours'])
         end = str(etime.strftime('%Y-%m-%dT%H:00:00.000Z'))
         results = {}
-        if stime != etime:
+        if stime.date() != etime.date():
             # crosses midnight
             mstime = str(stime.strftime('%Y-%m-%dT23:59:00.000Z'))
             metime = str(etime.strftime('%Y-%m-%dT00:00:00.000Z'))
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, mstime))
+            print('1',url, stime, etime)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[stime.date()] = json.load(resp)
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(metime, end))
+            print('2',url)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[etime.date()] = json.load(resp)
         else:
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, end))
+            print('3',url, stime, etime)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[stime.date()] = json.load(resp)
@@ -93,6 +97,9 @@ class EPG(PluginEPG):
 
     def get_program(self, _ch_data, _program_data):
         # https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd
+
+        if _ch_data['_id'] == '5b4e92e4694c027be6ecece1':
+            print(_program_data['title'])
 
         # a duration of 0 means dummy program, so skip
         if _program_data['episode']['duration'] == 0:
@@ -134,8 +141,12 @@ class EPG(PluginEPG):
         finale = False
         premiere = False
 
-        if 'firstAired' in _program_data['episode'].keys():
-            air_date_msec = datetime.datetime.fromisoformat(_program_data['episode']['firstAired'].replace('Z', '+00:00')).timestamp() * 1000
+        air_date = None
+        formatted_date = None
+        if 'clip' in _program_data['episode'].keys():
+            air_date_msec = datetime.datetime.fromisoformat(
+                _program_data['episode']['clip']['originalReleaseDate']
+                .replace('Z', '+00:00')).timestamp() * 1000
             air_date = utils.date_parse(air_date_msec, '%Y%m%d')
             formatted_date = utils.date_parse(air_date_msec, '%Y/%m/%d')
         else:
