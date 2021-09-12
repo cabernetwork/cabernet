@@ -34,7 +34,7 @@ import time
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.2.5'
+VERSION = '0.9.2.6'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0'

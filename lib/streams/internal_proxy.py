@@ -91,6 +91,7 @@ class InternalProxy(Stream):
                 i = 3
                 while i > 0:
                     try:
+                        self.logger.debug('Reloading stream')
                         playlist = m3u8.load(stream_uri)
                         break
                     except urllib.error.HTTPError as e:
@@ -102,7 +103,7 @@ class InternalProxy(Stream):
                 removed += self.remove_from_stream_queue(playlist, play_queue_dict)
                 added += self.add_to_stream_queue(playlist, play_queue_dict)
                 if added == 0 and duration > 0:
-                    time.sleep(duration * 0.3)
+                    time.sleep(duration * 0.7)
                 elif self.plugins.plugins[_channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, _channel_dict['instance']):
                     stream_uri = self.get_stream_uri(_channel_dict)
@@ -161,7 +162,8 @@ class InternalProxy(Stream):
                 if not played:
                     self.in_queue.put({'uri': uri, 
                         'data': _play_queue_dict[uri]})
-                    time.sleep(0.2)
+                    # provide some time for the queue to work
+                    time.sleep(0.1)
         return total_added
 
     def remove_from_stream_queue(self, _playlist, _play_queue_dict):
@@ -190,8 +192,6 @@ class InternalProxy(Stream):
             data = _play_queue_dict[uri]
             if data['filtered']:
                 self.write_buffer.write(out_queue_item['data'])
-                time.sleep(0.3 * self.duration)
-                data['played'] = True
             else:
                 self.video.data = out_queue_item['data']
                 chunk_updated = self.atsc.update_sdt_names(self.video.data[:80], 
@@ -199,13 +199,11 @@ class InternalProxy(Stream):
                     self.set_service_name(self.channel_dict).encode())
                 self.video.data = chunk_updated + self.video.data[80:]
                 self.duration = data['duration']
-                wait = 0.3 * self.duration
-                write_this = self.check_ts_counter(uri)
-                self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
-                data['played'] = True
-                self.write_buffer.write(self.video.data)
-                if wait > 0:
-                    time.sleep(wait)
+                if self.check_ts_counter(uri):
+                    self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
+                    self.write_buffer.write(self.video.data)
+            data['played'] = True
+            time.sleep(0.5 * self.duration)
         self.video.terminate()
 
     def get_ts_counter(self, _uri):
@@ -217,6 +215,10 @@ class InternalProxy(Stream):
             return int(m[len(m)-1])
 
     def check_ts_counter(self, _uri):
+        """
+        Providers sometime add the same stream section back into the list.
+        This methods catches this and informs the caller that it should be ignored.
+        """
         ts_counter = self.get_ts_counter(_uri)
         if ts_counter == self.last_ts_index:
             self.logger.info('TC Counter Same episode being transmitted, ignore {} uri: {}' \

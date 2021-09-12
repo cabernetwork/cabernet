@@ -60,18 +60,15 @@ class EPG(PluginEPG):
             mstime = str(stime.strftime('%Y-%m-%dT23:59:00.000Z'))
             metime = str(etime.strftime('%Y-%m-%dT00:00:00.000Z'))
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, mstime))
-            print('1',url, stime, etime)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[stime.date()] = json.load(resp)
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(metime, end))
-            print('2',url)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[etime.date()] = json.load(resp)
         else:
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, end))
-            print('3',url, stime, etime)
             req = urllib.request.Request(url)
             with urllib.request.urlopen(req) as resp:
                 results[stime.date()] = json.load(resp)
@@ -97,9 +94,6 @@ class EPG(PluginEPG):
 
     def get_program(self, _ch_data, _program_data):
         # https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd
-
-        if _ch_data['_id'] == '5b4e92e4694c027be6ecece1':
-            print(_program_data['title'])
 
         # a duration of 0 means dummy program, so skip
         if _program_data['episode']['duration'] == 0:
