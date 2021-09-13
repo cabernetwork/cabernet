@@ -184,10 +184,6 @@ class CabernetUpgrade:
         _web_status.data += 'Moving new code in place...<br>\r\n'
         b.restore_code(unpacked_code)
 
-        # at this point, we modify the data if needed
-        _web_status.data += 'Patching cabernet...<br>\r\n'
-        _web_status.data += patcher.patch_upgrade(self.config, c_manifest['next_version'])
-
         return True
 
     def check_expected_files(self, _web_status):

@@ -93,6 +93,11 @@ class Plugin:
         inst_defn_obj = ConfigDefn(self.plugin_path, PLUGIN_INSTANCE_DEFN_FILE, self.config_obj.data, True)
         # determine in the config data whether the instance of this name exists.  It would have a section name = 'name-instance'
         self.instances = self.find_instances()
+        if len(self.instances) == 0:
+            self.enabled = False
+            self.config_obj.data[self.namespace.lower()]['enabled'] = False
+            self.logger.info('No instances found, disabling plugin {}'.format(self.namespace))
+            return
         for inst in self.instances:
             self.plugin_db.save_instance(self.namespace, inst, '')
             # create a defn with the instance name as the section name. then process it.

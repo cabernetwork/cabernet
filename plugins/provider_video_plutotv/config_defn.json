@@ -100,6 +100,22 @@
                         "level": 3,
                         "help": "Used for PTS Filtering"
                     },
+                    "player-enable_pts_resync":{
+                        "label": "Enable PTS/DTS Resync",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "Corrects timing issues with the video and audio streams and makes them contiguous"
+                    },
+                    "player-pts_resync_type":{
+                        "label": "PTS/DTS Resync Type",
+                        "type": "list",
+                        "default": "ffmpeg",
+                        "values": ["ffmpeg", "internal"],
+                        "level": 2,
+                        "help": "Uses either ffmpeg genpts or internal resequencing"
+                    },
+
                     "epg-hours":{
                         "label": "EPG Hours to Pull",
                         "type": "integer",
