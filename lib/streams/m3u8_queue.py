@@ -66,7 +66,6 @@ class M3U8Queue:
             self.clear_queues()
             sys.exit()
 
-
     def process_m3u8_item(self, _queue_item):
         uri = _queue_item['uri']
         data = _queue_item['data']
@@ -90,6 +89,8 @@ class M3U8Queue:
                     time.sleep(1.5)
                 except urllib.error.URLError as e:
                     self.logger.info('HTTP Error, trying again. {}'.format(e))
+                except ConnectionResetError as e:
+                    self.logger.info('Connection Error, trying again. {}'.format(e))
             if not self.video.data:
                 self.logger.warning(f'Segment {uri} not available. Skipping..')
                 return

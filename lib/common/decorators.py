@@ -37,6 +37,10 @@ def handle_url_except(f):
             logger = logging.getLogger(f.__name__)
             logger.error("URLError in function {}(): {}".format(f.__name__, str(urlError)))
             return None
+        except ConnectionResetError as connError:
+            logger = logging.getLogger(f.__name__)
+            logger.error("ConnectionResetError in function {}(): {}".format(f.__name__, str(urlError)))
+            return None
         except socket.timeout as timeout:
             logger = logging.getLogger(f.__name__)
             logger.error("socket.timeout in function {}(): {}".format(f.__name__, str(timeout)))
