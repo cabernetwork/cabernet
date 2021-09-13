@@ -20,6 +20,7 @@ import datetime
 import errno
 import http
 import re
+import signal
 import urllib.request
 import time
 from collections import OrderedDict
@@ -29,11 +30,13 @@ from multiprocessing import Queue, Process
 from threading import Thread
 
 import lib.m3u8 as m3u8
+import lib.common.exceptions as exceptions
 import lib.streams.m3u8_queue as m3u8_queue
 from lib.streams.video import Video
 from lib.streams.atsc import ATSCMsg
 from lib.db.db_config_defn import DBConfigDefn
 from lib.db.db_channels import DBChannels
+from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 
@@ -55,18 +58,26 @@ class InternalProxy(Stream):
         self.initialized_psi = False
         self.in_queue = Queue()
         self.out_queue = Queue(maxsize=3)
+        self.terminate_queue = None
+        
+    def terminate(self, *args):
+        self.t_m3u8.terminate()
+        self.t_m3u8.join()
+        self.t_m3u8 = None
+        self.clear_queues()
 
-    def stream(self, _channel_dict, _write_buffer):
+    def stream(self, _channel_dict, _write_buffer, _terminate_queue):
         """
         Processes m3u8 interface without using ffmpeg
         """
         self.config = self.db_configdefn.get_config()
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
+        self.terminate_queue = _terminate_queue
         duration = 6
-        t_m3u8 = Process(target=m3u8_queue.start, args=(
+        self.t_m3u8 = Process(target=m3u8_queue.start, args=(
             self.config, self.in_queue, self.out_queue, _channel_dict,))
-        t_m3u8.start()
+        self.t_m3u8.start()
         play_queue_dict = OrderedDict()
         self.last_refresh = time.time()
         stream_uri = self.get_stream_uri(_channel_dict)
@@ -86,12 +97,13 @@ class InternalProxy(Stream):
 
         while True:
             try:
+                self.check_termination()
                 added = 0
                 removed = 0
                 i = 3
                 while i > 0:
                     try:
-                        self.logger.debug('Reloading stream')
+                        self.logger.debug('Reloading stream dur: {}'.format(duration))
                         playlist = m3u8.load(stream_uri)
                         break
                     except urllib.error.HTTPError as e:
@@ -120,19 +132,18 @@ class InternalProxy(Stream):
                     self.logger.error('{}{}'.format(
                         '3 UNEXPECTED EXCEPTION=', e))
                     raise
-        
-        t_m3u8.terminate()
-        t_m3u8.join()
-        del t_m3u8
-        self.clear_queues()
+            except exceptions.CabernetException:
+                pass
+        self.terminate()
+
+    def check_termination(self):
+        if not self.terminate_queue.empty():
+            raise exceptions.CabernetException("Termination Requested")
 
     def clear_queues(self):
-        while not self.in_queue.empty():
-            x = self.in_queue.get()
-        while not self.out_queue.empty():
-            x = self.out_queue.get()
+        self.in_queue.close()
+        self.out_queue.close()        
     
-
     def add_to_stream_queue(self, _playlist, _play_queue_dict):
         total_added = 0
         if _playlist.keys != [None]:
@@ -159,11 +170,11 @@ class InternalProxy(Stream):
                 }
                 self.logger.debug(f"Added {uri} to play queue")
                 total_added += 1
-                if not played:
-                    self.in_queue.put({'uri': uri, 
-                        'data': _play_queue_dict[uri]})
-                    # provide some time for the queue to work
-                    time.sleep(0.1)
+                self.in_queue.put({'uri': uri, 
+                    'data': _play_queue_dict[uri]})
+                # provide some time for the queue to work
+                self.check_termination()
+                time.sleep(1.0)
         return total_added
 
     def remove_from_stream_queue(self, _playlist, _play_queue_dict):
@@ -203,6 +214,7 @@ class InternalProxy(Stream):
                     self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
                     self.write_buffer.write(self.video.data)
             data['played'] = True
+            self.check_termination()
             time.sleep(0.5 * self.duration)
         self.video.terminate()
 

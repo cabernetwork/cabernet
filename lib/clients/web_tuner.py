@@ -137,7 +137,7 @@ class TunerHttpHandler(WebHTTPHandler):
             if resp['tuner'] < 0:
                 return
             else:
-                self.internal_proxy.stream(station_data, self.wfile)
+                self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue)
         elif self.config[self.real_namespace.lower()]['player-stream_type'] == 'ffmpegproxy':
             resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
             self.do_dict_response(resp)
@@ -199,7 +199,7 @@ class TunerHttpHandler(WebHTTPHandler):
         return lowest_namespace, lowest_instance, station
 
     @classmethod
-    def init_class_var(cls, _plugins, _hdhr_queue, _sched_queue):
+    def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
         WebHTTPHandler.logger = logging.getLogger(__name__)
         tuner_count = 0
         for plugin_name in _plugins.plugins.keys():
@@ -210,7 +210,7 @@ class TunerHttpHandler(WebHTTPHandler):
                     plugin_name))
                 tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
-        super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue)
+        super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 
 
 class TunerHttpServer(Thread):
@@ -237,8 +237,8 @@ def FactoryTunerHttpHandler():
     return CustomHttpHandler
 
 
-def start(_plugins, _hdhr_queue):
+def start(_plugins, _hdhr_queue, _terminate_queue):
     TunerHttpHandler.start_httpserver(
-        _plugins, _hdhr_queue,
+        _plugins, _hdhr_queue, _terminate_queue,
         _plugins.config_obj.data['web']['plex_accessible_port'],
         TunerHttpServer)

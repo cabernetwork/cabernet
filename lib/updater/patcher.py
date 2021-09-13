@@ -36,9 +36,10 @@ def patch_upgrade(_config, _new_version):
     To make sure this only executes associated with a specific version, the version 
     it is associated is tested with this new version.
     """
+    results = ''
     if _new_version.startswith(REQUIRED_VERSION):
         logging.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
-
+        results = 'Patch may hang python process on restart.  Please check and kill any hanging processes'
         db_channels = DBChannels(_config)
         cur = None
         sqlcmd = """
@@ -53,7 +54,8 @@ def patch_upgrade(_config, _new_version):
             DBChannels.conn[db_channels.db_name][threading.get_ident()].rollback()
             if cur is not None:
                 cur.close()
-
+    return results
+        
 
 
 

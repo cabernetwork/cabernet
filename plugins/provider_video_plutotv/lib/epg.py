@@ -90,7 +90,7 @@ class EPG(PluginEPG):
                 self.logger.debug('Refreshed EPG data for {}:{} day {}'
                     .format(self.plugin_obj.name, self.instance_key, day))
         except KeyError as e:
-            self.logger.info('Unable to update PlutoTV EPG, no timelines. {}'.format(e))
+            self.logger.info('Unable to update PlutoTV EPG, no timelines. Key Error: {}'.format(e))
 
     def get_program(self, _ch_data, _program_data):
         # https://github.com/XMLTV/xmltv/blob/master/xmltv.dtd

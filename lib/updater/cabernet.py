@@ -104,13 +104,13 @@ class CabernetUpgrade:
     def get_next_release(self, release_data_list):
         current_version = self.config['main']['version']
         x = self.version_re.match(current_version)
-        c_version_float = float(re.findall(r'(\d+\.\d+)\.\d+', current_version)[0])
+        c_version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', current_version)[0])
         prev_version = release_data_list[0]['tag_name']
         for data in release_data_list:
-            version_float = float(re.findall(r'(\d+\.\d+)\.\d+', data['tag_name'])[0])
-            if version_float <= c_version_float:
+            version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', data['tag_name'])[0])
+            if version_float-0.101 < c_version_float:
                 break
-            prev_version = data['tag_name']
+        prev_version = data['tag_name']
         return prev_version
 
     def upgrade_app(self, _web_status):
@@ -186,7 +186,7 @@ class CabernetUpgrade:
 
         # at this point, we modify the data if needed
         _web_status.data += 'Patching cabernet...<br>\r\n'
-        patcher.patch_upgrade(self.config, c_manifest['next_version'])
+        _web_status.data += patcher.patch_upgrade(self.config, c_manifest['next_version'])
 
         return True
 

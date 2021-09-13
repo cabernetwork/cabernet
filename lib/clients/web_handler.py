@@ -41,6 +41,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
     plugins = None
     hdhr_queue = None
+    terminate_queue = None
     sched_queue = None
     config = None
     logger = None
@@ -163,7 +164,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
 
     @classmethod
-    def init_class_var(cls, _plugins, _hdhr_queue):
+    def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue):
         WebHTTPHandler.logger = logging.getLogger(__name__)
         WebHTTPHandler.config = _plugins.config_obj.data
         
@@ -174,6 +175,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
         WebHTTPHandler.plugins = _plugins
         WebHTTPHandler.hdhr_queue = _hdhr_queue
+        WebHTTPHandler.terminate_queue = _terminate_queue
         if not cls.plugins.config_obj.defn_json:
             cls.plugins.config_obj.defn_json = ConfigDefn(_config=_plugins.config_obj.data)
         plugins_db = DBPlugins(_plugins.config_obj.data)
@@ -191,14 +193,14 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
         
     @classmethod
-    def start_httpserver(cls, _plugins, _hdhr_queue, _port, _http_server_class, _sched_queue=None):
+    def start_httpserver(cls, _plugins, _hdhr_queue, _terminate_queue, _port, _http_server_class, _sched_queue=None):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server_socket.bind((_plugins.config_obj.data['web']['bind_ip'], _port))
         server_socket.listen(int(_plugins.config_obj.data['web']['concurrent_listeners']))
         utils.logging_setup(_plugins.config_obj.data)
         logger = logging.getLogger(__name__)
-        cls.init_class_var(_plugins, _hdhr_queue, _sched_queue)
+        cls.init_class_var(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
         if cls.total_instances == 0:
             _plugins.config_obj.data['web']['concurrent_listeners']
         logger.debug(

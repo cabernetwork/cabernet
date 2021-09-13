@@ -41,6 +41,7 @@ from lib.schedule.scheduler import Scheduler
 from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
 import lib.updater.patcher as patcher
+from lib.streams.stream import Stream
 
 try:
     import pip
@@ -134,10 +135,11 @@ def main(script_dir):
             pickle_it.to_pickle(plugins)
 
         backups.scheduler_tasks(config)
+        terminate_queue = Queue()
         hdhr_queue = Queue()
         sched_queue = Queue()
-        webadmin = init_webadmin(config, plugins, hdhr_queue, sched_queue)
-        tuner = init_tuner(config, plugins, hdhr_queue)
+        webadmin = init_webadmin(config, plugins, hdhr_queue, terminate_queue, sched_queue)
+        tuner = init_tuner(config, plugins, hdhr_queue, terminate_queue)
         scheduler = Scheduler(plugins, sched_queue)
         time.sleep(0.1)
         ssdp_serverx = init_ssdp(config)
@@ -151,9 +153,10 @@ def main(script_dir):
         RESTART_REQUESTED = False
         while not RESTART_REQUESTED:            
             time.sleep(5)
-        RESTART_REQUESTED = False
+        terminate_queue.put('shutdown')
         LOGGER.info('Shutting Down...')
-        time.sleep(1)
+        RESTART_REQUESTED = False
+        time.sleep(3)
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
 
     except KeyboardInterrupt:
@@ -187,21 +190,21 @@ def init_versions(_plugins):
     updater_obj.scheduler_tasks()
 
 
-def init_webadmin(_config, _plugins, _hdhr_queue, _sched_queue):
+def init_webadmin(_config, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
     LOGGER.info('Starting admin website on {}:{}'.format(
         _config['web']['plex_accessible_ip'],
         _config['web']['web_admin_port']))
-    webadmin = Process(target=web_admin.start, args=(_plugins, _hdhr_queue, _sched_queue))
+    webadmin = Process(target=web_admin.start, args=(_plugins, _hdhr_queue, _terminate_queue, _sched_queue))
     webadmin.start()
     time.sleep(0.1)
     return webadmin
 
 
-def init_tuner(_config, _plugins, _hdhr_queue):
+def init_tuner(_config, _plugins, _hdhr_queue, _terminate_queue):
     LOGGER.info('Starting streaming tuner website on {}:{}'.format(
         _config['web']['plex_accessible_ip'],
         _config['web']['plex_accessible_port']))
-    tuner = Process(target=web_tuner.start, args=(_plugins, _hdhr_queue,))
+    tuner = Process(target=web_tuner.start, args=(_plugins, _hdhr_queue, _terminate_queue,))
     tuner.start()
     time.sleep(0.1)
     return tuner

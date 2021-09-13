@@ -168,8 +168,8 @@ class WebAdminHttpHandler(WebHTTPHandler):
         WebAdminHttpHandler.hdhr_station_scan = new_value
 
     @classmethod
-    def init_class_var(cls, _plugins, _hdhr_queue, _sched_queue):
-        super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue)
+    def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+        super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
         WebAdminHttpHandler.sched_queue = _sched_queue
         getrequest.log_urls()
         postrequest.log_urls()
@@ -201,8 +201,8 @@ def FactoryWebAdminHttpHandler():
     return CustomWebAdminHttpHandler
 
 
-def start(_plugins, _hdhr_queue, _sched_queue):
+def start(_plugins, _hdhr_queue, _terminate_queue, _sched_queue):
     WebAdminHttpHandler.start_httpserver(
-        _plugins, _hdhr_queue,
+        _plugins, _hdhr_queue, _terminate_queue,
         _plugins.config_obj.data['web']['web_admin_port'],
         WebAdminHttpServer, _sched_queue)

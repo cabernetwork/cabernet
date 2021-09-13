@@ -58,7 +58,6 @@ class M3U8Queue:
 
 
     def process_queue(self):
-        print('starting m3u8 queue')
         try:
             while True:
                 queue_item = self.m3u8_queue.get()
