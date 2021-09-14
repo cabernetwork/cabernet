@@ -1,11 +1,11 @@
 
 ## Installation
-1. Requirements
+### 1. Requirements
 - Python 3.7+
 - python cryptography module
 - ffmpeg
 
-2. Installation
+### 2. Installation
 - Download source
 - Unzip source in the installation folder
 - Create a data folder inside the installation folder and create a config.ini file inside the data folder
