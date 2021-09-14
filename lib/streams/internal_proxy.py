@@ -27,6 +27,7 @@ from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from multiprocessing import Queue, Process
+from queue import Empty
 from threading import Thread
 
 import lib.m3u8 as m3u8
@@ -57,10 +58,17 @@ class InternalProxy(Stream):
         self.atsc = ATSCMsg()
         self.initialized_psi = False
         self.in_queue = Queue()
-        self.out_queue = Queue(maxsize=3)
+        self.out_queue = Queue(maxsize=2)
         self.terminate_queue = None
         
     def terminate(self, *args):
+        try:
+            while True:
+                self.in_queue.get_nowait()
+        except Empty:
+            pass
+        self.in_queue.put({'uri': 'terminate'})
+        time.sleep(1)
         self.t_m3u8.terminate()
         self.t_m3u8.join()
         self.t_m3u8 = None
@@ -74,7 +82,6 @@ class InternalProxy(Stream):
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         self.terminate_queue = _terminate_queue
-        duration = 6
         self.t_m3u8 = Process(target=m3u8_queue.start, args=(
             self.config, self.in_queue, self.out_queue, _channel_dict,))
         self.t_m3u8.start()
@@ -103,19 +110,19 @@ class InternalProxy(Stream):
                 i = 3
                 while i > 0:
                     try:
-                        self.logger.debug('Reloading stream dur: {}'.format(duration))
+                        self.logger.debug('Reloading m3u8 stream')
                         playlist = m3u8.load(stream_uri)
                         break
                     except urllib.error.HTTPError as e:
                         self.logger.info('M3U8 Exception caught, retrying: {}'.format(e))
-                        time.sleep(1.5)
+                        time.sleep(0.5)
                         i -= 1
                 if i < 1:
                     break
                 removed += self.remove_from_stream_queue(playlist, play_queue_dict)
                 added += self.add_to_stream_queue(playlist, play_queue_dict)
-                if added == 0 and duration > 0:
-                    time.sleep(duration * 0.7)
+                if added == 0 and self.duration > 0:
+                    time.sleep(self.duration * 0.7)
                 elif self.plugins.plugins[_channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, _channel_dict['instance']):
                     stream_uri = self.get_stream_uri(_channel_dict)
@@ -133,7 +140,7 @@ class InternalProxy(Stream):
                         '3 UNEXPECTED EXCEPTION=', e))
                     raise
             except exceptions.CabernetException:
-                pass
+                break
         self.terminate()
 
     def check_termination(self):
@@ -151,7 +158,6 @@ class InternalProxy(Stream):
                 for key in _playlist.keys if key]
         else:
             keys = [None for i in range(0, len(_playlist.segments))]
-            
         for m3u8_segment, key in zip(_playlist.segments, keys):
             uri = m3u8_segment.absolute_uri
             if uri not in _play_queue_dict.keys():
@@ -174,7 +180,9 @@ class InternalProxy(Stream):
                     'data': _play_queue_dict[uri]})
                 # provide some time for the queue to work
                 self.check_termination()
-                time.sleep(1.0)
+                if total_added > 1:
+                    return total_added
+                time.sleep(0.5)
         return total_added
 
     def remove_from_stream_queue(self, _playlist, _play_queue_dict):
@@ -197,7 +205,8 @@ class InternalProxy(Stream):
         return total_removed
 
     def play_queue(self, _play_queue_dict):
-        while not self.out_queue.empty():
+        num_served = 0
+        while not self.out_queue.empty() and num_served < 2:
             out_queue_item = self.out_queue.get()
             uri = out_queue_item['uri']
             data = _play_queue_dict[uri]
@@ -205,14 +214,16 @@ class InternalProxy(Stream):
                 self.write_buffer.write(out_queue_item['data'])
             else:
                 self.video.data = out_queue_item['data']
-                chunk_updated = self.atsc.update_sdt_names(self.video.data[:80], 
-                    self.channel_dict['namespace'].encode(),
-                    self.set_service_name(self.channel_dict).encode())
-                self.video.data = chunk_updated + self.video.data[80:]
-                self.duration = data['duration']
-                if self.check_ts_counter(uri):
-                    self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
-                    self.write_buffer.write(self.video.data)
+                if self.video.data is not None:
+                    chunk_updated = self.atsc.update_sdt_names(self.video.data[:80], 
+                        self.channel_dict['namespace'].encode(),
+                        self.set_service_name(self.channel_dict).encode())
+                    self.video.data = chunk_updated + self.video.data[80:]
+                    self.duration = data['duration']
+                    if self.check_ts_counter(uri):
+                        self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
+                        self.write_buffer.write(self.video.data)
+                num_served += 1
             data['played'] = True
             self.check_termination()
             time.sleep(0.5 * self.duration)
@@ -233,7 +244,7 @@ class InternalProxy(Stream):
         """
         ts_counter = self.get_ts_counter(_uri)
         if ts_counter == self.last_ts_index:
-            self.logger.info('TC Counter Same episode being transmitted, ignore {} uri: {}' \
+            self.logger.info('TC Counter Same section being transmitted, ignoring {} uri: {}' \
                 .format(ts_counter, _uri))
             return False
         if ts_counter-1 != self.last_ts_index:

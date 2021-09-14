@@ -101,13 +101,15 @@ class CabernetUpgrade:
             release_list = json.load(resp)
         return release_list
 
+
     def get_next_release(self, release_data_list):
         current_version = self.config['main']['version']
         x = self.version_re.match(current_version)
         c_version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', current_version)[0])
         prev_version = release_data_list[0]['tag_name']
         for data in release_data_list:
-            version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', data['tag_name'])[0])
+            numbers = re.findall(r'\d+\.(\d+)\.(\d+).\d+', data['tag_name'])[0]
+            version_float = float('{:01d}.{:02d}'.format(int(numbers[0]), int(numbers[1])))
             if version_float-0.101 < c_version_float:
                 break
         prev_version = data['tag_name']

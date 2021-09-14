@@ -17,6 +17,7 @@ substantial portions of the Software.
 """
 
 import json
+import re
 import urllib.request
 
 import lib.m3u8 as m3u8
@@ -89,9 +90,10 @@ class Channels(PluginChannels):
                 if plutotv_channel['category'] in plutotv_groups:
                     groups_other = plutotv_groups[plutotv_channel['category']]
                 else:
-                    groups_other = [ plutotv_channel['category'] ]
-                    self.logger.info('Missing PlutoTV category translation for: {}' \
+                    # Need to replace spaces with "_" and remove special characters.
+                    self.logger.warning('Missing PlutoTV category translation for: {}' \
                         .format(plutotv_channel['category']))
+                    groups_other = re.sub('[ +&*%$#@!:;,<>?]', '', plutotv_channel['category'])
                 
                 channel = {
                     'id': ch_id,

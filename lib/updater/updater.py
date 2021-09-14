@@ -130,18 +130,6 @@ class Updater:
         """
         self.plugin_db.save_plugin(_manifest)
  
-    def get_next_release(self, release_data_list):
-        current_version = self.config['main']['version']
-        x = self.version_re.match(current_version)
-        c_version_float = float(re.findall(r'(\d+\.\d+)\.\d+', current_version)[0])
-        prev_version = release_data_list[0]['tag_name']
-        for data in release_data_list:
-            version_float = float(re.findall(r'(\d+\.\d+)\.\d+', data['tag_name'])[0])
-            if version_float <= c_version_float:
-                break
-            prev_version = data['tag_name']
-        return prev_version
-
     def upgrade_app(self, _id):
         """
         Initial request to perform an upgrade

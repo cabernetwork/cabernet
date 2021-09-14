@@ -322,7 +322,7 @@ class ChannelsFormHTML:
             if sid_data['json']['groups_other'] is None:
                 groups_other = ''
             else:
-                groups_other = sid_data['json']['groups_other']
+                groups_other = str(sid_data['json']['groups_other'])
                 
             if sid_data['json']['thumbnail_size'] is not None:
                 original_size = sid_data['json']['thumbnail_size']

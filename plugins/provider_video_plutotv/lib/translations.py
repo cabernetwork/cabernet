@@ -27,6 +27,8 @@ plutotv_groups = {
     'Classic TV':     groups['CLASSICS'],
     'Comedy':         groups['COMEDY'],
     'Crime':          groups['MYSTERY'],
+    'Curiosity':      groups['DOCUMENTARIES'],
+    'Drama':          groups['MYSTERY'],
     'En Español':     groups['SPANISH'],
     'Entertainment':  groups['ENTERTAINMENT'],
     'Explore':        groups['DOCUMENTARIES'],
@@ -34,12 +36,19 @@ plutotv_groups = {
     'Home + DIY':     groups['DIY'],
     'Kids':           groups['KIDS'],
     'Local':          groups['NEWS'],
+    'Life + Style':   groups['LIFESTYLE'],
+    'Motor':          groups['SPORTS'],
     'Movies':         groups['MOVIES'],
     'Music':          groups['MUSIC'],
+    'New on Pluto TV': groups['NEW'],
     'News + Opinion': groups['NEWS'],
+    'News + Info':    groups['NEWS'],
+    'Paranormal':     groups['MYSTERY'],
     'Pluto TV':       groups['CLASSICS'],
     'Reality':        groups['REALITY'],
+    'Samsung':        groups['SPORTS'],
     'Sports':         groups['SPORTS'],
+    'Sports & Gaming': groups['SPORTS'],
     'Vizio':          groups['MOVIES']
     }
 

@@ -7,7 +7,7 @@ https://github.com/rocky4546
 This file is part of Cabernet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the “Software”), to deal in the Software without restriction,
+and associated documentation files (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge, publish, distribute,
 sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
 is furnished to do so, subject to the following conditions:
@@ -30,7 +30,7 @@ from lib.db.db_channels import DBChannels
 from lib.streams.atsc import ATSCMsg
 from lib.streams.video import Video
 from .pts_validation import PTSValidation
-
+from .pts_resync import PTSResync
 
 
 class M3U8Queue:
@@ -53,16 +53,23 @@ class M3U8Queue:
             self.pts_validation = PTSValidation(_config, _channel_dict)
         self.video = Video(self.config)
         self.atsc = _channel_dict['atsc']
-        self.db_channels = DBChannels(self.config)
-
+        self.db_channels = DBChannels(_config)
+        self.pts_resync = PTSResync(_config, self.namespace, _channel_dict['uid'])
 
 
     def process_queue(self):
         try:
             while True:
                 queue_item = self.m3u8_queue.get()
+                if queue_item['uri'] == 'terminate':
+                    self.pts_resync.terminate()
+                    self.clear_queues()
+                    break
+                self.logger.debug('Processing next stream {}'.format(queue_item['uri']))
                 self.process_m3u8_item(queue_item)
+                self.logger.debug('Finished processing stream {}'.format(queue_item['uri']))
         except KeyboardInterrupt:
+            self.pts_resync.terminate()
             self.clear_queues()
             sys.exit()
 
@@ -86,7 +93,7 @@ class M3U8Queue:
                     self.logger.info('Provider gave partial stream, trying again. {}'
                         .format(e, len(e.partial)))
                     self.video.data = e.partial
-                    time.sleep(1.5)
+                    time.sleep(0.5)
                 except urllib.error.URLError as e:
                     self.logger.info('HTTP Error, trying again. {}'.format(e))
                 except ConnectionResetError as e:
@@ -120,8 +127,11 @@ class M3U8Queue:
 
             if not self.is_pts_valid():
                 return
-
-
+            self.pts_resync.resequence_pts(self.video)
+            if self.video.data is None:
+                self.data_queue.put({'uri': uri,
+                    'data': self.video.data})
+                return
 
             if self.atsc is None:
                 self.initialized_psi = True
@@ -165,10 +175,8 @@ class M3U8Queue:
             return self.atsc_msg.format_video_packets()
 
     def clear_queues(self):
-        while not self.m3u8_queue.empty():
-            x = self.m3u8_queue.get()
-        while not self.data_queue.empty():
-            x = self.data_queue.get()
+        self.m3u8_queue.close()
+        self.data_queue.close()
 
 
 def start(_config, _m3u8_queue, _data_queue, _channel_dict):

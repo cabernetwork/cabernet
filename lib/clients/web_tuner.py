@@ -157,7 +157,7 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.error('Unknown [player-stream_type] {}'
                 .format(self.config[self.real_namespace.lower()]['player-stream_type']))
             return
-        self.logger.info('1 Provider Connection Closed')
+        self.logger.info('1. Provider Connection Closed')
         WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
 
     def get_ns_inst_station(self, _station_data):

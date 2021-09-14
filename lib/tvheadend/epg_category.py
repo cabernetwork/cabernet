@@ -48,6 +48,7 @@ groups = {
     'KIDS': 'Kids',
     'LIFESTYLE': 'Lifestyle',
     'NEWS': 'News',
+    'NEW': 'New',
     'MUSIC': 'Music',
     'REALITY': 'Reality',
     'SCIENCE': 'Science',

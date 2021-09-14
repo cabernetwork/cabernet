@@ -32,9 +32,11 @@ class StreamQueue:
     def __init__(self, _bytes_per_read, _proc, _stream_id):
         self.bytes_per_read = _bytes_per_read
         self.sout = _proc.stdout
+        self.serr = _proc.stderr
         self.queue = []
         self.proc = _proc
         self.stream_id = _stream_id
+        self.not_terminated = True
 
         def _populate_queue():
             """
@@ -42,13 +44,14 @@ class StreamQueue:
             """
             self.logger.debug('Starting Stream Buffer Process PID={} Stream ID={}'
                 .format(self.proc.pid, self.stream_id))
-            while True:
+            while self.not_terminated:
                 try:
+                    self.sout.flush()
                     video_data = self.sout.read(self.bytes_per_read)
                     if video_data:
                         self.queue.append(video_data)
                     else:
-                        self.logger.debug('Stream ended for this process, exiting queue thread')                    
+                        self.logger.debug('Stream ended for this process, exiting queue thread')
                         break
                 except ValueError:
                     # occurs on termination with buffer must not be NULL
@@ -61,7 +64,7 @@ class StreamQueue:
         is_queue_changing = True
         queue_size = len(self.queue)
         while is_queue_changing:
-            time.sleep(0.2)
+            time.sleep(0.1)
             if len(self.queue) != queue_size:
                 queue_size = len(self.queue)
             else:
@@ -69,14 +72,12 @@ class StreamQueue:
         
         if len(self.queue) > 0:
             clone_queue = self.queue.copy()
-            # TBD ADD A MAX LIMIT ON A PULL
             del self.queue[:len(clone_queue)]
             return b''.join(clone_queue)
         return None
 
     def terminate(self):
-        self._t.kill()
-        self._t.join()
+        self.not_terminated = False
         
 
 StreamQueue.logger = logging.getLogger(__name__)
