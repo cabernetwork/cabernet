@@ -47,8 +47,9 @@ def patch_upgrade(_config_obj, _new_version):
         _config_obj.write('handler_filehandler', 'class', \
             "lib.common.log_handlers.MPRotatingFileHandler"
             )
-
-        
+        _config_obj.write('locast', 'enabled', \
+            False
+            )
         
     return results
         

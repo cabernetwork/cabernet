@@ -46,7 +46,7 @@
                     "channel-import_groups":{
                         "label": "Import Channel Groups",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 1,
                         "help": "Imports groups from PlutoTV into the group other column"
                     },

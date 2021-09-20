@@ -58,7 +58,7 @@ class PluginHandler:
                 try:
                     plugin = Plugin(self.config_obj, self.plugin_defn, '.'.join([_plugins_pkg, folder]))
                     self.plugins[plugin.name] = plugin
-                except exceptions.CabernetException:
+                except (exceptions.CabernetException, AttributeError):
                     pass
         self.del_missing_plugins()
 
