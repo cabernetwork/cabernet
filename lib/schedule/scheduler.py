@@ -221,6 +221,8 @@ class Scheduler(Thread):
                 self.run_trigger(_queue_item['uuid'])
             elif _queue_item['cmd'] == 'runtask':
                 self.run_task(_queue_item['taskid'])
+            elif _queue_item['cmd'] == 'deltask':
+                self.delete_task(_queue_item['taskid'])
             elif _queue_item['cmd'] == 'del':
                 self.delete_trigger(_queue_item['uuid'])
             elif _queue_item['cmd'] == 'add':
@@ -281,6 +283,11 @@ class Scheduler(Thread):
             dayofweek, interval, timelimit, randdur)
         trigger = self.scheduler_db.get_trigger(uuid)
         self.add_job(trigger)
+
+    def delete_task(self, _taskid):
+        task = self.scheduler_db.get_task(_taskid)
+        if task is not None:
+            self.scheduler_db.del_task(task['area'], task['title'])
 
     def run_task(self, _taskid):
         triggers = self.scheduler_db.get_triggers(_taskid)

@@ -25,6 +25,7 @@ from logging import config
 from http.server import HTTPServer
 from urllib.parse import urlparse
 
+import lib.common.socket_timeout as socket_timeout
 from lib.web.pages.templates import web_templates
 from lib.db.db_config_defn import DBConfigDefn
 from lib.streams.m3u8_redirect import M3U8Redirect
@@ -62,6 +63,7 @@ class TunerHttpHandler(WebHTTPHandler):
             super().__init__(*args)
         except ValueError as e:
             self.logger.warning('ValueError occurred, Bad stream recieved.  {}'.format(e))
+            raise
 
     def do_GET(self):
         content_path, query_data = self.get_query_data()
@@ -77,7 +79,7 @@ class TunerHttpHandler(WebHTTPHandler):
             else:
                 self.do_tuning(channel, query_data['name'], query_data['instance'])
                 return
-            self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Unknown channel'))
+            self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
 
         elif content_path.startswith('/logreset'):
             logging.config.fileConfig(fname=self.config['paths']['config_file'], disable_existing_loggers=False)
@@ -94,7 +96,6 @@ class TunerHttpHandler(WebHTTPHandler):
     def do_POST(self):
         content_path = self.path
         query_data = {}
-        self.logger.debug('Receiving a post form {}'.format(content_path))
         # get POST data
         if self.headers.get('Content-Length') != '0':
             post_data = self.rfile.read(int(self.headers.get('Content-Length'))).decode('utf-8')
@@ -117,16 +118,26 @@ class TunerHttpHandler(WebHTTPHandler):
 
         # refresh the config data in case it changed in the web_admin process
         self.plugins.config_obj.refresh_config_data()
-        self.config = self.plugins.config_obj.data
         self.config = self.db_configdefn.get_config()
         self.plugins.config_obj.data = self.config
         #try:
         station_list = TunerHttpHandler.channels_db.get_channels(_namespace, _instance)
         try:
             self.real_namespace, self.real_instance, station_data = self.get_ns_inst_station(station_list[sid])
+            if not self.config[self.real_namespace.lower()]['enabled']:
+                self.logger.warning('Plugin is not enabled, ignoring request: {} sid:{}' \
+                    .format(self.real_namespace, sid))
+                self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Disabled'))
+                return
+            section = self.plugins.plugins[self.real_namespace].plugin_obj.instances[self.real_instance].config_section
+            if not self.config[section]['enabled']:
+                self.logger.warning('Plugin Instance is not enabled, ignoring request: {}:{} sid:{}' \
+                    .format(self.real_namespace, self.real_instance, sid))
+                self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
+                return
         except KeyError:
-            self.logger.warning('Unknown channel ID, not found in database {} {} {}'.format(_namespace, _instance, sid))
-            self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Unknown channel'))
+            self.logger.warning('Unknown Channel ID, not found in database {} {} {}'.format(_namespace, _instance, sid))
+            self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
             return
         if self.config[self.real_namespace.lower()]['player-stream_type'] == 'm3u8redirect':
             self.do_dict_response(self.m3u8_redirect.gen_m3u8_response(station_data))
@@ -157,7 +168,7 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.error('Unknown [player-stream_type] {}'
                 .format(self.config[self.real_namespace.lower()]['player-stream_type']))
             return
-        self.logger.info('1. Provider Connection Closed')
+        self.logger.info('Provider Connection Closed')
         WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
 
     def get_ns_inst_station(self, _station_data):
@@ -210,6 +221,7 @@ class TunerHttpHandler(WebHTTPHandler):
                     plugin_name))
                 tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
+        socket_timeout.DEFAULT_SOCKET_TIMEOUT = 5.0
         super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 
 

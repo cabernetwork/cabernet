@@ -7,7 +7,7 @@ https://github.com/rocky4546
 This file is part of Cabernet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the “Software”), to deal in the Software without restriction,
+and associated documentation files (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge, publish, distribute,
 sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
 is furnished to do so, subject to the following conditions:
@@ -34,6 +34,7 @@ MPEG2_PROGRAM_ASSOCIATION_TABLE_TAG = b'\x00'
 MPEG2_CONDITIONAL_ACCESS_TABLE_TAG = b'\x01'
 MPEG2_PROGRAM_MAP_TABLE_TAG = b'\x02'
 
+ATSC_MSG_LEN = 188
 LEAP_SECONDS_1980 = 19
 LEAP_SECONDS_2021 = 37  # this has not changed since 2017
 
@@ -57,7 +58,7 @@ class ATSCMsg:
         self.crc_reflect_out = crc32_mpeg_model['reflect_out']
         self.crc_xor_out = crc32_mpeg_model['xor_out']
         self.crc_table_idx_width = 8
-        self.atsc_blank_section = b'\x47\x1f\xff\x10\x00'.ljust(188, b'\xff')
+        self.atsc_blank_section = b'\x47\x1f\xff\x10\x00'.ljust(ATSC_MSG_LEN, b'\xff')
         self.type_strings = []
 
     def gen_crc_mpeg(self, _msg):
@@ -149,31 +150,42 @@ class ATSCMsg:
     def gen_lang(self, _name):
         return struct.pack('%ds' % (len(_name)), _name)
 
-    def update_sdt_names(self, _sdt_msg, _service_provider, _service_name):
-        # must start with x474011  (pid for SDT is x0011
-        # update the full msg length 2 bytes with first 4 bits as xF at position 7-8  (includes crc)
-        # update descriptor length lower 12 bits at position 20-21 (remaining bytes - crc)
-        # x48 service descriptor tag
-        # 1 byte length of service provider
-        # byte string of the service provider
-        # 1 byte length of service name
-        # byte string of the service name
-        # crc
-        if _sdt_msg[:3] != b'\x47\x40\x11':
-            self.logger.debug('Missing ATSC Msg, found {}'.format(bytes(_sdt_msg[:20]).hex()))
-            return _sdt_msg
-
-        descr = b'\x01' \
-                + utils.set_str(_service_provider, False) \
-                + utils.set_str(_service_name, False)
-        descr = b'\x48' + utils.set_u8(len(descr)) + descr
-        msg = _sdt_msg[8:20] + utils.set_u8(len(descr)) + descr
-        length = utils.set_u16(len(msg) + 4 + 0xF000)
-        msg = ATSC_SERVICE_DESCR_TABLE_TAG + length + msg
-        crc = self.gen_crc_mpeg(msg)
-        msg = _sdt_msg[:5] + msg + crc
-        msg = msg.ljust(len(_sdt_msg), b'\xFF')
-        return msg
+    def update_sdt_names(self, _video, _service_provider, _service_name):
+        if _video.data is None:
+            return
+        i = 0
+        video_len = len(_video.data)
+        msg = None
+        self.logger.debug('Updating ATSC SDT with service info {} {}' \
+            .format(_service_provider, _service_name))
+        while True:
+            if i+ATSC_MSG_LEN > video_len: 
+                break
+            packet = _video.data[i:i+ATSC_MSG_LEN]
+            program_fields = self.decode_ts_packet(packet)
+            if program_fields is None:
+                continue
+            if program_fields['transport_error_indicator']:
+                continue
+            if program_fields['pid'] == 0x0011:
+                descr = b'\x01' \
+                        + utils.set_str(_service_provider, False) \
+                        + utils.set_str(_service_name, False)
+                descr = b'\x48' + utils.set_u8(len(descr)) + descr
+                msg = packet[8:20] + utils.set_u8(len(descr)) + descr
+                length = utils.set_u16(len(msg) + 4 + 0xF000)
+                msg = ATSC_SERVICE_DESCR_TABLE_TAG + length + msg
+                crc = self.gen_crc_mpeg(msg)
+                msg = packet[:5] + msg + crc
+                msg = msg.ljust(len(packet), b'\xFF')
+                _video.data = b''.join([
+                    _video.data[:i],
+                    msg,
+                    _video.data[i+ATSC_MSG_LEN:]
+                    ])
+            i += ATSC_MSG_LEN
+        if msg is None:
+            self.logger.debug('Missing ATSC SDT Msg in stream, unable to update provider and service name')
 
     def gen_sld(self, _base_pid, _elements):
         # Table 6.29 Service Location Descriptor
@@ -401,74 +413,6 @@ class ATSCMsg:
         #        05 name of the channel (GA94)
         #
 
-        # 1bytes = stream_type = x02
-        # 3bits = 111 static bits
-        # 13bits = elem_PID
-        # 4bits = 1111 static bits
-        # 12bits = num of descr
-        # for each descr
-
-        # crc
-        # NOTE: all transmissions had a zero sections transmission
-        # search 0x0020.*0001  ...
-        # there is one pmt per channel
-        # returns an array of msgs to send. one per channel.
-        #                                  4740 5016 0002  .....[.,..G@P...
-        # 0x0030:  b042 0003 c300 00e0 51f0 1610 06c0 0271  .B......Q......q
-        # 0x0040:  c000 0087 06c1 0101 00f2 0005 0447 4139  .............GA9
-        # 0x0050:  3402 e051 f003 0601 0281 e054 f012 0504  4..Q.......T....
-        # 0x0060:  4143 2d33 810a 0828 05ff 0f00 bf65 6e67  AC-3...(.....eng
-        # 0x0070:  47ab 58d1
-
-        # descriptors
-        # 10 smoothing_buffer_descriptor
-        # f0 1610 06c0 0271 c000 0087 06c1 0101 00f2 0005 0447 4139 34 KDTN-DT KPTD-LD KDTN-ES
-        # f0 0810 06c0 bd62 c008 00 KUVN-DT Bounce ESCAPE LAFF KSTR-DT GRIT
-        # f0 12 0a04 656e 6700 810a e828 05ff 0f01 bf65 6e67
-        # f0 0810 06c0 bd62 c008 00 KTVT-DT StartTV DABL FAVE
-        # f0 0605 0447 4139 34 KTXT-DT COMET CHARGE TBD SBN (31)
-        # f0 1f05 0447 4139 3487 17c1 0102 00f3 04f1 0f01 656e 6701 0000 0754  562d 5047 2d56 KTXT-DT COMET CHARGE TBD SBN (51)
-        # f0 1a05 0447 4139 3487 12c1 0101 00f2 0c01 656e 6701 0000 0454 562d 47 KTXT-DT COMET CHARGE TBD SBN (71)
-        # f0 0605 0447 4139 34 KTXT-DT COMET CHARGE TBD SBN (61)
-        # f0 3c05 0447 4139 3487 34c2 0101 00f3 0d01 656e 6701 0000
-        #   0554 562d 5047 0201 00f4 1c01 656e 6701 0000 1450 4720 
-        #   2853 7572 762e 2070 6172 656e 7461 6c65 29 KTXT-DT COMET CHARGE TBD SBN (41)
-        # f0 00 TBN_HD Hilsng SMILE Enlace POSITIV (31 41 51 61 71)
-        # f0 00 ION qubo IONPlus Shop QVC HSN (31 41 51 61 71 81)
-        # f0 0810 06c0 bd62 c008 00 KXAS-DT COZI-TV NBCLX (31 41 51)
-        # f0 0810 06c0 bd62 c008 00 KDAF-DT Antenna Court CHARGE (31 41 51 61)
-        # f0 0810 06c0 bd62 c008 00 KTXA-DT MeTV ThisTV Circle HSN (31 41 51 61 71)
-        # f0 1610 06c0 0271 c000 0087 06c1 0101 00f2 0005 0447 4139 34 KXDA-LD (EBETV) KXDA-LD (ALCANCE) KXDA-LD KXDA-LD (BIBLIATV) (31 41 51 61 71)
-        # f0 0810 06c0 bd62 c008 00 DECADES KDFW-DT KDFW_D3 GetTV (31 41 51 61)
-        # f0 1a87 12c1 0101 00f2 0c01 656e 6701 0000 0454 562d 4705 0447 4139 34 KERA-HD4 kids Create (31 41 51)
-        # f0 00 KFWD BizTV 52_4 SBN JTV CRTV AChurch (31 41 51 61 71 81 91)
-        #
-        # Assume no base descriptors \xf0 \x00
-        # Assume no video stream type descriptor 02 E0 xx F0 00
-        # Assume no audio stream type descriptor 81 E0 xx F0 00
-        #
-        # 1bytes = stream_type = x02
-        # 3bits = 111 static bits
-        # 13bits = elem_PID
-        # 4bits = 1111 static bits
-        # 12bits = num of descr
-        # for each descr
-        #
-        # 02 E0 31 F0 00 (31 is the PID)
-        # 02 E0 51 F0 05
-        # 02 E0 91 F0 0E
-        # 02 E0 51 F0 03 06 01 02
-        # 02 E0 31 F0 12 06 01 02
-        # 02 E0 31 F0 12 06 01 02 86 0D E2 65 6E 67 C1 FF FF 65 6E 67 7E FF FF (x86 CCT)
-        # Audio PIDs 34 35 36 44 54
-        # 81 E0 74 F0 00 (a3 descr)
-        # 81 E0 94 F0 00
-        # 05 04 41 43 2D 33 (reg descr optional)
-        # 81 E0 35 F0 18 
-        # 81 0A 08 28 05 FF 37 01 BF 73 70 61
-        # 0A 04 73 70 61 00
-        # all audio is x4-x9 where x is the video PID so 31 is 34
-
         msgs = []
         prog_num_int = 0
         for short_name in _channels.keys():
@@ -503,22 +447,6 @@ class ATSCMsg:
         # 1byte last_section_number = 0 (only one section)
         # 1byte protocol_version = 0
         # 2bytes number of tables
-        # for loop of tables
-        # c7 f0df 0000 e100 0000 0013 0000 fffb f400
-        # 0000 daf0 0000 04fe 80f0 0000 0060 f000
-        # 0100 fd00 f000 0003 adf0 0001 01fd 01f0
-        # 0000 0353 f000 0102 fd02 f000 0005 81f0
-        # 0001 03fd 03f0 0000 0440 f000 0104 fd04
-        # f000 0003 e5f0 0001 05fd 05f0 0000 02fb
-        # f000 0106 fd06 f000 0003 99f0 0001 07fd
-        # 07f0 0000 0484 f000 0200 fe00 f000 0006
-        # d6f0 0002 01fe 01f0 0000 05ea f000 0202
-        # fe02 f000 0009 d7f0 0002 03fe 03f0 0000
-        # 07b5 f000 0204 fe04 f000 0006 7af0 0002
-        # 05fe 05f0 0000 471f fb11 0392 f000 0206
-        # fe06 f000 0007 92f0 0002 07fe 07f0 0000
-        # 0899 f000 0301 fffb e000 0003 d3f0 00f0
-        # 0016 e673 47
 
         msg = ATSC_MASTER_GUIDE_TABLE_TAG
         return msg
@@ -564,7 +492,6 @@ class ATSCMsg:
         #       VCT 1FFB
         #       PAT 0
         #       CAT 1
-
         # 7 sections per packet
         sections = [
             self.atsc_blank_section,
@@ -584,11 +511,11 @@ class ATSCMsg:
             self.logger.error('ATSC: TOO MANY MESSAGES={}'.format(len(_msgs)))
             return None
         for i in range(len(_msgs)):
-            if len(_msgs[i]) > 188:
+            if len(_msgs[i]) > ATSC_MSG_LEN:
                 self.logger.error('ATSC: MESSAGE LENGTH TOO LONG={}'.format(len(_msgs[i])))
                 return None
             else:
-                sections[i] = _msgs[i].ljust(188, b'\xff')
+                sections[i] = _msgs[i].ljust(ATSC_MSG_LEN, b'\xff')
 
         return b''.join(sections)
         # TBD need to handle large msg and more than 7 msgs
@@ -604,10 +531,10 @@ class ATSCMsg:
         pat_found = False
         pmt_found = False
         while True:
-            if i+188 > video_len: 
+            if i+ATSC_MSG_LEN > video_len: 
                 break
-            packet = _video_data[i:i+188]
-            i += 188
+            packet = _video_data[i:i+ATSC_MSG_LEN]
+            i += ATSC_MSG_LEN
             program_fields = self.decode_ts_packet(packet)
             if program_fields is None:
                 continue
@@ -625,9 +552,18 @@ class ATSCMsg:
                     packet_list.append(packet)
                     pmt_found = True
                 continue
-            if program_fields['pid'] == 0x1ffb:
+            elif program_fields['pid'] == 0x1ffb:
                 self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
                 continue
+            #elif program_fields['pid'] == 0x0011:
+            #    self.logger.info('Service Description Table (SDT) 0x0011, not implemented {}'.format(i))
+            #    continue
+            #elif program_fields['pid'] == 0x0000 or \
+            #        program_fields['pid'] == 0x0100 or \
+            #        program_fields['pid'] == 0x0101:
+            #    continue
+            #else:
+            #    self.logger.info('Unknown PID {}'.format(program_fields['pid']))                
             prev_pid = program_fields['pid']
         return packet_list
         

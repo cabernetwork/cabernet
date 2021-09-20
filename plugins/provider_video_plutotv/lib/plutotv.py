@@ -50,21 +50,6 @@ class PlutoTV(PluginObj):
         This calls the scheduler to run the task.
         """
         self.refresh_obj('EPG', 'Refresh PlutoTV EPG')
-
-    def get_channel_uri_ext(self, sid, _instance=None):
-        """
-        External request to return the uri for a m3u8 stream.
-        Called from stream object.
-        """
-        return self.instances[_instance].get_channel_uri(sid)
-
-    def is_time_to_refresh_ext(self, _last_refresh, _instance):
-        """
-        External request to determine if the m3u8 stream uri needs to 
-        be refreshed.
-        Called from stream object.
-        """
-        return False
         
     def scheduler_tasks(self):
         sched_ch_hours = self.utc_to_local_time(23)

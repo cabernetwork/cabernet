@@ -26,11 +26,10 @@ import lib.common.exceptions as exceptions
 import lib.common.utils as utils
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-from lib.db.db_epg import DBepg
+from lib.db.db_epg_programs import DBEpgPrograms
 from lib.db.db_channels import DBChannels
 from lib.plugins.plugin_epg import PluginEPG
 
-from . import constants
 from .translations import xumo_tv_genres
 
 
@@ -38,6 +37,8 @@ class EPG(PluginEPG):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
+        self.db_programs = DBEpgPrograms(self.instance_obj.config_obj.data)
+
 
     def dates_to_pull(self):
         """
@@ -46,54 +47,34 @@ class EPG(PluginEPG):
         """
         return [1], []
 
-    @handle_json_except
-    @handle_url_except
     def get_url_listing(self):
-        """
-        {"id": "SH038289620000", "contentType": "SERIES", "title": "Latest News", "descriptions": {"small": "stuff"},
-        "start": 1630696080000, "end": 1630697400000, "channelId": 9999148, "type": "Asset"}
-        """
         url = 'https://valencia-app-mds.xumo.com/v2/channels/list/{}/onnowandnext.json?f=asset.title&f=asset.descriptions' \
             .format(self.plugin_obj.geo.channelListId)
-        req = urllib.request.Request(url)
-        with urllib.request.urlopen(req) as resp:
-            listing = json.load(resp)
-
+        listing = self.get_uri_data(url)
         ch_db = DBChannels(self.instance_obj.config_obj.data)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
         return ch_list, listing
 
     def refresh_programs(self, _epg_day, use_cache=True):
+        timeslot_list = {}
+        program_list = []
         todaydate = datetime.datetime.utcnow().date()
-        program_list = self.db.get_epg_one(self.plugin_obj.name, self.instance_key, todaydate)
-        if len(program_list) == 0:
-            program_list = []
-            timeslot_list = {}
-        else:
-            program_list = json.loads(program_list[0]['json'])
-            timeslot_list = {}
-            for program in program_list:
-                ts = (program['channel'], program['start'])
-                if ts not in timeslot_list.keys():
-                    timeslot_list[ts] = None
-
-        # Determine if GMT time is between 00:00 and 02:00.  If so, then process the entire day.
-        # else, process only the next 2 programs.
-        if utils.is_time_between(datetime.time(0,1), datetime.time(2,0)):
-            self.logger.debug('Time is between midnight and 2am UTC, so will generate a full days guide')
-            program_list = self.get_fullday_programs(program_list, timeslot_list)
-        #else:
-        #    self.logger.debug('Time is not between midnight and 2am UTC, so will generate a quick small update')
-        #    program_list = self.get_nownext_programs(program_list, timeslot_list)
-
-        # push the update to the database
+        if use_cache:
+            program_list = self.db.get_epg_one(self.plugin_obj.name, self.instance_key, todaydate)
+            if len(program_list) != 0:
+                program_list = json.loads(program_list[0]['json'])
+                for program in program_list:
+                    ts = (program['channel'], program['start'])
+                    if ts not in timeslot_list.keys():
+                        timeslot_list[ts] = program
+        program_list = self.get_fullday_programs(program_list, timeslot_list)
         self.db.save_program_list(self.plugin_obj.name, self.instance_key, todaydate, program_list)
         self.logger.debug('Refreshed EPG data for {}:{} day {}'
             .format(self.plugin_obj.name, self.instance_key, todaydate))
 
     def get_nownext_programs(self, _program_list, _prog_id_list):
         """
-        Returns a quick list of what is currently playing and what is on next
+        Currently not used
         """
         ch_list, listing = self.get_url_listing()
         for listing_data in listing['results']:
@@ -114,106 +95,91 @@ class EPG(PluginEPG):
                 _program_list.append(program_json)
         return _program_list
 
-    @handle_json_except
-    @handle_url_except
     def get_fullday_programs(self, _program_list, _timeslot_list):
         """
         Returns a days (from midnight to midnight UTC) of programs
-        # List of channels
-        #https://valencia-app-mds.xumo.com/v2/channels/list/10006.json?geoId=924baa2b
-        # Current thing playing, needed to get the stream uri by prog id
-        #https://valencia-app-mds.xumo.com/v2/channels/channel/99991331/onnow.json?f=title&f=descriptions#descriptions
-        # Current and next thing playing, so a very fast way to get current programs
-        #https://valencia-app-mds.xumo.com/v2/channels/list/10006/onnowandnext.json?f=asset.title&f=asset.descriptions&f=logo
-        # Provides programs (id and time slot) by channel over 24 hours GMT time, one hours at a time
-        # THIS IS WHERE THE progid is for m3u8 streaming...
-        #https://valencia-app-mds.xumo.com/v2/channels/channel/99991331/broadcast.json?hour=23
-        # Data for a single program. Note the channel number listed does not seem to match...  It also has the m3u8 url as well
-        #https://valencia-app-mds.xumo.com/v2/assets/asset/XM002J24LQYDS0.json?f=title&f=providers&f=descriptions&f=runtime&f=availableSince&f=cuePoints&f=ratings
-        ?f=asset.title&f=asset.episodeTitle&f=asset.providers&f=asset.runtime&f=asset.availableSince&f=asset.ratings
-        \u002Fv2\u002Fcategories\u002Fcategory\u002F1507.json
-        https://live-content.xumo.com/137/content/XM0QYR4ADYAUOA/23022737/master.m3u8
-        /client/index-c1d4ed7cf6fe454fd43f.js
-        https:\u002F\u002Flive-content.xumo.com\u002F1870\u002Fcaptions\u002FXM0MQ06IH0PXSG\u002Fxumo45d8043f52f84869ae3c2c1f7a067d983757172727560471838.vtt_xumo.dfxp
-        "apiConfig": {
-            "server": "https:\u002F\u002Fvalencia-app-mds.xumo.com",
-            "key": "BJ8e86EyuW8GUsXJ",
-            "channelListId": "10006",
-            "cacheBuster": "2",
-            "videoQS": "?f=title&f=providers&f=descriptions&f=runtime&f=availableSince&f=cuePoints&f=ratings",
-            "playlistQS": "?f=asset.title&f=asset.episodeTitle&f=asset.providers&f=asset.runtime&f=asset.availableSince&f=asset.ratings",
-            "defaultPlaylist": "\u002Fv2\u002Fcategories\u002Fcategory\u002F1507.json",
-            "epgQS": "?f=asset.title&f=asset.descriptions",
-            "defaultChannel": 9999110,
-            "geoId": "924baa2b",
-            "adTagUrl": "https:\u002F\u002Fvalencia-app.xumo.com\u002Fconfig",
-            "beaconServer": "https:\u002F\u002Fvalencia-beacons.xumo.com",
-            "enableBeacons": true,
-            "omniServer": "https:\u002F\u002Fsaa.cbsi.com\u002Fb\u002Fss\u002Fcbsicbsnewssite\u002F0",
-            "playlistLimit": "50"
-        },
-        "apiConfig.server") + "/v2/channels/list/" + e.store.channelListId + "/genres.json"
-        "apiConfig.server") + "/v2/assets/asset/" + f + ".json" + (0, P.default)("apiConfig.videoQS"), e.next = 23, v.default.get(p)
-
-        SH0... m3u8
-        XM0DMBUSIXH9T1
-        https:\u002F\u002Fdai2.xumo.com\u002Famagi_hls_data_xumo1212A-abcnews\u002FCDN\u002Fmaster.m3u8
-
         """
-
         ch_db = DBChannels(self.instance_obj.config_obj.data)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
         prog_list = {}
+        prog_ids = {}
+        time_sec_now = time.time()
+        start_hour = datetime.datetime.utcnow().hour - 2
+        if start_hour < 0:
+            start_hour = 0
+        self.logger.info('{}:{} Processing {} Channels from hour {}:00 to hour 23:00 UTC' \
+                .format(self.plugin_obj.name, self.instance_key, len(ch_list.keys()), start_hour))
         for ch in ch_list.keys():
             if not ch_list[ch][0]['enabled']:
-                    continue
-            self.logger.debug('{}:{} Processing Channel {} {}' \
+                continue
+            self.logger.debug('{}:{} Processing Channel {} ' \
                 .format(self.plugin_obj.name, self.instance_key, ch, ch_list[ch][0]['display_name']))
-            for hr in range(0,24):
+            for hr in range(start_hour,24):
                 url = 'https://valencia-app-mds.xumo.com/v2/channels/channel/{}/broadcast.json?hour={}' \
                     .format(ch, hr)
-                req = urllib.request.Request(url)
-                with urllib.request.urlopen(req) as resp:
-                    listing = json.load(resp)
+                listing = self.get_uri_data(url)
                 for prog in listing['assets']:
-                    start_time = utils.tm_local_parse(prog['timestamps']['start'])
-                    
-                    if prog['id'] not in prog_list.keys():
-                        prog_list[prog['id']] = {
+                    start_time = utils.tm_local_parse(prog['timestamps']['start'] * 1000)
+                    key = (ch, start_time)
+                    if 'live' not in prog:
+                        prog['live'] = False
+                    if key not in prog_list.keys():
+                        prog_list[key] = {
                             'id': prog['id'],
                             'channelId': ch,
-                            'start': prog['timestamps']['start'], 
-                            'end': prog['timestamps']['end']}
+                            'start': prog['timestamps']['start'],
+                            'end': prog['timestamps']['end'],
+                            'is_live': prog['live']}
+                        prog_ids[prog['id']] = None
 
-        self.logger.debug('{}:{} Processing {} Programs' \
+        self.logger.info('{}:{} Processing {} Programs' \
                 .format(self.plugin_obj.name, self.instance_key, len(prog_list.keys())))
-        for prog in prog_list.keys():
-            self.logger.debug('{}:{} Processing Program {}' \
-                .format(self.plugin_obj.name, self.instance_key, prog))
-            url = 'https://valencia-app-mds.xumo.com/v2/assets/asset/{}.json?f=title&f=providers&f=descriptions&f=runtime&f=availableSince' \
-                .format(prog)
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req) as resp:
-                listing = json.load(resp)
-            prog_list[prog]['title'] = listing['title']
-            if 'descriptions' in listing:
-                key = list(listing['descriptions'].keys())[0]
-                prog_list[prog]['descriptions'] = {}
-                prog_list[prog]['descriptions'][key] = listing['descriptions'][key]
-            
+        for prog in prog_ids.keys():
+            program = self.db_programs.get_program(self.plugin_obj.name, prog)
+            if len(program) == 0:
+                self.update_program_info(prog)
+            else:
+                self.logger.debug('{}:{} Processing Program {} from cache' \
+                    .format(self.plugin_obj.name, self.instance_key, prog))
+        program = None
+
         self.logger.debug('{}:{} Finalizing EPG updates' \
             .format(self.plugin_obj.name, self.instance_key))
-        for progid, listing_data in prog_list.items():
+        for key, listing_data in prog_list.items():
+            if time_sec_now - listing_data['start'] > 86400:
+                for hr in range(start_hour,24):
+                    dt_start_day = datetime.datetime.utcnow() 
+                    dt_start_time = dt_start_day.replace(tzinfo=datetime.timezone.utc, hour=hr, minute=0, second=0, microsecond=0)
+                    listing_data['start'] = round(dt_start_time.timestamp())
+                    listing_data['end'] = round(dt_start_time.timestamp()+3600)
+                    try:
+                        ch_data = ch_list[str(listing_data['channelId'])][0]
+                        key_ts = ( listing_data['channelId'], utils.tm_local_parse(listing_data['start'] * 1000) )
+                        if key_ts in _timeslot_list:
+                            program_json = self.get_program(ch_data,
+                                listing_data, _timeslot_list[key_ts])
+                        else:
+                            program_json = self.get_program(ch_data,
+                                listing_data, None)
+                        if program_json is not None:
+                            _program_list.append(program_json)
+                    except KeyError as e:
+                        self.logger.info('1 Missing Channel: {} {}'.format(str(listing_data['channelId']), e))
+                        continue
+                self.logger.debug('Channel has no programs, adding default programming for {}' \
+                    .format(listing_data['channelId']))
+                continue
             try:
                 ch_data = ch_list[str(listing_data['channelId'])][0]
-                if str(listing_data['channelId']) in _timeslot_list:
+                key_ts = ( listing_data['channelId'], utils.tm_local_parse(listing_data['start'] * 1000) )
+                if key_ts in _timeslot_list:
                     program_json = self.get_program(ch_data,
-                        listing_data, _timeslot_list[str(listing_data['channelId'])])
+                        listing_data, _timeslot_list[key_ts])
                 else:
                     program_json = self.get_program(ch_data,
                         listing_data, None)
-            except KeyError:
-                self.logger.info('Missing Channel: {}'.format(str(listing_data['channelId'])))
+            except KeyError as e:
+                self.logger.info('2 Missing Channel: {} {}'.format(str(listing_data['channelId']), e))
                 continue
             if program_json is not None:
                 _program_list.append(program_json)
@@ -231,27 +197,41 @@ class EPG(PluginEPG):
         if not _ch_data['enabled']:
             return None
         prog_id = _program_data['id']
-        if _timeslot_list is not None and prog_id in _timeslot_list:
+        key = (_ch_data['uid'], _program_data['start'])
+
+        if _timeslot_list is not None and key in _timeslot_list:
             return None
         
-        start_time = utils.tm_local_parse(_program_data['start'])
-        end_time = utils.tm_local_parse(_program_data['end'])
-        dur_min = int((_program_data['end'] - _program_data['start']) / 60 / 1000)
+        prog_details = self.db_programs.get_program(self.plugin_obj.name, prog_id)
+        if len(prog_details) == 0:
+            self.logger.warning('Program error: EPG program details missing {} {}' \
+                .format(self.plugin_obj.name, prog_id))
+            return None
+
+        prog_details = json.loads(prog_details[0]['json'])
+
+        start_time = utils.tm_local_parse(
+            (_program_data['start']
+            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment'])
+            * 1000)
+        end_time = utils.tm_local_parse(
+            (_program_data['end']
+            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment'])
+            * 1000)
+        dur_min = int((_program_data['end'] - _program_data['start']) / 60)
         sid = str(_program_data['channelId'])
-        title = _program_data['title']
+        title = prog_details['title']
         entity_type = None
 
-        if 'descriptions' not in _program_data.keys():
+        if 'description' not in prog_details.keys():
             description = 'Unavailable'
         else:
-            key = list(_program_data['descriptions'].keys())[0]
-            description = _program_data['descriptions'][key]
-            
+            description = prog_details['description']
         short_desc = description
         video_quality = None
         cc = False
-        live = False
-        is_new = False
+        live = _program_data['is_live']
+        is_new = _program_data['is_live']
         finale = False
         premiere = False
         air_date = None
@@ -264,7 +244,7 @@ class EPG(PluginEPG):
         if _ch_data['json']['groups_other'] in xumo_tv_genres:
             genres = xumo_tv_genres[_ch_data['json']['groups_other']]
         else:
-            self.logger.info('Missing xumo genre translation for: {}' \
+            self.logger.info('Missing XUMO genre translation for: {}' \
                     .format(_ch_data['json']['groups_other']))
             genres = _ch_data['json']['groups_other']
 
@@ -287,3 +267,35 @@ class EPG(PluginEPG):
             'season': season, 'episode': episode, 'se_common': se_common, 'se_xmltv_ns': se_xmltv_ns,
             'se_progid': se_prog_id}
         return json_result
+
+    def update_program_info(self, _prog):
+        self.logger.debug('{}:{} Processing Program {} from XUMO' \
+            .format(self.plugin_obj.name, self.instance_key, _prog))
+        program = {}
+        url = 'https://valencia-app-mds.xumo.com/v2/assets/asset/{}.json?f=title&f=providers&f=descriptions&f=runtime&f=availableSince' \
+            .format(_prog)
+        listing = self.get_uri_data(url)
+        program['title'] = listing['title']
+        if 'descriptions' in listing:
+            if 'large' in listing['descriptions'].keys():
+                key = 'large'
+            elif 'medium' in listing['descriptions'].keys():
+                key = 'medium'
+            elif 'small' in listing['descriptions'].keys():
+                key = 'small'
+            else:
+                key = list(listing['descriptions'].keys())[0]
+            program['description'] = listing['descriptions'][key]
+        program['stream_url'] = None
+        for source in listing['providers'][0]['sources']:
+            if 'drm' not in source:
+                if source['produces'] == 'application/x-mpegURL':
+                    program['stream_url'] = source['uri']
+                    break
+                elif source['produces'] == 'application/x-mpegURL;type=tv':
+                    program['stream_url'] = source['uri']
+        if program['stream_url'] is None:
+            self.logger.info('No stream available for program {}' \
+                .format(_prog))
+        self.db_programs.save_program(self.plugin_obj.name, _prog, program)
+        return program

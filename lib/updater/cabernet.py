@@ -30,7 +30,6 @@ import zipfile
 
 import lib.common.utils as utils
 import lib.db.datamgmt.backups as backups
-import lib.updater.patcher as patcher
 from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except

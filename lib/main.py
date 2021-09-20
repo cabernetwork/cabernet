@@ -29,6 +29,7 @@ from multiprocessing import Queue, Process
 import lib.clients.hdhr.hdhr_server as hdhr_server
 import lib.clients.web_tuner as web_tuner
 import lib.clients.web_admin as web_admin
+import lib.common.socket_timeout as socket_timeout
 import lib.common.utils as utils
 import lib.plugins.plugin_handler as plugin_handler
 import lib.clients.ssdp.ssdp_server as ssdp_server
@@ -116,10 +117,9 @@ def main(script_dir):
         LOGGER.info('Initiating Cabernet v{}'.format(utils.get_version_str()))
 
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
-        if args.restart:
-        #if args.restart and config['main']['maintenance_mode']:
+        if args.restart and config['main']['maintenance_mode']:
             LOGGER.info('In maintenance mode, applying patches')
-            patcher.patch_upgrade(config, utils.VERSION)
+            patcher.patch_upgrade(config_obj, utils.VERSION)
             config_obj.write('main', 'maintenance_mode', False)
             time.sleep(0.01)
 
@@ -127,9 +127,6 @@ def main(script_dir):
         plugins = init_plugins(config_obj)
         config_obj.defn_json = None
         init_versions(plugins)
-
-        scheduler_tasks(config)
-
         if opersystem in ['Windows']:
             pickle_it = Pickling(config)
             pickle_it.to_pickle(plugins)
@@ -140,7 +137,7 @@ def main(script_dir):
         sched_queue = Queue()
         webadmin = init_webadmin(config, plugins, hdhr_queue, terminate_queue, sched_queue)
         tuner = init_tuner(config, plugins, hdhr_queue, terminate_queue)
-        scheduler = Scheduler(plugins, sched_queue)
+        scheduler = init_scheduler(config, plugins, sched_queue)
         time.sleep(0.1)
         ssdp_serverx = init_ssdp(config)
         hdhr_serverx = init_hdhr(config, hdhr_queue)
@@ -160,8 +157,8 @@ def main(script_dir):
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
 
     except KeyboardInterrupt:
-        LOGGER.info('^C received, shutting down the server')
-        shutdown(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
+        LOGGER.warning('^C received, shutting down the server')
+        shutdown(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj, terminate_queue)
 
 
 def scheduler_tasks(_config):
@@ -209,6 +206,11 @@ def init_tuner(_config, _plugins, _hdhr_queue, _terminate_queue):
     time.sleep(0.1)
     return tuner
 
+def init_scheduler(_config, _plugins, _sched_queue):
+    scheduler_tasks(_config)
+    socket_timeout.DEFAULT_SOCKET_TIMEOUT = 10.0
+    return Scheduler(_plugins, _sched_queue)
+
 
 def init_ssdp(_config):
     if not _config['ssdp']['disable_ssdp']:
@@ -231,7 +233,9 @@ def init_hdhr(_config, _hdhr_queue):
     return None
 
 
-def shutdown(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj):
+def shutdown(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj, _terminate_queue):
+    _terminate_queue.put('shutdown')
+    time.sleep(2)
     terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
     clean_exit()
 

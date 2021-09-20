@@ -14,7 +14,7 @@
                     "enabled":{
                         "label": "Enabled",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 0,
                         "help": "Will disable this instance only"
                     },
@@ -54,6 +54,20 @@
                         "values": [1000, 2000, 3000, 4000, 5000],
                         "level": 1,
                         "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and provider at the same time."
+                    },
+                    "epg-start_adjustment":{
+                        "label": "Start Time Adjustment",
+                        "type": "integer",
+                        "default": 60,
+                        "level": 2,
+                        "help": "Used to start each program x seconds after the program is suppose to start."
+                    },
+                    "epg-end_adjustment":{
+                        "label": "End Time Adjustment",
+                        "type": "integer",
+                        "default": 60,
+                        "level": 2,
+                        "help": "Used to start each program x seconds before the program is suppose to end."
                     }
                 }
             }

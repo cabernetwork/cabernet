@@ -36,6 +36,7 @@ class PluginObj:
         self.scheduler_db = DBScheduler(self.config_obj.data)
         self.scheduler_tasks()
         self.enabled = True
+        self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
     # Plugin may have the following methods
     # used to interface to the app.
@@ -54,20 +55,20 @@ class PluginObj:
     This calls the scheduler to run the task.
     """
     
-    #def get_channel_uri_ext(self, sid, _instance=None):
-    """
-    Required for streaming
-    External request to get the uri for a channel.  Called from the 
-    stream object.  
-    """
+    def is_time_to_refresh_ext(self, _last_refresh, _instance):
+        """
+        External request to determine if the m3u8 stream uri needs to 
+        be refreshed.
+        Called from stream object.
+        """
+        return False
 
-    #def is_time_to_refresh_ext(self, _last_refresh, _instance):
-    """
-    May be required for streaming based on stream type
-    External request to determine if get_channel_uri_ext
-    should be called again.  Called from the 
-    stream sub-classes object.  
-    """
+    def get_channel_uri_ext(self, sid, _instance=None):
+        """
+        External request to return the uri for a m3u8 stream.
+        Called from stream object.
+        """
+        return self.instances[_instance].get_channel_uri(sid)
 
     def scheduler_tasks(self):
         """

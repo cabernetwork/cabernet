@@ -26,6 +26,7 @@ xumo_groups = {
     'Food, Drink & Travel': groups['TRAVEL'],
     'Kids & Family':        groups['KIDS'],
     'Latinx':               groups['SPANISH'],
+    'Latinx Heritage Month': groups['SPANISH'],
     'Lifestyle':            groups['LIFESTYLE'],
     'Music':                groups['MUSIC'],
     'News':                 groups['NEWS'],

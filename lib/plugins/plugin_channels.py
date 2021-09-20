@@ -17,9 +17,17 @@ substantial portions of the Software.
 """
 
 import datetime
+import json
 import logging
+import re
+import time
+import urllib.request
 
+import lib.m3u8 as m3u8
+import lib.common.utils as utils
 from lib.db.db_channels import DBChannels
+from lib.common.decorators import handle_url_except
+from lib.common.decorators import handle_json_except
 
 
 class PluginChannels:
@@ -32,7 +40,22 @@ class PluginChannels:
         self.db = DBChannels(self.instance_obj.config_obj.data)
         self.config_section = self.instance_obj.config_section
 
+    @handle_url_except(timeout=10.0)
+    @handle_json_except
+    def get_uri_data(self, _uri):
+        header = {
+            'Content-Type': 'application/json',
+            'User-agent': utils.DEFAULT_USER_AGENT}
+        req = urllib.request.Request(_uri, headers=header)
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            return json.load(resp)
 
+    @handle_url_except(timeout=10.0)
+    @handle_json_except
+    def get_m3u8_data(self, _uri):
+        return m3u8.load(_uri,
+            headers={'User-agent': utils.DEFAULT_USER_AGENT})
+    
     def refresh_channels(self, force=False):
         last_update = self.db.get_status(self.plugin_obj.name, self.instance_key)
         update_needed = False
@@ -44,7 +67,17 @@ class PluginChannels:
                     self.plugin_obj.name.lower()]['channel-update_timeout']:
                 update_needed = True
         if update_needed or force:
+            i = 0
             ch_dict = self.get_channels()
+            while ch_dict is None and i < 2:
+                i += 1
+                time.sleep(0.5)
+                ch_dict = self.get_channels()
+            if ch_dict == None:
+                self.logger.warning('Unable to retrieve channel data from {}, aborting refresh' \
+                    .format(self.plugin_obj.name))
+                return
+
             if 'channel-import_groups' in self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
                     self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['channel-import_groups'])
@@ -54,3 +87,5 @@ class PluginChannels:
             self.logger.debug('Channel data still new for {} {}, not refreshing' \
                 .format(self.plugin_obj.name, self.instance_key))
 
+    def clean_group_name(self, group_name):
+        return re.sub('[ +&*%$#@!:;,<>?]', '', group_name)

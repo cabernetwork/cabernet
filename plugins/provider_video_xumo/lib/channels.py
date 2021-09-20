@@ -16,63 +16,60 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import datetime
 import json
-import urllib.request
+import time
 
-import lib.m3u8 as m3u8
 import lib.common.exceptions as exceptions
 import lib.clients.channels.channels as channels
-from lib.common.decorators import handle_url_except
-from lib.common.decorators import handle_json_except
 from lib.plugins.plugin_channels import PluginChannels
+from lib.db.db_epg_programs import DBEpgPrograms
 
-from . import constants
 from .translations import xumo_groups
+from .epg import EPG
 
 class Channels(PluginChannels):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
+        self.db_programs = DBEpgPrograms(self.instance_obj.config_obj.data)
+        self.epg = EPG(_instance_obj)
 
-    @handle_json_except
-    @handle_url_except
     def get_channels(self):
         channels_url = 'https://valencia-app-mds.xumo.com/v2/channels/list/{}.json?geoId={}' \
             .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)
-        url_headers = {
-            'Content-Type': 'application/json',
-            'User-agent': constants.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(channels_url, headers=url_headers)
-        with urllib.request.urlopen(req) as resp:
-            ch_json = json.load(resp)
+
+        ch_json = self.get_uri_data(channels_url)
         ch_list = []
         if len(ch_json) == 0:
-            self.logger.warning('xumo HTTP Channel Request Failed for instance {}'.format(self.instance_key))
-            raise exceptions.CabernetException('xumo HTTP Channel Request Failed')
-
+            self.logger.warning('{} HTTP Channel Request Failed for instance {}' \
+                .format(self.plugin_obj.name, self.instance_key))
+            raise exceptions.CabernetException('{} HTTP Channel Request Failed' \
+                .format(self.plugin_obj.name))
         self.logger.info("{}: Found {} stations on instance {}"
             .format(self.plugin_obj.name, len(ch_json['channel']['item']),
             self.instance_key))
 
-        for xumo_channel in ch_json['channel']['item']:
+        for channel_dict in ch_json['channel']['item']:
             hd = 0
-            ch_id = str(xumo_channel['guid']['value'])
-            ch_callsign = xumo_channel['callsign']
+            ch_id = str(channel_dict['guid']['value'])
+            ch_callsign = channel_dict['callsign']
 
             thumbnail = "https://image.xumo.com/v1/channels/channel/{}/512x512.png?type=color_onBlack" \
                 .format(ch_id)
             thumbnail_size = channels.get_thumbnail_size(thumbnail)
  
-            channel = xumo_channel['number']
-            friendly_name = xumo_channel['title']
+            channel = channel_dict['number']
+            friendly_name = channel_dict['title']
             groups_other = None
-            if 'genre' in xumo_channel:
-                if xumo_channel['genre'][0]['value'] in xumo_groups:
-                    groups_other = xumo_groups[xumo_channel['genre'][0]['value']]
+            if 'genre' in channel_dict:
+                if channel_dict['genre'][0]['value'] in xumo_groups:
+                    groups_other = xumo_groups[channel_dict['genre'][0]['value']]
                 else:
-                    groups_other = [ xumo_channel['genre'][0]['value'] ]
-                    self.logger.info('Missing xumo category translation for: {}' \
-                        .format(xumo_channel['genre'][0]['value']))
+                    # Need to replace spaces with "_" and remove special characters.
+                    self.logger.warning('Missing XUMO category translation for: {}' \
+                        .format(channel_dict['genre'][0]['value']))
+                    groups_other = self.clean_group_name(channel_dict['genre'][0]['value'])
             
             channel = {
                 'id': ch_id,
@@ -90,38 +87,45 @@ class Channels(PluginChannels):
             ch_list.append(channel)
         return ch_list
 
-    @handle_json_except
-    @handle_url_except
     def get_channel_uri(self, _channel_id):
         self.logger.info('{} : Getting video stream for channel {}' \
             .format(self.plugin_obj.name, _channel_id))
-        
-        url = 'https://valencia-app-mds.xumo.com/v2/channels/channel/{}/onnow.json' \
-            .format(_channel_id)
-        headers = {'Content-Type': 'application/json',
-            'User-agent': constants.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as resp:
-            prog = json.load(resp)
-        prog_id = prog['id']
-        print(prog_id)
 
-        url = 'https://valencia-app-mds.xumo.com/v2/assets/asset/{}.json?f=providers' \
-            .format(prog_id)
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as resp:
-            prog_streams = json.load(resp)
+        start_hour = datetime.datetime.utcnow().hour
+        url = 'https://valencia-app-mds.xumo.com/v2/channels/channel/{}/broadcast.json?hour={}' \
+            .format(_channel_id, start_hour)
+        time_now = time.time()
+        listing = self.get_uri_data(url)
+        prog_id = None
+        for prog in listing['assets']:
+            if time_now < prog['timestamps']['end']:
+                prog_id = prog['id']
+                break
 
-        stream_url = prog_streams['providers'][0]['source'][0]['uri']
-        
-        self.logger.debug("Determining best video stream for " + _channel_id + "...")
+        if prog_id is None:
+            prog_id = listing['assets'][len(listing['assets'])-1]['id']
+            self.logger.debug('XUMO current list of current topics are outside of current time {} using {}' \
+                .format(listing['assets'], prog_id))
+        prog_dict = self.db_programs.get_program(self.plugin_obj.name, prog_id)
+        if len(prog_dict) == 0:
+            self.logger.info('XUMO program not in database so EPG is not upto date. Try refreshing EPG. prog:{} ch:{}' \
+                .format(prog_id, _channel_id))
+            json_list = self.epg.update_program_info(prog_id)
+            if json_list is None:
+                self.logger.warning('Unable to find program uri stream from XUMO, aborting {}' \
+                    .format(prog_id))
+                return None
+        else:
+            json_list = json.loads(prog_dict[0]['json'])
+
+        stream_url = json_list['stream_url']
+        self.logger.debug('Determining best video stream for {}...' \
+            .format(_channel_id))
         bestStream = None
 
         # find the heighest stream url bandwidth and save it to the list
-        videoUrlM3u = m3u8.load(stream_url,
-            headers={'User-agent': constants.DEFAULT_USER_AGENT})
-        self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
-
+        videoUrlM3u = self.get_m3u8_data(stream_url)
+        self.logger.debug('Found {} Playlists'.format(str(len(videoUrlM3u.playlists))))
         if len(videoUrlM3u.playlists) > 0:
             for videoStream in videoUrlM3u.playlists:
                 if bestStream is None:
@@ -129,19 +133,51 @@ class Channels(PluginChannels):
                 elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
                       (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
                     bestStream = videoStream
-
                 elif ((videoStream.stream_info.resolution[0] == bestStream.stream_info.resolution[0]) and
                       (videoStream.stream_info.resolution[1] == bestStream.stream_info.resolution[1]) and
                       (videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth)):
                     bestStream = videoStream
 
             if bestStream is not None:
-                self.logger.debug(_channel_id + " will use " +
-                    str(bestStream.stream_info.resolution[0]) + "x" +
-                    str(bestStream.stream_info.resolution[1]) +
-                    " resolution at " + str(bestStream.stream_info.bandwidth) + "bps")
-
+                self.logger.debug('{} will use {}x{} resolution at {}bps' \
+                    .format(_channel_id, str(bestStream.stream_info.resolution[0]), \
+                    str(bestStream.stream_info.resolution[1]), str(bestStream.stream_info.bandwidth)))
                 return bestStream.absolute_uri
         else:
-            self.logger.debug("No variant streams found for this station.  Assuming single stream only.")
+            self.logger.debug('No variant streams found for this station.  Assuming single stream only.')
             return stream_url
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

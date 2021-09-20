@@ -58,14 +58,14 @@
                     "epg-start_adjustment":{
                         "label": "Start Time Adjustment",
                         "type": "integer",
-                        "default": 60,
+                        "default": 0,
                         "level": 2,
                         "help": "Used to start each program x seconds after the program is suppose to start."
                     },
                     "epg-end_adjustment":{
                         "label": "End Time Adjustment",
                         "type": "integer",
-                        "default": -60,
+                        "default": 0,
                         "level": 2,
                         "help": "Used to start each program x seconds before the program is suppose to end."
                     }

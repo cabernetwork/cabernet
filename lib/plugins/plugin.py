@@ -53,6 +53,8 @@ class Plugin:
         self.enabled = True
         self.plugin_path = _plugin_path
         self.config_obj = _config_obj
+
+
         self.db_configdefn = DBConfigDefn(_config_obj.data)
         self.load_config_defn()
 
@@ -63,9 +65,13 @@ class Plugin:
         self.namespace = None
         self.instances = []
         self.load_plugin_manifest(_plugin_defn)
+        self.plugin_obj = None
+        if not self.config_obj.data[self.namespace.lower()]['enabled']:
+            self.enabled = False
+            self.logger.debug('Plugin disabled in config.ini for {}'.format(self.name))
+            return
         self.load_instances()
         self.logger.info('Plugin created for {}'.format(self.name))
-        self.plugin_obj = None
 
     def load_config_defn(self):
         try:

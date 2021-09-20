@@ -25,9 +25,9 @@ import time
 import lib.common.utils as utils
 from lib.db.db_channels import DBChannels
 
-REQUIRED_VERSION = '0.9.2'
+REQUIRED_VERSION = '0.9.3'
 
-def patch_upgrade(_config, _new_version):
+def patch_upgrade(_config_obj, _new_version):
     """
     This method is called when a cabernet upgrade is requested.  Versions are
     major.minor.patch
@@ -36,24 +36,20 @@ def patch_upgrade(_config, _new_version):
     To make sure this only executes associated with a specific version, the version 
     it is associated is tested with this new version.
     """
+    LOGGER = logging.getLogger(__name__)
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
-        logging.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
-        results = 'Patch may hang python process on restart.  Please check and kill any hanging processes'
-        db_channels = DBChannels(_config)
-        cur = None
-        sqlcmd = """
-            ALTER TABLE channels ADD COLUMN atsc VARCHAR(1500);
-            """
-        try:
-            cur = db_channels.sql_exec(sqlcmd)
-            DBChannels.conn[db_channels.db_name][threading.get_ident()].commit()
-            cur.close()
-        except sqlite3.OperationalError as e:
-            logging.info('Database Update already applied, patch ignored, {}'.format(e))
-            DBChannels.conn[db_channels.db_name][threading.get_ident()].rollback()
-            if cur is not None:
-                cur.close()
+        LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
+        results = 'Patch updates File logging settings...'
+        _config_obj.write('handler_filehandler', 'args', \
+            "(os.getenv('LOGS_DIR','data/logs')+'/cabernet.log', 'a', 10000000, 10)"
+            )
+        _config_obj.write('handler_filehandler', 'class', \
+            "lib.common.log_handlers.MPRotatingFileHandler"
+            )
+
+        
+        
     return results
         
 

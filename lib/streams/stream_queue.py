@@ -27,9 +27,8 @@ class StreamQueue:
     Used with ffmpeg and streamlink
     """
 
-    logger = None
-
     def __init__(self, _bytes_per_read, _proc, _stream_id):
+        self.logger = logging.getLogger(__name__)
         self.bytes_per_read = _bytes_per_read
         self.sout = _proc.stdout
         self.serr = _proc.stderr
@@ -42,8 +41,6 @@ class StreamQueue:
             """
             Collect lines from 'stream' and put them in 'queue'.
             """
-            self.logger.debug('Starting Stream Buffer Process PID={} Stream ID={}'
-                .format(self.proc.pid, self.stream_id))
             while self.not_terminated:
                 try:
                     self.sout.flush()
@@ -75,9 +72,6 @@ class StreamQueue:
             del self.queue[:len(clone_queue)]
             return b''.join(clone_queue)
         return None
-
+        
     def terminate(self):
         self.not_terminated = False
-        
-
-StreamQueue.logger = logging.getLogger(__name__)

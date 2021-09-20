@@ -19,10 +19,13 @@ substantial portions of the Software.
 import datetime
 import errno
 import http
+import os
 import re
 import signal
-import urllib.request
+import socket
+import threading
 import time
+import urllib.request
 from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -30,9 +33,13 @@ from multiprocessing import Queue, Process
 from queue import Empty
 from threading import Thread
 
-import lib.m3u8 as m3u8
+import lib.common.socket_timeout as socket_timeout
 import lib.common.exceptions as exceptions
+import lib.common.utils as utils
+import lib.m3u8 as m3u8
 import lib.streams.m3u8_queue as m3u8_queue
+from lib.common.decorators import handle_url_except
+from lib.common.decorators import handle_json_except
 from lib.streams.video import Video
 from lib.streams.atsc import ATSCMsg
 from lib.db.db_config_defn import DBConfigDefn
@@ -43,13 +50,15 @@ from .stream import Stream
 
 class InternalProxy(Stream):
 
+    is_m3u8_starting = 0
+
     def __init__(self, _plugins, _hdhr_queue):
         self.last_refresh = None
         self.channel_dict = None
-        self.write_buffer = None
+        self.wfile = None
         self.file_filter = None
         self.duration = 6
-        self.last_ts_index = -1
+        self.last_ts_filename = ''
         super().__init__(_plugins, _hdhr_queue)
         self.config = self.plugins.config_obj.data
         self.db_configdefn = DBConfigDefn(self.config)
@@ -60,38 +69,45 @@ class InternalProxy(Stream):
         self.in_queue = Queue()
         self.out_queue = Queue(maxsize=2)
         self.terminate_queue = None
+        self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
         
     def terminate(self, *args):
         try:
             while True:
                 self.in_queue.get_nowait()
-        except Empty:
+        except (Empty, EOFError):
             pass
         self.in_queue.put({'uri': 'terminate'})
-        time.sleep(1)
+        time.sleep(0.2)
         self.t_m3u8.terminate()
         self.t_m3u8.join()
+        time.sleep(0.5)
         self.t_m3u8 = None
         self.clear_queues()
 
-    def stream(self, _channel_dict, _write_buffer, _terminate_queue):
+    @handle_url_except(timeout=14.0)
+    @handle_json_except
+    def get_m3u8_data(self, _uri):
+        return m3u8.load(_uri,
+            headers={'User-agent': utils.DEFAULT_USER_AGENT})
+
+    def stream(self, _channel_dict, _wfile, _terminate_queue):
         """
         Processes m3u8 interface without using ffmpeg
         """
         self.config = self.db_configdefn.get_config()
         self.channel_dict = _channel_dict
-        self.write_buffer = _write_buffer
+        self.wfile = _wfile
         self.terminate_queue = _terminate_queue
-        self.t_m3u8 = Process(target=m3u8_queue.start, args=(
-            self.config, self.in_queue, self.out_queue, _channel_dict,))
-        self.t_m3u8.start()
+        self.start_m3u8_queue_process()
         play_queue_dict = OrderedDict()
         self.last_refresh = time.time()
         stream_uri = self.get_stream_uri(_channel_dict)
         if not stream_uri:
-            self.logger.warning('Unknown Channel')
+            self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
+            self.terminate()
             return
-        self.logger.debug('M3U8: {}'.format(stream_uri))
+        self.logger.debug('{} M3U8: {}'.format(self.t_m3u8.pid, stream_uri))
         self.file_filter = None
         if self.config[_channel_dict['namespace'].lower()]['player-enable_url_filter']:
             stream_filter = self.config[_channel_dict['namespace'].lower()]['player-url_filter']
@@ -101,23 +117,14 @@ class InternalProxy(Stream):
                 self.logger.warning('[{}]][player-enable_url_filter]'
                     ' enabled but [player-url_filter] not set'
                     .format(_channel_dict['namespace'].lower()))
-
         while True:
             try:
                 self.check_termination()
                 added = 0
                 removed = 0
-                i = 3
-                while i > 0:
-                    try:
-                        self.logger.debug('Reloading m3u8 stream')
-                        playlist = m3u8.load(stream_uri)
-                        break
-                    except urllib.error.HTTPError as e:
-                        self.logger.info('M3U8 Exception caught, retrying: {}'.format(e))
-                        time.sleep(0.5)
-                        i -= 1
-                if i < 1:
+                self.logger.debug('Reloading m3u8 stream {}'.format(self.t_m3u8.pid))
+                playlist = self.get_m3u8_data(stream_uri)
+                if playlist is None:
                     break
                 removed += self.remove_from_stream_queue(playlist, play_queue_dict)
                 added += self.add_to_stream_queue(playlist, play_queue_dict)
@@ -126,20 +133,21 @@ class InternalProxy(Stream):
                 elif self.plugins.plugins[_channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, _channel_dict['instance']):
                     stream_uri = self.get_stream_uri(_channel_dict)
-                    self.logger.debug('M3U8: {}'.format(stream_uri))
+                    self.logger.debug('{} M3U8: {}'.format(self.t_m3u8.pid, stream_uri))
                     self.last_refresh = time.time()
                 self.play_queue(play_queue_dict)
-            except IOError as e:
+            except IOError as ex:
                 # Check we hit a broken pipe when trying to write back to the client
-                if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
+                if ex.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
                     # Normal process.  Client request end of stream
-                    self.logger.info('2. Connection dropped by end device {}'.format(e))
+                    self.logger.info('Connection dropped by end device {} {}'.format(ex, self.t_m3u8.pid))
                     break
                 else:
-                    self.logger.error('{}{}'.format(
-                        '3 UNEXPECTED EXCEPTION=', e))
+                    self.logger.error('{}{} {}'.format(
+                        'UNEXPECTED EXCEPTION=', ex, self.t_m3u8.pid))
                     raise
-            except exceptions.CabernetException:
+            except exceptions.CabernetException as ex:
+                self.logger.info('{} {}'.format(ex, self.t_m3u8.pid))
                 break
         self.terminate()
 
@@ -164,7 +172,7 @@ class InternalProxy(Stream):
                 played = False
                 filtered = False
                 if self.file_filter is not None:
-                    m = self.file_filter.match(uri)
+                    m = self.file_filter.match(urllib.parse.unquote(uri))
                     if m:
                         filtered = True
                 _play_queue_dict[uri] = {
@@ -174,7 +182,7 @@ class InternalProxy(Stream):
                     'duration': m3u8_segment.duration,
                     'key': key
                 }
-                self.logger.debug(f"Added {uri} to play queue")
+                self.logger.debug(f"Added {uri} to play queue {self.t_m3u8.pid}")
                 total_added += 1
                 self.in_queue.put({'uri': uri, 
                     'data': _play_queue_dict[uri]})
@@ -198,7 +206,7 @@ class InternalProxy(Stream):
                 if _play_queue_dict[segment_key]['played']:
                     del _play_queue_dict[segment_key]
                     total_removed += 1
-                    self.logger.debug(f"Removed {segment_key} from play queue")
+                    self.logger.debug(f"Removed {segment_key} from play queue {self.t_m3u8.pid}")
                 continue
             else:
                 break
@@ -209,48 +217,120 @@ class InternalProxy(Stream):
         while not self.out_queue.empty() and num_served < 2:
             out_queue_item = self.out_queue.get()
             uri = out_queue_item['uri']
+            if uri == 'terminate':
+                raise exceptions.CabernetException('m3u8 queue termination requested, aborting stream {}' \
+                    .format(self.t_m3u8.pid))
             data = _play_queue_dict[uri]
             if data['filtered']:
-                self.write_buffer.write(out_queue_item['data'])
+                self.logger.debug(f"Filtered, Sending ATSC Msg {self.t_m3u8.pid}")
+                self.write_buffer(out_queue_item['data'])
             else:
                 self.video.data = out_queue_item['data']
                 if self.video.data is not None:
-                    chunk_updated = self.atsc.update_sdt_names(self.video.data[:80], 
-                        self.channel_dict['namespace'].encode(),
-                        self.set_service_name(self.channel_dict).encode())
-                    self.video.data = chunk_updated + self.video.data[80:]
+                    if self.config['stream']['update_sdt']:
+                        self.atsc.update_sdt_names(self.video,
+                            self.channel_dict['namespace'].encode(),
+                            self.set_service_name(self.channel_dict).encode())
                     self.duration = data['duration']
-                    if self.check_ts_counter(uri):
-                        self.logger.info(f"Serving {uri} ({self.duration}s) ({len(self.video.data)}B)")
-                        self.write_buffer.write(self.video.data)
+                    uri_decoded = urllib.parse.unquote(uri)
+                    if self.check_ts_counter(uri_decoded):
+                        self.logger.info(f"Serving {self.t_m3u8.pid} {uri_decoded}  ({self.duration}s) ({len(self.video.data)}B)")
+                        self.write_buffer(self.video.data)
+                    else:
+                        self.write_atsc_msg()
+                else:
+                    self.write_atsc_msg()
                 num_served += 1
             data['played'] = True
             self.check_termination()
             time.sleep(0.5 * self.duration)
         self.video.terminate()
 
-    def get_ts_counter(self, _uri):
-        r = re.compile( r'(\d+)\.ts' )
-        m = r.findall(_uri)
-        if len(m) == 0:
-            return 0
+    def write_buffer(self, _data):
+        socket_timeout.add_timeout(20.0)
+        try:
+            x = self.wfile.write(_data)
+        except socket.timeout as ex:
+            socket_timeout.del_timeout(20.0)
+            raise
+        except IOError as e:
+            socket_timeout.del_timeout(20.0)
+            raise
+        socket_timeout.del_timeout(20.0)
+        return x
+
+    def write_atsc_msg(self):
+        if self.channel_dict['atsc'] is None:
+            self.logger.debug(f"No video data, Sending Empty ATSC Msg {self.t_m3u8.pid}")
+            self.write_buffer(
+                self.atsc.format_video_packets())
         else:
-            return int(m[len(m)-1])
+            self.logger.debug(f"No video data, Sending default ATSC Msg for channel {self.t_m3u8.pid}")
+            self.write_buffer(
+                self.atsc.format_video_packets(
+                self.channel_dict['atsc']))
+
+    def get_ts_counter(self, _uri):
+        m = self.tc_match.findall(_uri)
+        if len(m) == 0:
+            return '', 0
+        else:
+            self.logger.debug('ts_counter {} {}'.format(m, _uri))
+            x_tuple = m[len(m)-1]
+            if len(x_tuple) == 0:
+                x_tuple = (_uri, '0')
+            else:
+                x_tuple = (_uri, x_tuple)
+            return x_tuple
 
     def check_ts_counter(self, _uri):
         """
         Providers sometime add the same stream section back into the list.
         This methods catches this and informs the caller that it should be ignored.
         """
-        ts_counter = self.get_ts_counter(_uri)
-        if ts_counter == self.last_ts_index:
-            self.logger.info('TC Counter Same section being transmitted, ignoring {} uri: {}' \
-                .format(ts_counter, _uri))
+        if _uri == self.last_ts_filename:
+            self.logger.warning('TC Counter Same section being transmitted, ignoring uri: {} {}' \
+                .format(_uri, self.t_m3u8.pid))
             return False
-        if ts_counter-1 != self.last_ts_index:
-            if self.last_ts_index != -1:
-                self.logger.info('TC Counter Discontinuity {} vs {} next uri: {}' \
-                    .format(self.last_ts_index, ts_counter, _uri))
-        self.last_ts_index = ts_counter
+        self.last_ts_filename = _uri
         return True
 
+    def start_m3u8_queue_process(self):
+        """
+        Python sometimes starts a process where it is not connected to the parent,
+        so the queues do not interact.  The process is killed and restarted
+        until python can do this correctly.
+        """
+        is_running = False
+        tries = 0
+        while True:
+            while InternalProxy.is_m3u8_starting != 0:
+                time.sleep(0.1)
+            InternalProxy.is_m3u8_starting = threading.get_ident()
+            time.sleep(0.01)
+            if InternalProxy.is_m3u8_starting == threading.get_ident():
+                break
+        while not is_running:
+            # Process is not thread safe.  Must do the same target, one at a time.
+            self.t_m3u8 = Process(target=m3u8_queue.start, args=(
+                self.config, self.in_queue, self.out_queue, self.channel_dict,))
+            self.t_m3u8.start()
+            self.in_queue.put({'uri': 'status'})
+            while self.out_queue.empty() and tries < 5:
+                tries += 1
+                time.sleep(0.1)
+            if tries > 4:
+                while not self.in_queue.empty():
+                    try:
+                        time.sleep(0.1)
+                        self.in_queue.get_nowait()
+                    except (Empty, EOFError):
+                        pass
+                self.t_m3u8.terminate()
+                self.t_m3u8.join()
+                tries = 0
+                time.sleep(0.3)
+            else:
+                status = self.out_queue.get()
+                is_running = True
+        InternalProxy.is_m3u8_starting = False

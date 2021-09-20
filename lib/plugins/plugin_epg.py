@@ -17,9 +17,15 @@ substantial portions of the Software.
 """
 
 import datetime
+import json
 import logging
+import urllib.request
 
+import lib.common.utils as utils
 from lib.db.db_epg import DBepg
+from lib.common.decorators import handle_url_except
+from lib.common.decorators import handle_json_except
+
 
 
 class PluginEPG:
@@ -35,12 +41,23 @@ class PluginEPG:
             [self.instance_obj.config_section]['epg-episode_adjustment'])
 
 
+    @handle_url_except(timeout=10.0)
+    @handle_json_except
+    def get_uri_data(self, _uri):
+        header = {'User-agent': utils.DEFAULT_USER_AGENT}
+        req = urllib.request.Request(_uri, headers=header)
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            x = json.load(resp)
+        return x
+    
+    
+    
     def refresh_epg(self):
         if not self.is_refresh_expired():
             self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.plugin_obj.name, self.instance_key))
             return
         if not self.instance_obj.config_obj.data[self.instance_obj.config_section]['epg-enabled']:
-            self.logger.debug('EPG collection not enabled for {} {}'
+            self.logger.info('EPG Collection not enabled for {} {}'
                 .format(self.plugin_obj.name, self.instance_key))
             return
         forced_dates, aging_dates = self.dates_to_pull()

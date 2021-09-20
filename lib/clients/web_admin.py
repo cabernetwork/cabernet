@@ -24,6 +24,7 @@ import re
 from threading import Thread
 from http.server import HTTPServer
 
+import lib.common.socket_timeout as socket_timeout
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
 from lib.common.decorators import filerequest
@@ -169,6 +170,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+        socket_timeout.DEFAULT_SOCKET_TIMEOUT = 60.0
         super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
         WebAdminHttpHandler.sched_queue = _sched_queue
         getrequest.log_urls()

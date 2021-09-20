@@ -25,10 +25,11 @@ import platform
 import socket
 import time
 import urllib
-
 from http.server import BaseHTTPRequestHandler
+from multiprocessing import Queue
 
 import lib.common.utils as utils
+import lib.common.socket_timeout as socket_timeout
 from lib.web.pages.templates import web_templates
 from lib.config.config_defn import ConfigDefn
 from lib.db.db_plugins import DBPlugins
@@ -51,10 +52,13 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
     total_instances = 0
 
     def log_message(self, _format, *args):
-        if int(args[1]) > 399:
-            self.logger.warning('[%s] %s' % (self.address_string(), _format % args))
-        else:
-            self.logger.info('[%s] %s' % (self.address_string(), _format % args))
+        try:
+            if int(args[1]) > 399:
+                self.logger.warning('[%s] %s' % (self.address_string(), _format % args))
+            else:
+                self.logger.info('[%s] %s' % (self.address_string(), _format % args))
+        except IndexError:
+            self.logger.error('[%s] %s' % (self.address_string(), _format % args))
 
     def get_query_data(self):
         content_path = self.path
@@ -113,24 +117,20 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 self.send_response(_code)
                 self.send_header('Content-type', mime_lookup[0])
                 self.end_headers()
-                try:
-                    self.wfile.write(x)
-                except BrokenPipeError as ex:
-                    self.logger.debug('Client dropped connection while writing out, ignoring. {}'.format(ex))
-
+                self.do_write(x)
             except IsADirectoryError as e:
-                self.logger.info('1:{}'.format(e))
+                self.logger.info('IsADirectoryError:{}'.format(e))
                 self.do_mime_response(401, 'text/html', web_templates['htmlError'].format('401 - Unauthorized'))
             except FileNotFoundError as e:
-                self.logger.info('2:{}'.format(e))
+                self.logger.info('FileNotFoundError:{}'.format(e))
                 self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - File Not Found'))
             except NotADirectoryError as e:
-                self.logger.info('3:{}'.format(e))
+                self.logger.info('NotADirectoryError:{}'.format(e))
                 self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Folder Not Found'))
             except ConnectionAbortedError as e:
-                self.logger.info('4:{}'.format(e))
+                self.logger.info('ConnectionAbortedError:{}'.format(e))
             except ModuleNotFoundError as e:
-                self.logger.info('5:{}'.format(e))
+                self.logger.info('ModuleNotFoundError:{}'.format(e))
                 self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Area Not Found'))
 
     def do_response(self, _code, _mime, _reply_str=None):
@@ -138,11 +138,8 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         self.send_header('Content-type', _mime)
         self.end_headers()
         if _reply_str:
-            try:
-                self.wfile.write(_reply_str.encode('utf-8'))
-            except BrokenPipeError as ex:
-                self.logger.debug('Client dropped connection before results were sent, ignoring. {}'.format(ex))
-
+            self.do_write(_reply_str.encode('utf-8'))
+        
     def do_mime_response(self, _code, _mime, _reply_str=None):
         self.do_dict_response({ 
             'code': _code, 'headers': {'Content-type': _mime},
@@ -158,10 +155,17 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
             self.send_header(header, value)
         self.end_headers()
         if rsp_dict['text']:
-            try:
-                self.wfile.write(rsp_dict['text'].encode('utf-8'))
-            except BrokenPipeError as ex:
-                self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
+            self.do_write(rsp_dict['text'].encode('utf-8'))
+
+    def do_write(self, _data):
+        try:
+            socket_timeout.add_timeout(20.0)
+            self.wfile.write(_data)
+            socket_timeout.del_timeout(20.0)
+        except BrokenPipeError as ex:
+            self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
+            socket_timeout.add_timeout(20.0)
+    
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue):
@@ -176,6 +180,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.plugins = _plugins
         WebHTTPHandler.hdhr_queue = _hdhr_queue
         WebHTTPHandler.terminate_queue = _terminate_queue
+        socket_timeout.reset_timeout()
         if not cls.plugins.config_obj.defn_json:
             cls.plugins.config_obj.defn_json = ConfigDefn(_config=_plugins.config_obj.data)
         plugins_db = DBPlugins(_plugins.config_obj.data)

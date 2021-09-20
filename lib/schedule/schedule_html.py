@@ -33,6 +33,10 @@ def get_schedule_html(_webserver):
         schedule_html.run_task(_webserver.query_data['task'])
         time.sleep(0.05)
         html = schedule_html.get()
+    elif 'deltask' in _webserver.query_data:
+        schedule_html.del_task(_webserver.query_data['task'])
+        time.sleep(0.05)
+        html = schedule_html.get()        
     elif 'delete' in _webserver.query_data:
         schedule_html.del_trigger(_webserver.query_data['trigger'])
         time.sleep(0.05)
@@ -159,6 +163,8 @@ class ScheduleHTML:
                 ])
                 play_name = ''
                 play_icon = ''
+                delete_icon = ''
+                delete_name = ''
             else:
                 html = ''.join([html,
                     ' -- Last ran ', lastran_delta, ' ago, ',
@@ -167,13 +173,21 @@ class ScheduleHTML:
                 ])
                 play_name = '&run=1'
                 play_icon = 'play_arrow'
+                delete_icon = 'delete_forever'
+                delete_name = '&deltask=1'
 
             html = ''.join([html,
                 '</a></td>',
                 '<td class="schedIcon">',
                 '<a href="#" onclick=\'load_sched_url("/api/schedulehtml?task=',
                 task_dict['taskid'], play_name, '")\'>',
-                '<i class="md-icon">', play_icon, '</i></a></td>',
+                '<i class="md-icon">', play_icon, '</i></a>',
+                '<br>',
+                '<a href="#" title="After deleting, restart app to restore tasks to default" ', 
+                'onclick=\'load_sched_url("/api/schedulehtml?task=',
+                task_dict['taskid'], delete_name, '")\'>',
+                '<i class="md-icon">', delete_icon, '</i></a>',
+                '</td>',
                 '</tr>',
                 '<tr>',
                 '<td colspan=3><hr></td>',
@@ -474,5 +488,10 @@ class ScheduleHTML:
 
     def run_task(self, _taskid):
         self.queue.put({'cmd': 'runtask', 'taskid': _taskid })
+        return None
+
+
+    def del_task(self, _taskid):
+        self.queue.put({'cmd': 'deltask', 'taskid': _taskid })
         return None
 

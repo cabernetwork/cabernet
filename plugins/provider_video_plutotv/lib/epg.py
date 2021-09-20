@@ -25,10 +25,8 @@ import lib.common.exceptions as exceptions
 import lib.common.utils as utils
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-from lib.db.db_epg import DBepg
 from lib.plugins.plugin_epg import PluginEPG
 
-from . import constants
 from .translations import plutotv_tv_genres
 
 
@@ -43,11 +41,8 @@ class EPG(PluginEPG):
         aging items        
         """
         return [1], []
-
-
-    @handle_json_except
-    @handle_url_except
-    def get_url_data(self):
+    
+    def get_day_data(self):
         stime = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
         # back up 2 hours
         start = str(stime.strftime('%Y-%m-%dT%H:00:00.000Z'))
@@ -60,23 +55,17 @@ class EPG(PluginEPG):
             mstime = str(stime.strftime('%Y-%m-%dT23:59:00.000Z'))
             metime = str(etime.strftime('%Y-%m-%dT00:00:00.000Z'))
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, mstime))
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req) as resp:
-                results[stime.date()] = json.load(resp)
+            results[stime.date()] = self.get_uri_data(url)
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(metime, end))
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req) as resp:
-                results[etime.date()] = json.load(resp)
+            results[etime.date()] = self.get_uri_data(url)
         else:
             url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, end))
-            req = urllib.request.Request(url)
-            with urllib.request.urlopen(req) as resp:
-                results[stime.date()] = json.load(resp)
+            results[stime.date()] = self.get_uri_data(url)
         return results
 
     def refresh_programs(self, _epg_day, use_cache=True):
         try:
-            json_data = self.get_url_data()
+            json_data = self.get_day_data()
             for day, day_data in json_data.items():
                 program_list = []
                 for ch_data in day_data:

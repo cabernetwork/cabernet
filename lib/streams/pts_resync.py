@@ -17,6 +17,7 @@ substantial portions of the Software.
 """
 
 import logging
+import os
 import subprocess
 import time
 from threading import Thread
@@ -29,6 +30,7 @@ class PTSResync:
         self.logger = logging.getLogger(__name__)
         self.config = _config
         self.namespace = _namespace
+        self.id = _id
         if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
             self.ffmpeg_proc = self.open_ffmpeg_proc()
         else:
@@ -38,14 +40,26 @@ class PTSResync:
             if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
                 self.logger.info('PTS Resync running ffmpeg')
 
-
     def video_to_stdin(self, _video):
-        self.ffmpeg_proc.stdin.write(_video.data)
+        try:
+            self.ffmpeg_proc.stdin.write(_video.data)
+        except BrokenPipeError as ex:
+            # This occurs when the process does not start correctly
+            self.stream_queue.terminate()
+            self.ffmpeg_proc.terminate()
+            try:
+                self.ffmpeg_proc.communicate()
+            except ValueError:
+                pass
+            self.ffmpeg_proc = self.open_ffmpeg_proc()
+            time.sleep(0.01)
+            self.ffmpeg_proc.stdin.write(_video.data)
+            self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
+            self.logger('Restarting PTSResync ffmpeg due to corrupted process start {}', os.getpid())
 
     def resequence_pts(self, _video):
         if not self.config[self.namespace]['player-enable_pts_resync']:
             return
-
         if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
             t_in = Thread(target=self.video_to_stdin, args=(_video,))
             t_in.start()

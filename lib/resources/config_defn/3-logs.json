@@ -90,7 +90,7 @@
                     "class":{
                         "label": "class",
                         "type": "string",
-                        "default": "handlers.RotatingFileHandler",
+                        "default": "lib.common.log_handlers.MPRotatingFileHandler",
                         "level": 4,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
                         "help": null
@@ -98,10 +98,10 @@
                     "args":{
                         "label": "args",
                         "type": "string",
-                        "default": "(os.getenv('LOGS_DIR','data/logs')+'/cabernet.log', 'a', 1000000, 10)",
+                        "default": "(os.getenv('LOGS_DIR','data/logs')+'/cabernet.log', 'a', 10000000, 10)",
                         "level": 4,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
-                        "help": "Arguments are path-filename, a=append, 1000000 is max size per file, 10 is max number of files to keep"
+                        "help": "Arguments are path-filename, a=append, 10000000 is max size per file, 10 is max number of files to keep"
                     }
                 }
             },

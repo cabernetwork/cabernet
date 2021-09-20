@@ -32,24 +32,32 @@ class PluginInstanceObj:
         self.plugin_obj = _plugin_obj
         self.instance_key = _instance_key
         self.enabled = True
+        self.channels = None
+        self.epg = None
 
     def refresh_channels(self):
-        if self.enabled:
+        if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             self.channels.refresh_channels()
         else:
             self.logger.debug('{}:{} Plugin instance disabled, not refreshing Channels' \
                 .format(self.plugin_obj.name, self.instance_key))
 
     def get_channel_uri(self, sid):
-        if self.enabled:
-            return self.channels.get_channel_uri(sid)
+        if self.enabled and self.config_obj.data[self.config_section]['enabled']:
+            i = 0
+            uri = self.channels.get_channel_uri(sid)
+            while uri is None and i < 2:
+                i += 1
+                time.sleep(0.1)
+                uri = self.channels.get_channel_uri(sid)
+            return uri
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not refreshing Channels' \
+            self.logger.debug('{}:{} Plugin instance disabled, not getting Channel uri' \
                 .format(self.plugin_obj.name, self.instance_key))
             return None
 
     def refresh_epg(self):
-        if self.enabled:
+        if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             self.epg.refresh_epg()
         else:
             self.logger.debug('{}:{} Plugin instance disabled, not refreshing EPG' \

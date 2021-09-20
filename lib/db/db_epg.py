@@ -128,7 +128,6 @@ class DBepg(DB):
             _namespace,
             _instance,
         ))
-    
 
     def get_last_update(self, _namespace, _instance, _day):
         if not _instance:

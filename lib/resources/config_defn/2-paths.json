@@ -177,7 +177,15 @@
                         "default": "epg",
                         "level": 3,
                         "writable": false,
-                        "help": "Filename of database containing program data"
+                        "help": "Filename of database containing each days worth of program data"
+                    },
+                    "db_files-epg_programs_db":{
+                        "label": "EPG Programs Database",
+                        "type": "path",
+                        "default": "epg_programs",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing program specific data"
                     },
                     "db_files-scheduler_db":{
                         "label": "Scheduler Database",

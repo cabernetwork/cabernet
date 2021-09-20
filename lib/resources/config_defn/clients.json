@@ -64,9 +64,24 @@
                     }
                 }
             },
+            "stream":{
+                "label": "Stream",
+                "sort": "2",
+                "icon": "cast",
+                "description": "Streaming Settings",
+                "settings":{
+                    "update_sdt":{
+                        "label": "ATSC SDT Update",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 2,
+                        "help": "Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."
+                    }
+                }
+            },
             "epg":{
                 "label": "EPG",
-                "sort": "2",
+                "sort": "3",
                 "icon": "tune",
                 "description": "TV Guide or EPG settings",
                 "settings":{
@@ -111,7 +126,7 @@
             },
             "ssdp":{
                 "label": "SSDP",
-                "sort": "3",
+                "sort": "4",
                 "icon": "vignette",
                 "description": "SSDP protocol on port 1900 (partially implemented).  Not required for most manual setups with media servers.",
                 "settings":{
@@ -135,7 +150,7 @@
             },
             "hdhomerun":{
                 "label": "HDHomeRun",
-                "sort": "4",
+                "sort": "5",
                 "icon": "vignette",
                 "description": "HDHomeRun protocol on port 65001 (partially implemented).  Not required for most manual setups with media servers.",
                 "settings":{

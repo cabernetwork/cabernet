@@ -26,15 +26,13 @@ from datetime import datetime
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 import lib.common.exceptions as exceptions
-
-from . import constants
+import lib.common.utils as utils
 
 
 class Geo:
 
-    logger = None
-
     def __init__(self, _config_obj, _section):
+        self.logger = logging.getLogger(__name__)
         self.config_obj = _config_obj
         self.section = _section
         self.geoId = None
@@ -48,15 +46,19 @@ class Geo:
         Geo info comes from json object on the home page
         If the request fails, we will use the last data available in config
         """
-        geo_url = 'http://www.xumo.tv'
-        login_headers = {'Content-Type': 'application/json', 'User-agent': constants.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(geo_url, headers=login_headers)
-        with urllib.request.urlopen(req, timeout=5) as resp:
-            results = json.loads(
-                re.findall(b'__JOBS_REHYDRATE_STATE__=(.+?);</script>', (resp.read()), flags=re.DOTALL)[0])
-        self.geoId, self.channelListId = results["jobs"]["1"]["data"]["geoId"], results["jobs"]["1"]["data"]["channelListId"]
-        self.config_obj.write(self.section, 'geoid', self.geoId)
-        self.config_obj.write(self.section, 'channelListId', self.channelListId)
-
-    
-Geo.logger = logging.getLogger(__name__)
+        if self.config_obj.data[self.section]['geoid'] is not None and \
+                self.config_obj.data[self.section]['channellistid'] is not None:
+            self.geoId = self.config_obj.data[self.section]['geoid']
+            self.channelListId = self.config_obj.data[self.section]['channellistid']
+            self.logger.debug('Reusing XUMO geoId and channelListId from provider')
+        else:
+            geo_url = 'https://www.xumo.tv'
+            login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
+            req = urllib.request.Request(geo_url, headers=login_headers)
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                results = json.loads(
+                    re.findall(b'__JOBS_REHYDRATE_STATE__=(.+?);</script>', (resp.read()), flags=re.DOTALL)[0])
+            self.geoId, self.channelListId = results["jobs"]["1"]["data"]["geoId"], results["jobs"]["1"]["data"]["channelListId"]
+            self.config_obj.write(self.section, 'geoid', self.geoId)
+            self.config_obj.write(self.section, 'channellistid', self.channelListId)
+        

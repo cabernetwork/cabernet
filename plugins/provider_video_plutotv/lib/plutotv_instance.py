@@ -16,10 +16,6 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import logging
-
-import lib.common.utils as utils
-import lib.common.exceptions as exceptions
 from .channels import Channels
 from .epg import EPG
 from lib.plugins.plugin_instance_obj import PluginInstanceObj
