@@ -36,14 +36,16 @@ def handle_url_except(f=None, timeout=1.0):
     if f is None:
         return functools.partial(handle_url_except, timeout=timeout)
     def wrapper_func(self, *args, **kwargs):
-        logger = None
+        logger = logging.getLogger(f.__name__)
         ex_save = ''
         i = 2
         while i > 0:
             i -= 1
             try:
                 socket_timeout.add_timeout(timeout)
+                self.logger.debug('Running url request {}'.format(os.getpid()))
                 x = f(self, *args, **kwargs)
+                self.logger.debug('Ran url request {}'.format(os.getpid()))
                 socket_timeout.del_timeout(timeout)
                 return x
             except urllib.error.HTTPError as ex:

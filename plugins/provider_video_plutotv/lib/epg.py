@@ -69,12 +69,16 @@ class EPG(PluginEPG):
             for day, day_data in json_data.items():
                 program_list = []
                 for ch_data in day_data:
-                    for listing_data in ch_data['timelines']:
-                        program_json = self.get_program(ch_data, listing_data)
-                        if program_json is not None:
-                            program_list.append(program_json)
-
+                    if 'timelines' in ch_data:
+                        for listing_data in ch_data['timelines']:
+                            program_json = self.get_program(ch_data, listing_data)
+                            if program_json is not None:
+                                program_list.append(program_json)
                 # push the update to the database
+                if len(program_list) == 0:
+                    self.logger.info('{}:{} Unable to update EPG, no timelines for day {}' \
+                        .format(self.plugin_obj.name, self.instance_key, day))
+                    continue
                 self.db.save_program_list(self.plugin_obj.name, self.instance_key, day, program_list)
                 self.logger.debug('Refreshed EPG data for {}:{} day {}'
                     .format(self.plugin_obj.name, self.instance_key, day))

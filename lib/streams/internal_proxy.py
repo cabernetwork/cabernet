@@ -247,16 +247,18 @@ class InternalProxy(Stream):
         self.video.terminate()
 
     def write_buffer(self, _data):
-        socket_timeout.add_timeout(20.0)
+        #socket_timeout.add_timeout(20.0)
         try:
+            self.logger.debug('writing buffer {}'.format(os.getpid()))
             x = self.wfile.write(_data)
+            self.logger.debug('wrote buffer {}'.format(os.getpid()))
         except socket.timeout as ex:
-            socket_timeout.del_timeout(20.0)
+            #socket_timeout.del_timeout(20.0)
             raise
         except IOError as e:
-            socket_timeout.del_timeout(20.0)
+            #socket_timeout.del_timeout(20.0)
             raise
-        socket_timeout.del_timeout(20.0)
+        #socket_timeout.del_timeout(20.0)
         return x
 
     def write_atsc_msg(self):

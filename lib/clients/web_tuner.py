@@ -221,7 +221,7 @@ class TunerHttpHandler(WebHTTPHandler):
                     plugin_name))
                 tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
-        socket_timeout.DEFAULT_SOCKET_TIMEOUT = 5.0
+        socket_timeout.DEFAULT_SOCKET_TIMEOUT = None
         super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 
 

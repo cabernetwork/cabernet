@@ -20,6 +20,7 @@ import importlib
 import importlib.resources
 import logging
 import mimetypes
+import os
 import pathlib
 import platform
 import socket
@@ -159,12 +160,14 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
     def do_write(self, _data):
         try:
-            socket_timeout.add_timeout(20.0)
+            #socket_timeout.add_timeout(20.0)
+            self.logger.debug('writing buffer {}'.format(os.getpid()))
             self.wfile.write(_data)
-            socket_timeout.del_timeout(20.0)
+            self.logger.debug('wrote buffer {}'.format(os.getpid()))
+            #socket_timeout.del_timeout(20.0)
         except BrokenPipeError as ex:
             self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
-            socket_timeout.add_timeout(20.0)
+            #socket_timeout.del_timeout(20.0)
     
 
     @classmethod

@@ -38,14 +38,18 @@ def reset_timeout():
 def add_timeout(_timeout):
     global ACTIVE_TIMEOUTS
     ACTIVE_TIMEOUTS.append(_timeout)
-    set_timeout()
+    #set_timeout()
+    logger = logging.getLogger(__name__)
+    logger.debug('socket timeouts: {} {}' \
+        .format(ACTIVE_TIMEOUTS, os.getpid()))
     
 def del_timeout(_timeout):
     global ACTIVE_TIMEOUTS
     try:
         ACTIVE_TIMEOUTS.remove(_timeout)
-        set_timeout()
+        #set_timeout()
     except ValueError:
+        logger = logging.getLogger(__name__)
         logger.warning('Requested timeout be removed, but missing {} {} {}' \
             .format(os.getpid(), _timeout, ACTIVE_TIMEOUTS))
         raise
@@ -56,4 +60,7 @@ def set_timeout():
         socket.setdefaulttimeout(max(ACTIVE_TIMEOUTS))
     except ValueError:
         socket.setdefaulttimeout(DEFAULT_SOCKET_TIMEOUT)
+        logger = logging.getLogger(__name__)
+        logger.debug('Setting timeout to default: {} {}' \
+            .format(DEFAULT_SOCKET_TIMEOUT, os.getpid()))
 
