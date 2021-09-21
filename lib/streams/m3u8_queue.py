@@ -19,6 +19,7 @@ substantial portions of the Software.
 import http
 import logging
 import os
+import re
 import socket
 import sys
 import time
