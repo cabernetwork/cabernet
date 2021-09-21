@@ -24,7 +24,6 @@ import re
 from threading import Thread
 from http.server import HTTPServer
 
-import lib.common.socket_timeout as socket_timeout
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
 from lib.common.decorators import filerequest
@@ -77,12 +76,12 @@ class WebAdminHttpHandler(WebHTTPHandler):
 
         try:
             super().__init__(*args)
-        except ConnectionResetError:
-            self.logger.warning('########## ConnectionResetError occurred, will try again')
+        except ConnectionResetError as ex:
+            self.logger.warning('ConnectionResetError occurred, will try again {}'.format(str(ex))))
             time.sleep(1)
             super().__init__(*args)
-        except ValueError:
-            self.logger.warning('ValueError occurred, Bad stream recieved.  Could be HTTPS or the stream was disconnected early')
+        except ValueError as ex:
+            self.logger.warning('ValueError occurred, Possible Bad stream recieved.  {}'.format(str(ex)))
         
 
     def do_GET(self):
@@ -170,7 +169,6 @@ class WebAdminHttpHandler(WebHTTPHandler):
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
-        socket_timeout.DEFAULT_SOCKET_TIMEOUT = None
         super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
         WebAdminHttpHandler.sched_queue = _sched_queue
         getrequest.log_urls()

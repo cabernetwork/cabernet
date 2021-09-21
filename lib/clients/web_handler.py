@@ -30,7 +30,6 @@ from http.server import BaseHTTPRequestHandler
 from multiprocessing import Queue
 
 import lib.common.utils as utils
-import lib.common.socket_timeout as socket_timeout
 from lib.web.pages.templates import web_templates
 from lib.config.config_defn import ConfigDefn
 from lib.db.db_plugins import DBPlugins
@@ -160,14 +159,9 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
     def do_write(self, _data):
         try:
-            #socket_timeout.add_timeout(20.0)
-            self.logger.debug('writing buffer {}'.format(os.getpid()))
             self.wfile.write(_data)
-            self.logger.debug('wrote buffer {}'.format(os.getpid()))
-            #socket_timeout.del_timeout(20.0)
         except BrokenPipeError as ex:
             self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
-            #socket_timeout.del_timeout(20.0)
     
 
     @classmethod
@@ -183,7 +177,6 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.plugins = _plugins
         WebHTTPHandler.hdhr_queue = _hdhr_queue
         WebHTTPHandler.terminate_queue = _terminate_queue
-        socket_timeout.reset_timeout()
         if not cls.plugins.config_obj.defn_json:
             cls.plugins.config_obj.defn_json = ConfigDefn(_config=_plugins.config_obj.data)
         plugins_db = DBPlugins(_plugins.config_obj.data)

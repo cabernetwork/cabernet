@@ -25,7 +25,6 @@ from logging import config
 from http.server import HTTPServer
 from urllib.parse import urlparse
 
-import lib.common.socket_timeout as socket_timeout
 from lib.web.pages.templates import web_templates
 from lib.db.db_config_defn import DBConfigDefn
 from lib.streams.m3u8_redirect import M3U8Redirect
@@ -57,12 +56,14 @@ class TunerHttpHandler(WebHTTPHandler):
         self.db_configdefn = DBConfigDefn(self.config)
         try:
             super().__init__(*args)
-        except ConnectionResetError:
-            self.logger.warning('ConnectionResetError occurred, will try again')
+        except ConnectionResetError as ex:
+            self.logger.warning('ConnectionResetError occurred, will try again {}' \
+                .format(ex))
             time.sleep(1)
             super().__init__(*args)
-        except ValueError as e:
-            self.logger.warning('ValueError occurred, Bad stream recieved.  {}'.format(e))
+        except ValueError as ex:
+            self.logger.warning('ValueError occurred, Bad stream recieved.  {}' \
+                .format(ex))
             raise
 
     def do_GET(self):
@@ -89,7 +90,7 @@ class TunerHttpHandler(WebHTTPHandler):
             sid = content_path.replace('/watch/', '')
             self.do_tuning(sid, query_data['name'], query_data['instance'])
         else:
-            self.logger.warning("Unknown request to " + content_path)
+            self.logger.warning('Unknown request to {}'.format(content_path))
             self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Not Implemented'))
         return
 
@@ -136,7 +137,8 @@ class TunerHttpHandler(WebHTTPHandler):
                 self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
                 return
         except KeyError:
-            self.logger.warning('Unknown Channel ID, not found in database {} {} {}'.format(_namespace, _instance, sid))
+            self.logger.warning('Unknown Channel ID, not found in database {} {} {}' \
+                .format(_namespace, _instance, sid))
             self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
             return
         if self.config[self.real_namespace.lower()]['player-stream_type'] == 'm3u8redirect':
@@ -221,7 +223,6 @@ class TunerHttpHandler(WebHTTPHandler):
                     plugin_name))
                 tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
-        socket_timeout.DEFAULT_SOCKET_TIMEOUT = None
         super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 
 

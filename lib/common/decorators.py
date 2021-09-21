@@ -29,54 +29,47 @@ import urllib
 import urllib.error
 from functools import update_wrapper
 
-import lib.common.socket_timeout as socket_timeout
-
-
-def handle_url_except(f=None, timeout=1.0):
+def handle_url_except(f=None, timeout=None):
+    """
+    timeout not currently used
+    """
     if f is None:
         return functools.partial(handle_url_except, timeout=timeout)
     def wrapper_func(self, *args, **kwargs):
-        logger = logging.getLogger(f.__name__)
         ex_save = ''
-        i = 2
+        i = 3
         while i > 0:
             i -= 1
             try:
-                socket_timeout.add_timeout(timeout)
-                self.logger.debug('Running url request {}'.format(os.getpid()))
+                if len(args) > 0:
+                    x = str(args[0])
+                else:
+                    x = 'unknown'
                 x = f(self, *args, **kwargs)
-                self.logger.debug('Ran url request {}'.format(os.getpid()))
-                socket_timeout.del_timeout(timeout)
                 return x
             except urllib.error.HTTPError as ex:
                 ex_save = str(ex)
-                logger = logging.getLogger(f.__name__)
-                logger.info("HTTPError in function {}(), retrying twice {} {} {}" \
+                self.logger.info("HTTPError in function {}(), retrying {} {} {}" \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             except urllib.error.URLError as ex:
                 ex_save = str(ex)
-                logger = logging.getLogger(f.__name__)
-                logger.info("URLError in function {}, retrying twice (): {} {} {}" \
+                self.logger.info("URLError in function {}, retrying (): {} {} {}" \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             except ConnectionResetError as ex:
                 ex_save = str(ex)
-                logger = logging.getLogger(f.__name__)
-                logger.info("ConnectionResetError in function {}(), retrying twice {} {} {}" \
+                self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}" \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             except socket.timeout as ex:
                 ex_save = str(ex)
-                logger = logging.getLogger(f.__name__)
-                logger.info("Socket Timeout Error in function {}(), retrying twice {} {} {}" \
+                self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}" \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             except http.client.RemoteDisconnected as ex:
                 ex_save = str(ex)
-                logger = logging.getLogger(f.__name__)
-                logger.info('Remote Server Disconnect Error in function {}(), retrying twice {} {} {}' \
+                self.logger.info('Remote Server Disconnect Error in function {}(), retrying {} {} {}' \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
-            time.sleep(0.5)
-        logger.warning('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
+            time.sleep(1.0)
+        self.logger.warning('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
             .format(f.__name__, os.getpid(), ex_save, str(args[0])))
-        socket_timeout.del_timeout(timeout)
         return None
     return update_wrapper(wrapper_func, f)
 
@@ -86,8 +79,7 @@ def handle_json_except(f):
         try:
             return f(self, *args, **kwargs)
         except json.JSONDecodeError as jsonError:
-            logger = logging.getLogger(f.__name__)
-            logger.error("JSONError in function {}(): {}".format(f.__name__, str(jsonError)))
+            self.logger.error("JSONError in function {}(): {}".format(f.__name__, str(jsonError)))
             return None
     return update_wrapper(wrapper_func, f)
 

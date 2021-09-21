@@ -29,7 +29,6 @@ from multiprocessing import Queue, Process
 import lib.clients.hdhr.hdhr_server as hdhr_server
 import lib.clients.web_tuner as web_tuner
 import lib.clients.web_admin as web_admin
-import lib.common.socket_timeout as socket_timeout
 import lib.common.utils as utils
 import lib.plugins.plugin_handler as plugin_handler
 import lib.clients.ssdp.ssdp_server as ssdp_server
@@ -151,7 +150,7 @@ def main(script_dir):
         while not RESTART_REQUESTED:            
             time.sleep(5)
         terminate_queue.put('shutdown')
-        LOGGER.info('Shutting Down...')
+        LOGGER.info('Shutting Down and Restarting...')
         RESTART_REQUESTED = False
         time.sleep(3)
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
@@ -208,7 +207,6 @@ def init_tuner(_config, _plugins, _hdhr_queue, _terminate_queue):
 
 def init_scheduler(_config, _plugins, _sched_queue):
     scheduler_tasks(_config)
-    socket_timeout.DEFAULT_SOCKET_TIMEOUT = 10.0
     return Scheduler(_plugins, _sched_queue)
 
 
