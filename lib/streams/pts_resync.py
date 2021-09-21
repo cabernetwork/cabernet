@@ -60,6 +60,8 @@ class PTSResync:
     def resequence_pts(self, _video):
         if not self.config[self.namespace]['player-enable_pts_resync']:
             return
+        if _video.data is None:
+            return
         if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
             t_in = Thread(target=self.video_to_stdin, args=(_video,))
             t_in.start()

@@ -300,8 +300,11 @@ class M3U8Process(Thread):
 
     def terminate(self):
         global STREAM_QUEUE
-        STREAM_QUEUE.put({'uri': 'terminate'})
-        time.sleep(0.01)
+        try:
+            STREAM_QUEUE.put({'uri': 'terminate'})
+            time.sleep(0.01)
+        except ValueError:
+            pass
 
     def get_stream_uri(self):
         return self.plugins.plugins[self.channel_dict['namespace']] \
@@ -342,7 +345,7 @@ class M3U8Process(Thread):
                 if m3u8_segment.duration > 0:
                     self.duration = m3u8_segment.duration
                 self.logger.debug('Added {} to play queue {}' \
-                    .format(uri, os.getpid())
+                    .format(uri, os.getpid()))
                 total_added += 1
                 try:
                     STREAM_QUEUE.put({'uri': uri, 
@@ -401,7 +404,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
             else:
                 logger.debug('UNKNOWN m3u8 queue request')
         except (KeyboardInterrupt, EOFError):
-            self.pts_resync.terminate()
-            self.clear_queues()
-            time.sleep(0.1)
+            TERMINATE_REQUESTED = True
+            STREAM_QUEUE.put({'uri': 'terminate'})
+            time.sleep(1.0)
             sys.exit()
