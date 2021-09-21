@@ -45,8 +45,6 @@
 !insertmacro MUI_PAGE_DIRECTORY
 ; get data folder
 Page custom DataFolderPage DataFolderPageLeave
-; get username and password
-Page custom UserPassPage UserPassPageLeave
 ; Components page
 !define MUI_PAGE_CUSTOMFUNCTION_PRE TestPython
 !insertmacro MUI_PAGE_COMPONENTS
@@ -192,7 +190,7 @@ SectionEnd
     !insertmacro MUI_DESCRIPTION_TEXT ${SEC01} "Installs python for all users.  Required for the Windows Service"
     !insertmacro MUI_DESCRIPTION_TEXT ${SEC02} "Installs the base app"
     !insertmacro MUI_DESCRIPTION_TEXT ${SEC03} "Adds a Windows Service using nssm."
-    !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} "Installs ffmpeg in app folder. No longer required."
+    !insertmacro MUI_DESCRIPTION_TEXT ${SEC04} "Installs ffmpeg in app folder. Currently required for most providers"
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Function onMultiUserModeChanged
@@ -212,7 +210,8 @@ Function .onInit
     StrCpy $DataFolder "C:\Windows\system32\config\systemprofile\Documents\cabernet"
     !insertmacro MULTIUSER_INIT
     SectionSetFlags ${SEC02} 17    # main section
-    SectionSetFlags ${SEC04} 0    # main section
+    ;SectionSetFlags ${SEC04} 0    # ffmpeg section, able to select, but not selected
+    SectionSetFlags ${SEC04} 1    # main section
 FunctionEnd
 
 

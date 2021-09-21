@@ -57,7 +57,7 @@ Function UserPassPage
     ${If} $Dialog == error
         Abort
     ${EndIf}
-    ${NSD_CreateLabel} 0 0 100% 24u "Please specify Locast Username and Password."
+    ${NSD_CreateLabel} 0 0 100% 24u "Please specify LocastUsername and Password."
     Pop $lblLabel
     ${NSD_CreateLabel} 0 30u 60u 12u "Username:"
     Pop $lblUsername
@@ -157,7 +157,7 @@ FunctionEnd
 
 Function UpdateConfig
     SetOutPath "$INSTDIR"
-    StrCpy $cmd 'python -m build.WINDOWS.UpdateConfig -u "$user" -p "$pwd" -i "$INSTDIR" -d "$DataFolder"'
+    StrCpy $cmd 'python -m build.WINDOWS.UpdateConfig -i "$INSTDIR" -d "$DataFolder"'
     nsExec::ExecToStack '$cmd'
     Pop $0 ;return value
     Pop $1 ; status text

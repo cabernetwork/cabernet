@@ -136,24 +136,29 @@ class Scheduler(Thread):
         Calls the trigger function and times the result
         """
         start = time.time()
-        if _trigger['namespace'] == 'internal':
-            mod_name, func_name = _trigger['funccall'].rsplit('.', 1)
-            mod = importlib.import_module(mod_name)
-            call_f = getattr(mod, func_name)
-            call_f(self.plugins)
-        else:
-            plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
-            if plugin_obj is None:
-                self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
-                    .format(_trigger['namespace']))
-                pass
-            elif _trigger['instance'] is None:
-                call_f = getattr(plugin_obj, _trigger['funccall'])
-                call_f()
+        try:
+            if _trigger['namespace'] == 'internal':
+                mod_name, func_name = _trigger['funccall'].rsplit('.', 1)
+                mod = importlib.import_module(mod_name)
+                call_f = getattr(mod, func_name)
+                call_f(self.plugins)
             else:
-                call_f = getattr(plugin_obj.instances[_trigger['instance']], 
-                    _trigger['funccall'])
-                call_f()
+                plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
+                if plugin_obj is None:
+                    self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
+                        .format(_trigger['namespace']))
+                    pass
+                elif _trigger['instance'] is None:
+                    call_f = getattr(plugin_obj, _trigger['funccall'])
+                    call_f()
+                else:
+                    call_f = getattr(plugin_obj.instances[_trigger['instance']], 
+                        _trigger['funccall'])
+                    call_f()
+        except KeyError:
+            # happens when the plugin is removed, but scheduler still has data.
+            pass
+
         end = time.time()
         duration = int(end - start)
         time.sleep(0.2)
