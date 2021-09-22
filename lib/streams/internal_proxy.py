@@ -138,6 +138,7 @@ class InternalProxy(Stream):
             self.write_atsc_msg()
             self.idle_counter = 0
         while not self.out_queue.empty():
+            self.idle_counter = 0
             out_queue_item = self.out_queue.get()
             uri = out_queue_item['uri']
             if uri == 'terminate':
