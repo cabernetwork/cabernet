@@ -25,6 +25,7 @@ from lib.plugins.plugin_obj import PluginObj
 
 from .geo import Geo
 from .xumo_instance import XUMOInstance
+from ..lib import translations
 
 
 class XUMO(PluginObj):
@@ -34,6 +35,12 @@ class XUMO(PluginObj):
         self.geo = Geo(_plugin.config_obj, self.namespace.lower())
         for inst in _plugin.instances:
             self.instances[inst] = XUMOInstance(self, inst)
+        self.unc_xumo_base = self.uncompress(translations.xumo_base)
+        self.unc_xumo_icons = self.uncompress(translations.xumo_icons)
+        self.unc_xumo_channel = self.uncompress(translations.xumo_channel)
+        self.unc_xumo_channels = self.uncompress(translations.xumo_channels)
+        self.unc_xumo_program = self.uncompress(translations.xumo_program)
+        
 
     def refresh_channels_ext(self, _instance=None):
         """

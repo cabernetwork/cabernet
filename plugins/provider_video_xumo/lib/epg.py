@@ -39,21 +39,12 @@ class EPG(PluginEPG):
         super().__init__(_instance_obj)
         self.db_programs = DBEpgPrograms(self.instance_obj.config_obj.data)
 
-
     def dates_to_pull(self):
         """
         Since epg is less than one day, return a forced day item with no
         aging items        
         """
         return [1], []
-
-    def get_url_listing(self):
-        url = 'https://valencia-app-mds.xumo.com/v2/channels/list/{}/onnowandnext.json?f=asset.title&f=asset.descriptions' \
-            .format(self.plugin_obj.geo.channelListId)
-        listing = self.get_uri_data(url)
-        ch_db = DBChannels(self.instance_obj.config_obj.data)
-        ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
-        return ch_list, listing
 
     def refresh_programs(self, _epg_day, use_cache=True):
         timeslot_list = {}
@@ -71,29 +62,6 @@ class EPG(PluginEPG):
         self.db.save_program_list(self.plugin_obj.name, self.instance_key, todaydate, program_list)
         self.logger.debug('Refreshed EPG data for {}:{} day {}'
             .format(self.plugin_obj.name, self.instance_key, todaydate))
-
-    def get_nownext_programs(self, _program_list, _prog_id_list):
-        """
-        Currently not used
-        """
-        ch_list, listing = self.get_url_listing()
-        for listing_data in listing['results']:
-            try:
-                ch_data = ch_list[str(listing_data['channelId'])][0]
-                if not ch_data['enabled']:
-                    continue
-                if str(listing_data['channelId']) in _prog_id_list:
-                    program_json = self.get_program(ch_data,
-                        listing_data, _prog_id_list[str(listing_data['channelId'])])
-                else:
-                    program_json = self.get_program(ch_data,
-                        listing_data, None)
-            except KeyError:
-                self.logger.debug('Missing Channel: {}'.format(str(listing_data['channelId'])))
-                continue
-            if program_json is not None:
-                _program_list.append(program_json)
-        return _program_list
 
     def get_fullday_programs(self, _program_list, _timeslot_list):
         """
@@ -115,8 +83,9 @@ class EPG(PluginEPG):
             self.logger.debug('{}:{} Processing Channel {} ' \
                 .format(self.plugin_obj.name, self.instance_key, ch, ch_list[ch][0]['display_name']))
             for hr in range(start_hour,24):
-                url = 'https://valencia-app-mds.xumo.com/v2/channels/channel/{}/broadcast.json?hour={}' \
-                    .format(ch, hr)
+                url = ''.join([self.plugin_obj.unc_xumo_base,
+                    self.plugin_obj.unc_xumo_channel
+                    .format(ch, hr)])
                 listing = self.get_uri_data(url)
                 for prog in listing['assets']:
                     start_time = utils.tm_local_parse(prog['timestamps']['start'] * 1000)
@@ -238,7 +207,7 @@ class EPG(PluginEPG):
         formatted_date = None
         rating = None
 
-        icon = "https://image.xumo.com/v1/channels/channel/{}/512x512.png?type=color_onBlack" \
+        icon = self.plugin_obj.unc_xumo_icons \
             .format(sid)
 
         if _ch_data['json']['groups_other'] in xumo_tv_genres:
@@ -272,8 +241,9 @@ class EPG(PluginEPG):
         self.logger.debug('{}:{} Processing Program {} from XUMO' \
             .format(self.plugin_obj.name, self.instance_key, _prog))
         program = {}
-        url = 'https://valencia-app-mds.xumo.com/v2/assets/asset/{}.json?f=title&f=providers&f=descriptions&f=runtime&f=availableSince' \
-            .format(_prog)
+        url = ''.join([self.plugin_obj.unc_xumo_base,
+            self.plugin_obj.unc_xumo_program
+            .format(_prog)])
         listing = self.get_uri_data(url)
         program['title'] = listing['title']
         if 'descriptions' in listing:

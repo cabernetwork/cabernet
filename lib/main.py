@@ -17,7 +17,6 @@ substantial portions of the Software.
 """
 
 import gc
-
 import argparse
 import logging
 import os

@@ -36,9 +36,9 @@ class Channels(PluginChannels):
         self.epg = EPG(_instance_obj)
 
     def get_channels(self):
-        channels_url = 'https://valencia-app-mds.xumo.com/v2/channels/list/{}.json?geoId={}' \
-            .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)
-
+        channels_url = ''.join([self.plugin_obj.unc_xumo_base,
+            self.plugin_obj.unc_xumo_channels
+            .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)])
         ch_json = self.get_uri_data(channels_url)
         ch_list = []
         if len(ch_json) == 0:
@@ -55,7 +55,7 @@ class Channels(PluginChannels):
             ch_id = str(channel_dict['guid']['value'])
             ch_callsign = channel_dict['callsign']
 
-            thumbnail = "https://image.xumo.com/v1/channels/channel/{}/512x512.png?type=color_onBlack" \
+            thumbnail = self.plugin_obj.unc_xumo_icons \
                 .format(ch_id)
             thumbnail_size = channels.get_thumbnail_size(thumbnail)
  
@@ -92,8 +92,9 @@ class Channels(PluginChannels):
             .format(self.plugin_obj.name, _channel_id))
 
         start_hour = datetime.datetime.utcnow().hour
-        url = 'https://valencia-app-mds.xumo.com/v2/channels/channel/{}/broadcast.json?hour={}' \
-            .format(_channel_id, start_hour)
+        url = ''.join([self.plugin_obj.unc_xumo_base,
+            self.plugin_obj.unc_xumo_channel
+            .format(_channel_id, start_hour)])
         time_now = time.time()
         listing = self.get_uri_data(url)
         prog_id = None

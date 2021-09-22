@@ -32,7 +32,7 @@ class Channels(PluginChannels):
         super().__init__(_instance_obj)
 
     def get_channels(self):
-        channels_url = 'https://api.pluto.tv/v2/channels.json'
+        channels_url = ''.join([self.plugin_obj.unc_pluto_base, '.json'])
         ch_json = self.get_uri_data(channels_url)
         ch_list = []
         if len(ch_json) == 0:

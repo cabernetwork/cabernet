@@ -24,7 +24,7 @@ import urllib.request
 from lib.plugins.plugin_obj import PluginObj
 
 from .plutotv_instance import PlutoTVInstance
-
+from ..lib import translations
 
 class PlutoTV(PluginObj):
 
@@ -34,6 +34,7 @@ class PlutoTV(PluginObj):
             return
         for inst in _plugin.instances:
             self.instances[inst] = PlutoTVInstance(self, inst)
+        self.unc_pluto_base = self.uncompress(translations.pluto_base)
 
     def refresh_channels_ext(self, _instance=None):
         """
@@ -93,6 +94,6 @@ class PlutoTV(PluginObj):
                 'EPG',
                 'Refresh PlutoTV EPG',
                 'interval',
-                interval=110,
-                randdur=20
+                interval=200,
+                randdur=80
                 )

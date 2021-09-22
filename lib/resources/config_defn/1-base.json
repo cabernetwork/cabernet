@@ -130,6 +130,14 @@
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.check_encryption",
                         "help": "Will encrypt the password using a self-generated key.  Use with only one user running service."
+                    },
+                    "plugin_data":{
+                        "label": "plugin data",
+                        "type": "string",
+                        "default": null,
+                        "level": 4,
+                        "onInit": "lib.config.config_callbacks.set_pdata",
+                        "help": null
                     }
                 }
             },

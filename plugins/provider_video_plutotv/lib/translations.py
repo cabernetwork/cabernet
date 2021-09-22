@@ -23,6 +23,8 @@ from lib.tvheadend.epg_category import tvh_genres
 
 #https://github.com/zang74/PlutoIPTV-for-TVH/blob/master/pluto.py
 
+pluto_base = 'gfpMXf5BjIU3XxoFXxLCzxHFzfkQz62QkN33yZS7yf5='
+
 plutotv_groups = {
     'Classic TV':     groups['CLASSICS'],
     'Comedy':         groups['COMEDY'],

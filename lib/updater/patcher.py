@@ -81,5 +81,4 @@ def patch_upgrade(_config_obj, _new_version):
                 task['area'], ':', task['title'], 
                 ' deleted from Scheduler'
                 ])
-
     return results

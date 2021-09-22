@@ -29,6 +29,7 @@ import uuid
 
 import lib.common.utils as utils
 import lib.common.encryption as encryption
+import lib.config.config_defn as config_defn
 import lib.clients.hdhr.hdhr_server as hdhr_server
 from lib.db.db_config_defn import DBConfigDefn
 
@@ -201,6 +202,11 @@ def set_ffprobe_path(_config_obj, _section, _key):
             _config_obj.logger.info('ffprobe_path does not exist and may be needed based on stream_type')
         else:
             _config_obj.data[_section][_key] = 'ffprobe'
+
+def set_pdata(_config_obj, _section, _key):
+    if not _config_obj.data[_section][_key]:
+        _config_obj.data[_section][_key] = \
+             utils.PLUGIN_DATA + config_defn.PLUGIN_DATA
 
 
 def check_encryption(_config_obj, _section, _key):

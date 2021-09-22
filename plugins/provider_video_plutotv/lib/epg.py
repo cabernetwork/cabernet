@@ -50,16 +50,17 @@ class EPG(PluginEPG):
             hours=self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['epg-hours'])
         end = str(etime.strftime('%Y-%m-%dT%H:00:00.000Z'))
         results = {}
+        epg_urls = ''.join([self.plugin_obj.unc_pluto_base, '?start={}&stop={}'])
         if stime.date() != etime.date():
             # crosses midnight
             mstime = str(stime.strftime('%Y-%m-%dT23:59:00.000Z'))
             metime = str(etime.strftime('%Y-%m-%dT00:00:00.000Z'))
-            url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, mstime))
+            url = (epg_urls.format(start, mstime))
             results[stime.date()] = self.get_uri_data(url)
-            url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(metime, end))
+            url = (epg_urls.format(metime, end))
             results[etime.date()] = self.get_uri_data(url)
         else:
-            url = ('https://api.pluto.tv/v2/channels?start={}&stop={}'.format(start, end))
+            url = (epg_urls.format(start, end))
             results[stime.date()] = self.get_uri_data(url)
         return results
 

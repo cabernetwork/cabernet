@@ -27,7 +27,7 @@ from lib.config import config_callbacks
 from lib.db.db_config_defn import DBConfigDefn
 
 CONFIG_DEFN_PATH = 'lib.resources.config_defn'
-
+PLUGIN_DATA = 'AOEPFQGLIKMCNRJSBTHUDV'
 
 def load_default_config_defns():
     """ loads all definition files from the default

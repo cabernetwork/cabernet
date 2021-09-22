@@ -69,6 +69,7 @@ class InternalProxy(Stream):
         self.out_queue = Queue(maxsize=3)
         self.terminate_queue = None
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
+        self.idle_counter = 0
         
     def terminate(self, *args):
         try:
@@ -132,6 +133,10 @@ class InternalProxy(Stream):
         self.out_queue.close()        
     
     def play_queue(self):
+        self.idle_counter += 1
+        if self.idle_counter > 20:
+            self.write_atsc_msg()
+            self.idle_counter = 0
         while not self.out_queue.empty():
             out_queue_item = self.out_queue.get()
             uri = out_queue_item['uri']
@@ -161,6 +166,7 @@ class InternalProxy(Stream):
                     self.write_atsc_msg()
             self.check_termination()
             time.sleep(0.5 * self.duration)
+        time.sleep(1)
         self.video.terminate()
 
     def write_buffer(self, _data):

@@ -16,8 +16,11 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import base64
+import binascii
 import datetime
 import logging
+import string
 import time
 import urllib.request
 
@@ -36,6 +39,12 @@ class PluginObj:
         self.scheduler_db = DBScheduler(self.config_obj.data)
         self.scheduler_tasks()
         self.enabled = True
+        self.def_trans = ''.join([
+            string.ascii_uppercase,
+            string.ascii_lowercase,
+            string.digits,
+            '+/'
+            ]).encode()
         self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
     # Plugin may have the following methods
@@ -149,6 +158,29 @@ class PluginObj:
         elif local_hours > 23:
             local_hours -= 24
         return local_hours
+
+
+    def compress(self, _data):
+        if type(_data) is str:
+            _data = _data.encode()
+        return base64.b64encode(_data).translate(
+            _data.maketrans(self.def_trans,
+            self.config_obj.data['main']['plugin_data'].encode()))
+
+
+    def uncompress(self, _data):
+        if type(_data) is str:
+            _data = _data.encode()
+        a = self.config_obj.data['main']['plugin_data'].encode()
+        try:
+            return base64.b64decode(_data.translate(_data.maketrans(
+                self.config_obj.data['main']['plugin_data']
+                .encode(), self.def_trans))) \
+                .decode()
+        except (binascii.Error, UnicodeDecodeError) as ex:
+            self.logger.error('Uncompression Error, invalid string {}' \
+                .format(_data))
+            return None
 
     @property
     def name(self):
