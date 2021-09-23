@@ -37,7 +37,7 @@ def handle_url_except(f=None, timeout=None):
         return functools.partial(handle_url_except, timeout=timeout)
     def wrapper_func(self, *args, **kwargs):
         ex_save = ''
-        i = 3
+        i = 2
         while i > 0:
             i -= 1
             try:
