@@ -69,7 +69,7 @@ class InternalProxy(Stream):
         self.out_queue = Queue(maxsize=3)
         self.terminate_queue = None
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
-        self.idle_counter = 0
+        self.idle_counter = 30
         
     def terminate(self, *args):
         try:
@@ -103,7 +103,6 @@ class InternalProxy(Stream):
         
         self.wfile = _wfile
         self.terminate_queue = _terminate_queue
-        
         while True:
             try:
                 self.check_termination()
