@@ -73,11 +73,11 @@ class M3U8Queue(Thread):
         self.key_list = {}
         self.start()
 
-    @handle_url_except(timeout=1.0)
+    @handle_url_except()
     def get_uri_data(self, _uri):
         header = {'User-agent': utils.DEFAULT_USER_AGENT}
         req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=1.0) as resp:
+        with urllib.request.urlopen(req, timeout=5.0) as resp:
             x = resp.read()
         return x
     
@@ -384,13 +384,13 @@ class M3U8Process(Thread):
 
 def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None):
     """
-    All items in this process must handle a socket timeout of 1.0
+    All items in this process must handle a socket timeout of 5.0
     """
     global IN_QUEUE
     global STREAM_QUEUE
     global OUT_QUEUE
     global TERMINATE_REQUESTED
-    socket.setdefaulttimeout(1.0)
+    socket.setdefaulttimeout(5.0)
     IN_QUEUE = _m3u8_queue
     STREAM_QUEUE = Queue()
     OUT_QUEUE = _data_queue
@@ -407,5 +407,5 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
         except (KeyboardInterrupt, EOFError):
             TERMINATE_REQUESTED = True
             STREAM_QUEUE.put({'uri': 'terminate'})
-            time.sleep(1.0)
+            time.sleep(5.0)
             sys.exit()
