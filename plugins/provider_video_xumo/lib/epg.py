@@ -37,7 +37,7 @@ class EPG(PluginEPG):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
-        self.db_programs = DBEpgPrograms(self.instance_obj.config_obj.data)
+        self.db_programs = DBEpgPrograms(self.config)
 
     def dates_to_pull(self):
         """
@@ -67,7 +67,7 @@ class EPG(PluginEPG):
         """
         Returns a days (from midnight to midnight UTC) of programs
         """
-        ch_db = DBChannels(self.instance_obj.config_obj.data)
+        ch_db = DBChannels(self.config)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
         prog_list = {}
         prog_ids = {}
@@ -181,11 +181,11 @@ class EPG(PluginEPG):
 
         start_time = utils.tm_local_parse(
             (_program_data['start']
-            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment'])
+            + self.config[self.config_section]['epg-start_adjustment'])
             * 1000)
         end_time = utils.tm_local_parse(
             (_program_data['end']
-            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment'])
+            + self.config[self.config_section]['epg-start_adjustment'])
             * 1000)
         dur_min = int((_program_data['end'] - _program_data['start']) / 60)
         sid = str(_program_data['channelId'])

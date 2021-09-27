@@ -33,6 +33,7 @@ from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
 from lib.updater.cabernet import CabernetUpgrade
 from lib.common.string_obj import StringObj
+from lib.common.tmp_mgmt import TMPMgmt
 
 STATUS = StringObj()
 IS_UPGRADING = False
@@ -79,6 +80,7 @@ class Updater:
         self.config = _plugins.config_obj.data
         self.plugin_db = DBPlugins(self.config)
         self.sched_queue = None
+        self.tmp_mgmt = TMPMgmt(self.config)
 
     def scheduler_tasks(self):
         scheduler_db = DBScheduler(self.config)
@@ -158,26 +160,11 @@ class Updater:
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         IS_UPGRADING = False
+        self.tmp_mgmt.cleanup_tmp()
         self.restart_app()
-        
         
     def restart_app(self):
         # get schedDB and find restart taskid.
         scheduler_db = DBScheduler(self.config)
         task = scheduler_db.get_tasks('Applications', 'Restart')[0]
         self.sched_queue.put({'cmd': 'runtask', 'taskid': task['taskid'] })
-
-
-
-    def download_zip(self, _zip_url):
-        buf_size = 2 * 16 * 16 * 1024
-        save_path = pathlib.Path(self.config['paths']['tmp_dir']).joinpath(utils.CABERNET_NAMESPACE + '.zip')
-        h = {'Content-Type': 'application/zip', 'User-agent': utils.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(_zip_url, headers=h)
-        with urllib.request.urlopen(req) as resp:
-            with open(save_path, 'wb') as out_file:
-                while True:
-                    chunk = resp.read(buf_size)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)

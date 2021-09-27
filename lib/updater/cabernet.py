@@ -33,7 +33,7 @@ import lib.db.datamgmt.backups as backups
 from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-
+from lib.common.tmp_mgmt import TMPMgmt
 
 MANIFEST_FILE = 'manifest.json'
 TMP_ZIPFILE = utils.CABERNET_NAMESPACE + '.zip'
@@ -47,6 +47,7 @@ class CabernetUpgrade:
         self.config_obj = _plugins.config_obj
         self.config = _plugins.config_obj.data
         self.plugin_db = DBPlugins(self.config)
+        self.tmp_mgmt = TMPMgmt(self.config)
         
     def update_version_info(self):
         """
@@ -207,39 +208,18 @@ class CabernetUpgrade:
                 response = False
         return response
 
-    @handle_json_except
-    @handle_url_except
     def download_zip(self, _zip_url):
+        global TMP_ZIPFILE
         buf_size = 2 * 16 * 16 * 1024
         save_path = pathlib.Path(self.config['paths']['tmp_dir']).joinpath(TMP_ZIPFILE)
-        h = {'Content-Type': 'application/zip', 'User-agent': utils.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(_zip_url, headers=h)
-        with urllib.request.urlopen(req) as resp:
-            with open(save_path, 'wb') as out_file:
-                while True:
-                    chunk = resp.read(buf_size)
-                    if not chunk:
-                        break
-                    out_file.write(chunk)
+        self.download_file(_zip_url, None, TMP_ZIPFILE, None)
         return True
 
     def extract_code(self):
         try:
             file_to_extract = pathlib.Path(self.config['paths']['tmp_dir']).joinpath(TMP_ZIPFILE)
             out_folder = pathlib.Path(self.config['paths']['tmp_dir']).joinpath('code')
-            with zipfile.ZipFile(file_to_extract, 'r') as z:
-                files = z.namelist()
-                top_folder = files[0]
-                z.extractall(out_folder)
-            return pathlib.Path('code', top_folder)
-        except (zipfile.BadZipFile, FileNotFoundError):
+            self.tmp_mgmt.extract_zip(file_to_extract, out_folder, False)
+        except exceptions.CabernetException as ex:
+            self.logger.warning('{}'.format(str(ex)))
             return None
-
-    def cleanup_tmp(self):
-        dir = self.config['paths']['tmp_dir']
-        for files in os.listdir(dir):
-            path = os.path.join(dir, files)
-            try:
-                shutil.rmtree(path)
-            except OSError:
-                os.remove(path)

@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "plutotv":{
-                "label": "PlutoTV",
-                "sort": "PlutoTV2",
+            "m3u":{
+                "label": "M3U",
+                "sort": "M3U2",
                 "icon": "cast_connected",
-                "description": "Settings for PlutoTV Instances",
+                "description": "Settings for M3U Instances",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -24,7 +24,22 @@
                         "default": null,
                         "level": 0,
                         "onChange": "lib.config.config_callbacks.update_instance_label",
-                        "help": "Defines the tab name for this instance"
+                        "help": "OnChange: The scheduler instance tasks are removed.  Please restart app following a change."
+                    },
+                    "channel-m3u_file":{
+                        "label": "M3U File",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "help": "Use http:// https:// or (Linux) file:/// (Windows) file:///C:/ Be careful when using spaces in the path"
+                    },
+                    "channel-m3u_file_type":{
+                        "label": "M3U File Type",
+                        "type": "list",
+                        "default": "autodetect",
+                        "values": ["autodetect", "gzip", "zip", "m3u"],
+                        "level": 1,
+                        "help": "When the extension of the file is not provided from the url, set this to define the type of file"
                     },
                     "channel-update_timeout":{
                         "label": "Channel Update Timeout",
@@ -38,7 +53,7 @@
                         "type": "boolean",
                         "default": false,
                         "level": 1,
-                        "help": "Imports groups from PlutoTV into the group other column"
+                        "help": "Imports groups from M3U into the group other column"
                     },
                     "player-stream_type":{
                         "label": "stream_type",
@@ -55,6 +70,13 @@
                         "level": 3,
                         "help": "When starting, will play the last segment.  If VOD type stream, then enable will cause the entire video to be played from the start."
                     },
+                    "player-decode_url":{
+                        "label": "Decode M3U8 URL",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 3,
+                        "help": "Sometimes the provider M3U8 URL must be decoded before the HTTP request can be made.  Most of the time, it does not need to be decoded."
+                    },
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
                         "type": "boolean",
@@ -65,7 +87,7 @@
                     "player-url_filter":{
                         "label": "URL Filter",
                         "type": "string",
-                        "default": "^.*(_ad/|google.com|plutotv_filler|Well_be_right|_AdPod|_Promo).*$",
+                        "default": null,
                         "level": 3,
                         "help": "Only used with stream_type=internalproxy"
                     },
@@ -106,11 +128,26 @@
                         "help": "Uses either ffmpeg genpts or internal resequencing"
                     },
                     "epg-enabled":{
-                        "label": "EPG Collection Enabled",
+                        "label": "XMLTV Enabled",
                         "type": "boolean",
                         "default": true,
                         "level": 1,
-                        "help": "Disable if you have multiple instances for the same city"
+                        "help": "If disabled, will not populate the XMLTV output with this instance"
+                    },
+                    "epg-xmltv_file":{
+                        "label": "XMLTV File",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "help": "Use http:// https:// or (Linux) file:/// (Windows) file:///C:/ Be careful when using spaces in the path"
+                    },
+                    "epg-xmltv_file_type":{
+                        "label": "XMLTV File Type",
+                        "type": "list",
+                        "default": "autodetect",
+                        "values": ["autodetect", "gzip", "zip", "xml"],
+                        "level": 1,
+                        "help": "When the extension of the file is not provided from the url, set this to define the type of file"
                     },
                     "epg-prefix":{
                         "label": "EPG Channel Prefix",
@@ -132,7 +169,7 @@
                         "default": 0,
                         "values": [1000, 2000, 3000, 4000, 5000],
                         "level": 1,
-                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and PlutoTV at the same time."
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and M3U at the same time."
                     },
                     "epg-start_adjustment":{
                         "label": "Start Time Adjustment",
@@ -160,4 +197,3 @@
         }
     }
 }
-

@@ -17,7 +17,9 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import errno
 import logging
+import re
 import xml.dom.minidom as minidom
 from xml.etree import ElementTree
 
@@ -30,8 +32,6 @@ from lib.db.db_plugins import DBPlugins
 from lib.web.pages.templates import web_templates
 
 
-
-
 @getrequest.route('/xmltv.xml')
 def xmltv_xml(_webserver):
     try:
@@ -40,8 +40,6 @@ def xmltv_xml(_webserver):
     except MemoryError as e:
         self.do_mime_response(501, 'text/html', 
             web_templates['htmlError'].format('501 - MemoryError: {}'.format(e)))
-        
-
 
 
 class EPG:
@@ -63,8 +61,6 @@ class EPG:
                 'code': 200,
                 'headers': {'Content-type': 'application/xml; Transfer-Encoding: chunked'},
                 'text': None})
-
-            #self.plugins.refresh_epg(self.namespace, self.instance)
             xml_out = self.gen_header_xml()
             channel_list = self.channels_db.get_channels(self.namespace, self.instance)
             self.gen_channel_xml(xml_out, channel_list)
@@ -78,6 +74,7 @@ class EPG:
                 xml_out = self.gen_minimal_header_xml()
                 self.gen_program_xml(xml_out, day_data, channel_list, ns, inst)
                 self.write_xml(xml_out)
+                xml_out.clear()
                 day_data, ns, inst = self.epg_db.get_next_row()
             self.epg_db.close_query()
             self.webserver.wfile.write(b'</tv>\r\n')
@@ -85,30 +82,51 @@ class EPG:
         except MemoryError as e:
             self.logger.error('MemoryError parsing large xml')
             raise e
-        xml_out = None
+        except IOError as ex:
+            # Check we hit a broken pipe when trying to write back to the client
+            if ex.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
+                # Normal process.  Client request end of stream
+                self.logger.info('Connection dropped by client {}' \
+                    .format(ex))
+                xml_out.clear()
+                return
+            else:
+                self.logger.error('{}{}'.format(
+                    'UNEXPECTED EXCEPTION=', ex))
+                raise
 
+        xml_out = None
 
     def write_xml(self, _xml, keep_xml_prolog=False):
         if self.config['epg']['epg_prettyprint']:
             if not keep_xml_prolog:
-                epg_dom = ElementTree.tostring(_xml)
-                if len(epg_dom) < 20:
-                    return False
-                epg_dom = minidom.parseString(epg_dom).toprettyxml()[27:-6]
+                epg_dom = minidom.parseString(ElementTree.tostring(_xml, encoding='UTF-8', method='xml')).toprettyxml()
+                if epg_dom.endswith('</tv>\n'):
+                    epg_dom = epg_dom.replace('<?xml version="1.0" ?>\n<tv>', '', 1)
+                    epg_dom = epg_dom.replace('</tv>', '', 1)
+                else:
+                    epg_dom = ''
             else:
-                epg_dom = minidom.parseString(ElementTree.tostring(_xml, encoding='UTF-8', method='xml')).toprettyxml()[:-6]
-                if len(epg_dom) < 250:
-                    return False
+                epg_dom = minidom.parseString(ElementTree.tostring(_xml, encoding='UTF-8', method='xml')).toprettyxml()
+                if epg_dom.endswith('</tv>\n'):
+                    epg_dom = re.sub('</tv>\n$', '', epg_dom)
+                else:
+                    epg_dom = re.sub('"/>\n$', '">', epg_dom)
             self.webserver.wfile.write(epg_dom.encode())
         else:
             if not keep_xml_prolog:
-                epg_dom = ElementTree.tostring(_xml)[4:-5]
-                if len(epg_dom) < 10:
-                    return False
+                epg_dom = ElementTree.tostring(_xml)
+                if epg_dom.endswith(b'<tv />'):
+                    epg_dom = b''
+                else:
+                    epg_dom = epg_dom.replace(b'<tv>', b'', 1)
+                    epg_dom = epg_dom.replace(b'</tv>', b'', 1)
             else:
-                epg_dom = ElementTree.tostring(_xml)[:-5]
-                if len(epg_dom) < 250:
-                    return False
+                epg_dom = ElementTree.tostring(_xml)
+                if epg_dom.endswith(b'</tv>'):
+                    epg_dom = re.sub(b'</tv>$', b'', epg_dom)
+                else:
+                    epg_dom = re.sub(b'" />$', b'">', epg_dom)
             self.webserver.wfile.write(epg_dom+b'\r\n')
         epg_dom = None
         return True
@@ -121,7 +139,10 @@ class EPG:
             sids_processed.append(sid)
             for ch_data in sid_data_list:
                 if not ch_data['enabled']:
-                    break
+                    continue
+                config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
+                if not self.config[config_section]['enabled']:
+                    continue
                 updated_chnum = utils.wrap_chnum(
                     ch_data['display_number'], ch_data['namespace'],
                     ch_data['instance'], self.config)
@@ -148,9 +169,14 @@ class EPG:
             try:
                 for ch_data in _channel_list[prog_data['channel']]:
                     if ch_data['namespace'] == _ns \
-                            and ch_data['instance'] == _inst \
-                            and not ch_data['enabled']:
-                        skip = True
+                            and ch_data['instance'] == _inst:
+                        if not ch_data['enabled']:
+                            skip = True
+                            break
+                        config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
+                        if not self.config[config_section]['enabled']:
+                            skip = True
+                            break
             except KeyError:
                 skip = True
             if skip:
@@ -213,10 +239,10 @@ class EPG:
                 r = ElementTree.SubElement(prog_out, 'credits')
                 if prog_data['directors']:
                     for actor in prog_data['directors']:
-                        EPG.sub_el(r, 'producer', _text=actor)
+                        EPG.sub_el(r, 'director', _text=actor)
                 if prog_data['actors']:
                     for actor in prog_data['actors']:
-                        EPG.sub_el(r, 'presenter', _text=actor)
+                        EPG.sub_el(r, 'actor', _text=actor)
 
             if prog_data['rating']:
                 r = ElementTree.SubElement(prog_out, 'rating')
@@ -233,7 +259,6 @@ class EPG:
             if prog_data['se_xmltv_ns']:
                 EPG.sub_el(prog_out, 'episode-num', system='xmltv_ns',
                     _text=prog_data['se_xmltv_ns'])
-
             if prog_data['is_new']:
                 EPG.sub_el(prog_out, 'new')
             else:

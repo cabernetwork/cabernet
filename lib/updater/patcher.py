@@ -28,7 +28,8 @@ import lib.common.utils as utils
 from lib.db.db_channels import DBChannels
 from lib.db.db_scheduler import DBScheduler
 
-REQUIRED_VERSION = '0.9.3'
+REQUIRED_VERSION = '0.9.4'
+LOGGER = None
 
 def patch_upgrade(_config_obj, _new_version):
     """
@@ -39,46 +40,48 @@ def patch_upgrade(_config_obj, _new_version):
     To make sure this only executes associated with a specific version, the version 
     it is associated is tested with this new version.
     """
+    global LOGGER
     LOGGER = logging.getLogger(__name__)
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
-        results = 'Patch updates File logging settings...'
-        _config_obj.write('handler_filehandler', 'args', \
-            "(os.getenv('LOGS_DIR','data/logs')+'/cabernet.log', 'a', 10000000, 10)")
-        _config_obj.write('handler_filehandler', 'class', \
-            "lib.common.log_handlers.MPRotatingFileHandler")
-        try:
-            _config_obj.write('locast', 'enabled', False)
-        except KeyError:
-            pass
+        results = 'Patch updates migrating config settings...'
 
-        # remove the locast plugin folder
-        results += '\nPatch updates Remove locast plugin folder...'
-        try:
-            plugins_path = _config_obj.data['paths']['internal_plugins_pkg']
-            for folder in importlib.resources.contents(plugins_path):
-                if folder == 'provider_video_locast':
-                    folder_fullpath = os.path.join(plugins_path, folder)
-                    shutil.rmtree(folder_fullpath)
-        except FileNotFoundError as ex:
-            pass
-        except PermissionError as ex:
-            LOGGER.warning('PermissionError on locast folder unable to delete {}'.format(ex))
-            results += 'Unable to delete the locast folder due to permissions, aborting'
-        except OSError as ex:
-            LOGGER.warning('OS Error, Unable to delete locast folder {}'.format(ex))
-            results += 'Unable to delete the locast folder due to permissions, aborting'
+        key = move_key(_config_obj, 'channel-import_groups')
+        key = move_key(_config_obj, 'channel-update_timeout')
+        key = move_key(_config_obj, 'player-stream_type')
+        key = move_key(_config_obj, 'player-enable_url_filter')
+        key = move_key(_config_obj, 'player-url_filter')
+        key = move_key(_config_obj, 'player-enable_pts_filter')
+        key = move_key(_config_obj, 'player-pts_minimum')
+        key = move_key(_config_obj, 'player-pts_max_delta')
+        key = move_key(_config_obj, 'player-enable_pts_resync')
+        key = move_key(_config_obj, 'player-pts_resync_type')
+        key = move_key(_config_obj, 'epg-min_refresh_rate')
 
-        # remove scheduler events for locast
-        results += '\nPatch updates Remove locast scheduler events...'
-        db_scheduler = DBScheduler(_config_obj.data)
-        tasks = db_scheduler.get_tasks_by_name('Locast')
-        db_results = ''
-        for task in tasks:
-            db_scheduler.del_task(task['area'], task['title'])
-            db_results = ''.join([db_results, 
-                task['area'], ':', task['title'], 
-                ' deleted from Scheduler'
-                ])
     return results
+
+
+def move_key(_config_obj, _key):
+    find_key_by_section(_config_obj, _key, 'plutotv')
+    find_key_by_section(_config_obj, _key, 'xumo')
+
+
+def find_key_by_section(_config_obj, _key, _section):
+    global LOGGER
+    if _section in _config_obj.data:
+        if _key in _config_obj.data[_section]:
+            LOGGER.info('Moving setting {}:{} to instance'.format(_section, _key))
+            value = _config_obj.data[_section][_key]
+            sections = find_instance(_config_obj.data, _section)
+            for section in sections:
+                _config_obj.write(section, _key, value)
+            _config_obj.write(_section, _key, None)
+    
+
+def find_instance(_config, _plugin_name):
+    sections = []
+    for section in _config.keys():
+        if section.startswith(_plugin_name+'_'):
+            sections.append(section)
+    return sections

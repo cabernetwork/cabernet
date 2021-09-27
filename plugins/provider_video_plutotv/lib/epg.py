@@ -47,7 +47,7 @@ class EPG(PluginEPG):
         # back up 2 hours
         start = str(stime.strftime('%Y-%m-%dT%H:00:00.000Z'))
         etime = stime + datetime.timedelta(
-            hours=self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['epg-hours'])
+            hours=self.config[self.plugin_obj.name.lower()]['epg-hours'])
         end = str(etime.strftime('%Y-%m-%dT%H:00:00.000Z'))
         results = {}
         epg_urls = ''.join([self.plugin_obj.unc_pluto_base, '?start={}&stop={}'])
@@ -98,11 +98,11 @@ class EPG(PluginEPG):
         sid = str(_ch_data['_id'])
         start_time = datetime.datetime.fromisoformat(_program_data['start'] \
             .replace('Z', '+00:00')).timestamp() \
-            + self.instance_obj.config_obj.data[self.config_section]['epg-start_adjustment']
+            + self.config[self.config_section]['epg-start_adjustment']
         start_time = utils.tm_local_parse(start_time * 1000)
         end_time = datetime.datetime.fromisoformat(_program_data['stop'] \
             .replace('Z', '+00:00')).timestamp() \
-            + self.instance_obj.config_obj.data[self.config_section]['epg-end_adjustment']
+            + self.config[self.config_section]['epg-end_adjustment']
         end_time = utils.tm_local_parse(end_time * 1000)
         title = _program_data['title']
         entity_type = None
@@ -142,7 +142,7 @@ class EPG(PluginEPG):
             formatted_date = None
 
         icon = None
-        icon_type = self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['program_thumbnail']
+        icon_type = self.config[self.plugin_obj.name.lower()]['program_thumbnail']
         if icon_type == 'featuredImage' and \
             icon_type in _program_data['episode']['series'].keys():
                 icon = _program_data['episode']['series'][icon_type]['path']

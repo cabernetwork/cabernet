@@ -289,6 +289,9 @@ class TVHUserConfig:
     def write(self, _section, _key, _value):
         self.data[_section][_key] = _value
         try:
+            if _value is None:
+                self.config_handler.remove_option(_section, _key)
+                return
             self.config_handler.set(_section, _key, str(_value))
         except configparser.NoSectionError:
             self.config_handler.add_section(_section)

@@ -18,12 +18,13 @@ substantial portions of the Software.
 
 import errno
 import os
-import time
 import pathlib
 import re
+import time
 from threading import Thread
 from http.server import HTTPServer
 
+import lib.common.utils as utils
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
 from lib.common.decorators import filerequest
@@ -89,6 +90,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             valid_check = re.match(r'^(/([A-Za-z0-9\._\-]+)/[A-Za-z0-9\._\-/]+)[?%&A-Za-z0-9\._\-/=]*$', self.path)
             self.content_path, self.query_data = self.get_query_data()
             self.plugins.config_obj.refresh_config_data()
+            utils.start_mem_trace(self.config)
             self.config = self.plugins.config_obj.data
             if getrequest.call_url(self, self.content_path):
                 pass
@@ -98,32 +100,52 @@ class WebAdminHttpHandler(WebHTTPHandler):
                 self.logger.info('UNKNOWN HTTP Request {}'.format(self.content_path))
                 self.do_mime_response(501, 'text/html', 
                     web_templates['htmlError'].format('501 - Not Implemented'))
+            snapshot = utils.end_mem_trace(self.config)
+            utils.display_top(self.config, snapshot)
+            
             return
-        except MemoryError as e:
-            self.logger.error('UNKNOWN MEMORY EXCEPTION: {}'.format(e))
+        except MemoryError as ex:
+            self.logger.error('UNKNOWN MEMORY EXCEPTION: {}'.format(ex))
             self.do_mime_response(501, 'text/html', 
-                web_templates['htmlError'].format('501 - {}'.format(e)))
-        except IOError as e:
+                web_templates['htmlError'].format('501 - {}'.format(ex)))
+            snapshot = utils.end_mem_trace(self.config)
+            utils.display_top(self.config, snapshot)
+        except IOError as ex:
             if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
-                self.logger.info('Connection dropped by end device {}'.format(e))
+                self.logger.info('Connection dropped by end device {}'.format(ex))
             else:
-                self.logger.error('{}{}'.format(
-                    'UNEXPECTED IOERROR EXCEPTION=', e))
-                raise
-
+                self.logger.exception('{}{}'.format(
+                    'UNEXPECTED IOERROR EXCEPTION=', ex))
+            snapshot = utils.end_mem_trace(self.config)
+            utils.display_top(self.config, snapshot)
+        except Exception as ex:
+            self.logger.exception('{}{}'.format(
+                'UNEXPECTED EXCEPTION on GET=', ex))
+            self.do_mime_response(501, 'text/html', 
+                web_templates['htmlError'].format('501 - Server Error'))
+            snapshot = utils.end_mem_trace(self.config)
+            utils.display_top(self.config, snapshot)
+        
     def do_POST(self):
-        self.content_path = self.path
-        self.logger.debug('Receiving POST form {} {}'.format(self.content_path, self.query_data))
-        # get POST data
-        self.content_path, self.query_data = self.get_query_data()
-        self.plugins.config_obj.refresh_config_data()
-        self.config = self.plugins.config_obj.data
-        if postrequest.call_url(self, self.content_path):
-            pass
-        else:
-            self.logger.info('UNKNOWN HTTP POST Request {}'.format(self.content_path))
-            self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Not Implemented'))
-        return
+        try:
+            self.content_path = self.path
+            self.logger.debug('Receiving POST form {} {}'.format(self.content_path, self.query_data))
+            # get POST data
+            self.content_path, self.query_data = self.get_query_data()
+            self.plugins.config_obj.refresh_config_data()
+            self.config = self.plugins.config_obj.data
+            if postrequest.call_url(self, self.content_path):
+                pass
+            else:
+                self.logger.info('UNKNOWN HTTP POST Request {}'.format(self.content_path))
+                self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Not Implemented'))
+        except Exception as ex:
+            self.logger.exception('{}{}'.format(
+                'UNEXPECTED EXCEPTION on POST=', ex))
+            self.do_mime_response(501, 'text/html', 
+                web_templates['htmlError'].format('501 - Server Error'))
+
+
 
     @classmethod
     def get_ns_inst_path(cls, _query_data):
@@ -170,7 +192,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
         super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
-        WebAdminHttpHandler.sched_queue = _sched_queue
+        WebHTTPHandler.sched_queue = _sched_queue
         getrequest.log_urls()
         postrequest.log_urls()
         filerequest.log_urls()

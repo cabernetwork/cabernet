@@ -179,6 +179,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.terminate_queue = _terminate_queue
         if not cls.plugins.config_obj.defn_json:
             cls.plugins.config_obj.defn_json = ConfigDefn(_config=_plugins.config_obj.data)
+            
         plugins_db = DBPlugins(_plugins.config_obj.data)
         WebHTTPHandler.namespace_list = plugins_db.get_instances()
         WebHTTPHandler.channels_db = DBChannels(_plugins.config_obj.data)

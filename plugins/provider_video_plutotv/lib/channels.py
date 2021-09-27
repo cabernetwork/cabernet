@@ -21,7 +21,6 @@ import re
 
 import lib.common.exceptions as exceptions
 from lib.db.db_channels import DBChannels
-import lib.clients.channels.channels as channels
 from lib.plugins.plugin_channels import PluginChannels
 
 from .translations import plutotv_groups
@@ -33,7 +32,7 @@ class Channels(PluginChannels):
 
     def get_channels(self):
         channels_url = ''.join([self.plugin_obj.unc_pluto_base, '.json'])
-        ch_json = self.get_uri_data(channels_url)
+        ch_json = self.get_uri_json_data(channels_url)
         ch_list = []
         if len(ch_json) == 0:
             self.logger.warning('{} HTTP Channel Request Failed for instance {}' \
@@ -43,7 +42,6 @@ class Channels(PluginChannels):
         self.logger.info("{}: Found {} stations on instance {}"
             .format(self.plugin_obj.name, len(ch_json),
             self.instance_key))
-
         counter=0
         for channel_dict in ch_json:
             if (channel_dict["isStitched"]
@@ -56,12 +54,12 @@ class Channels(PluginChannels):
                 ch_callsign = channel_dict['name']
                 thumbnail = None
                 thumbnail_size = None
-                for tn in [self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['channel-thumbnail'],
+                for tn in [self.config[self.plugin_obj.name.lower()]['channel-thumbnail'],
                     "colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
                     "solidLogoPNG", "thumbnail", "logo", "featuredImage"]:
                     if tn in channel_dict.keys():
                         thumbnail = channel_dict[tn]['path']
-                        thumbnail_size = channels.get_thumbnail_size(thumbnail)
+                        thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
                         break
 
                 stream_url = channel_dict['stitched']['urls'][0]['url']
@@ -70,7 +68,7 @@ class Channels(PluginChannels):
                     .replace('&deviceModel=', '&deviceModel=Chrome') \
                     .replace('&deviceType=', '&deviceType=web') \
                     .replace('&sid=', '&sid=' + \
-                    self.instance_obj.config_obj.data['main']['uuid'] + \
+                    self.config['main']['uuid'] + \
                     str(counter))
                 counter += 1
                 channel = channel_dict['number']
@@ -103,27 +101,7 @@ class Channels(PluginChannels):
     def get_channel_uri(self, _channel_id):
         self.logger.info('{}: Getting video stream info for {}' \
             .format(self.plugin_obj.name, _channel_id))
-        ch_dict = self.db.get_channel(_channel_id, None, None)
+        ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
         stream_url = ch_dict['json']['stream_url']
-
-        self.logger.debug('Determining best video stream for {}...' \
-            .format(_channel_id))
-        bestStream = None
-
-        # find the heighest stream url bandwidth and save it to the list
-        videoUrlM3u = self.get_m3u8_data(stream_url)
-        self.logger.debug('Found {} Playlists'.format(str(len(videoUrlM3u.playlists))))
-        if len(videoUrlM3u.playlists) > 0:
-            for videoStream in videoUrlM3u.playlists:
-                if bestStream is None:
-                    bestStream = videoStream
-                elif videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth:
-                    bestStream = videoStream
-            if bestStream is not None:
-                self.logger.debug('{} will use bandwidth at {} bps' \
-                    .format(_channel_id, str(bestStream.stream_info.bandwidth)))
-                return bestStream.absolute_uri
-        else:
-            self.logger.debug('No variant streams found for this station.  Assuming single stream only.')
-            return stream_url
+        return self.get_best_stream(stream_url, _channel_id)
 

@@ -1,11 +1,16 @@
+
 import os
-import urllib
-from lib.m3u8.parser import is_url
+from .parser import is_url
+
+try:
+    import urlparse as url_parser
+except ImportError:
+    import urllib.parse as url_parser
 
 
 def _urijoin(base_uri, path):
     if is_url(base_uri):
-        return urllib.parse.urljoin(base_uri, path)
+        return url_parser.urljoin(base_uri, path)
     else:
         return os.path.normpath(os.path.join(base_uri, path.strip('/')))
 
@@ -27,7 +32,11 @@ class BasePathMixin(object):
     def base_path(self):
         if self.uri is None:
             return None
-        return os.path.dirname(self.uri)
+        return os.path.dirname(self.get_path_from_uri())
+
+    def get_path_from_uri(self):
+        """Some URIs have a slash in the query string."""
+        return self.uri.split("?")[0]
 
     @base_path.setter
     def base_path(self, newbase_path):

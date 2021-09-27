@@ -16,68 +16,61 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
+
 import random
-import time
-import urllib.request
 
-from lib.plugins.plugin_obj import PluginObj
+from .channels import Channels
+from .epg import EPG
+from lib.plugins.plugin_instance_obj import PluginInstanceObj
 
-from .plutotv_instance import PlutoTVInstance
-from ..lib import translations
 
-class PlutoTV(PluginObj):
+class M3UGenericInstance(PluginInstanceObj):
 
-    def __init__(self, _plugin):
-        super().__init__(_plugin)
-        if not self.config_obj.data[_plugin.name.lower()]['enabled']:
+    def __init__(self, _plutotv, _instance):
+        super().__init__(_plutotv, _instance)
+        self.config_obj = _plutotv.config_obj
+        if not self.config_obj.data[self.config_section]['enabled']:
             return
-        for inst in _plugin.instances:
-            self.instances[inst] = PlutoTVInstance(self, inst)
-        self.unc_pluto_base = self.uncompress(translations.pluto_base)
+
+        self.channels = Channels(self)
+        self.epg = EPG(self)
 
     def scheduler_tasks(self):
-        sched_ch_hours = self.utc_to_local_time(23)
+        sched_ch_hours = random.randint(4,6)
         sched_ch_mins = random.randint(1,55)
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
+        label = self.config_obj.data[self.config_section]['label']
         if self.scheduler_db.save_task(
                 'Channels',
-                'Refresh {} Channels'.format(self.namespace),
-                self.name,
-                None,
+                'Refresh {} Channels'.format(label),
+                self.plugin_obj.name,
+                self.instance_key,
                 'refresh_channels',
                 20,
                 'inline',
-                'Pulls channel lineup from {}'.format(self.namespace)
+                'Pulls channel lineup from M3U'
                 ):
             self.scheduler_db.save_trigger(
                 'Channels',
-                'Refresh {} Channels'.format(self.namespace),
+                'Refresh {} Channels'.format(label),
                 'startup')
             self.scheduler_db.save_trigger(
                 'Channels',
-                'Refresh {} Channels'.format(self.namespace),
+                'Refresh {} Channels'.format(label),
                 'daily',
                 timeofday=sched_ch
                 )
         if self.scheduler_db.save_task(
                 'EPG',
-                'Refresh {} EPG'.format(self.namespace),
-                self.name,
-                None,
+                'Refresh {} EPG'.format(label),
+                self.plugin_obj.name,
+                self.instance_key,
                 'refresh_epg',
                 10,
                 'thread',
-                'Pulls channel program data from {}'.format(self.namespace)
+                'Add triggers to the EPG Refresh based on when the m3u is updated online.'
                 ):
             self.scheduler_db.save_trigger(
                 'EPG',
-                'Refresh {} EPG'.format(self.namespace),
+                'Refresh {} EPG'.format(label),
                 'startup')
-            self.scheduler_db.save_trigger(
-                'EPG',
-                'Refresh {} EPG'.format(self.namespace),
-                'interval',
-                interval=200,
-                randdur=80
-                )

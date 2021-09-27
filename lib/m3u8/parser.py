@@ -1,14 +1,13 @@
 # coding: utf-8
-# pylama:ignore=E303
 # Copyright 2014 Globo.com Player authors. All rights reserved.
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
-
-from . import iso8601
+import iso8601
 import datetime
 import itertools
 import re
-from lib.m3u8 import protocol
+from collections import OrderedDict
+from . import protocol
 
 '''
 http://tools.ietf.org/html/draft-pantos-http-live-streaming-08#section-3.2
@@ -125,6 +124,14 @@ def parse(content, strict=False, custom_tags_parser=None):
             _parse_extinf(line, data, state, lineno, strict)
             state['expect_segment'] = True
 
+        elif line.startswith(protocol.extgrp):
+            _parse_extgrp(line, state)
+            state['expect_segment'] = True
+
+        elif line.startswith(protocol.extvlcopt):
+            _parse_extvlcopt(line, state)
+            state['expect_segment'] = True
+
         elif line.startswith(protocol.ext_x_stream_inf):
             state['expect_playlist'] = True
             _parse_stream_inf(line, data, state)
@@ -182,6 +189,15 @@ def parse(content, strict=False, custom_tags_parser=None):
         elif line.startswith(protocol.ext_x_session_key):
             _parse_session_key(line, data, state)
 
+        elif line.startswith(protocol.ext_x_preload_hint):
+            _parse_preload_hint(line, data, state)
+
+        elif line.startswith(protocol.ext_x_daterange):
+            _parse_daterange(line, data, state)
+
+        elif line.startswith(protocol.ext_x_gap):
+            state['gap'] = True
+
         # Comments and whitespace
         elif line.startswith('#'):
             if callable(custom_tags_parser):
@@ -221,17 +237,45 @@ def _parse_key(line):
 def _parse_extinf(line, data, state, lineno, strict):
     chunks = line.replace(protocol.extinf + ':', '').split(',', 1)
     if len(chunks) == 2:
-        duration, title = chunks
+        duration_and_props, title = chunks
     elif len(chunks) == 1:
         if strict:
             raise ParseError(lineno, line)
         else:
-            duration = chunks[0]
+            duration_and_props = chunks[0]
             title = ''
+
+    additional_props = OrderedDict()
+    chunks = duration_and_props.strip().split(' ', 1)
+    if len(chunks) == 2:
+        duration, raw_props = chunks
+        matched_props = re.finditer(r'([\w\-]+)="([^"]*)"', raw_props)
+        for match in matched_props:
+            additional_props[match.group(1)] = match.group(2)
+    else:
+        duration = duration_and_props
+
     if 'segment' not in state:
         state['segment'] = {}
     state['segment']['duration'] = float(duration)
     state['segment']['title'] = title
+    state['segment']['additional_props'] = additional_props
+
+
+def _parse_extgrp(line, state):
+    _, value = _parse_simple_parameter_raw_value(line, str)
+    if 'segment' not in state:
+        state['segment'] = {}
+    state['segment']['grp'] = value
+
+
+def _parse_extvlcopt(line, state):
+    _, value = _parse_simple_parameter_raw_value(line, str)
+    if 'segment' not in state:
+        state['segment'] = {}
+    if not isinstance(state['segment'].get('vlcopt', None), list):
+        state['segment']['vlcopt'] = []
+    state['segment']['vlcopt'].append(value)
 
 
 def _parse_ts_chunk(line, data, state):
@@ -258,6 +302,8 @@ def _parse_ts_chunk(line, data, state):
             data['keys'].append(None)
     if state.get('current_segment_map'):
         segment['init_section'] = state['current_segment_map']
+    segment['dateranges'] = state.pop('dateranges', None)
+    segment['gap_tag'] = state.pop('gap', None)
     data['segments'].append(segment)
 
 
@@ -276,7 +322,6 @@ def _parse_attribute_list(prefix, line, atribute_parser):
 
     return attributes
 
-
 def _parse_stream_inf(line, data, state):
     data['is_variant'] = True
     data['media_sequence'] = None
@@ -285,6 +330,8 @@ def _parse_stream_inf(line, data, state):
     atribute_parser["bandwidth"] = lambda x: int(float(x))
     atribute_parser["average_bandwidth"] = int
     atribute_parser["frame_rate"] = float
+    atribute_parser["video_range"] = str
+    atribute_parser["hdcp_level"] = str
     state['stream_info'] = _parse_attribute_list(protocol.ext_x_stream_inf, line, atribute_parser)
 
 
@@ -292,6 +339,9 @@ def _parse_i_frame_stream_inf(line, data):
     atribute_parser = remove_quotes_parser('codecs', 'uri')
     atribute_parser["program_id"] = int
     atribute_parser["bandwidth"] = int
+    atribute_parser["average_bandwidth"] = int
+    atribute_parser["video_range"] = str
+    atribute_parser["hdcp_level"] = str
     iframe_stream_info = _parse_attribute_list(protocol.ext_x_i_frame_stream_inf, line, atribute_parser)
     iframe_playlist = {'uri': iframe_stream_info.pop('uri'),
                        'iframe_stream_info': iframe_stream_info}
@@ -300,7 +350,7 @@ def _parse_i_frame_stream_inf(line, data):
 
 
 def _parse_media(line, data, state):
-    quoted = remove_quotes_parser('uri', 'group_id', 'language', 'assoc_language', 'name', 'instream_id', 'characteristics')
+    quoted = remove_quotes_parser('uri', 'group_id', 'language', 'assoc_language', 'name', 'instream_id', 'characteristics', 'channels')
     media = _parse_attribute_list(protocol.ext_x_media, line, quoted)
     data['media'].append(media)
 
@@ -343,13 +393,11 @@ def _parse_cueout_cont(line, state):
         state['current_cue_out_duration'] = res.group(1)
         state['current_cue_out_scte35'] = res.group(2)
 
-
 def _cueout_no_duration(line):
     # this needs to be called first since line.split in all other
     # parsers will throw a ValueError if passed just this tag
     if line == protocol.ext_x_cue_out:
         return (None, None)
-
 
 def _cueout_elemental(line, state, prevline):
     param, value = line.split(':', 1)
@@ -359,7 +407,6 @@ def _cueout_elemental(line, state, prevline):
     else:
         return None
 
-
 def _cueout_envivio(line, state, prevline):
     param, value = line.split(':', 1)
     res = re.match('.*DURATION=(.*),.*,CUE="(.*)"', value)
@@ -368,38 +415,45 @@ def _cueout_envivio(line, state, prevline):
     else:
         return None
 
+def _cueout_duration(line):
+    # this needs to be called after _cueout_elemental
+    # as it would capture those cues incompletely
+    # This was added seperately rather than modifying "simple"
+    param, value = line.split(':', 1)
+    res = re.match(r'DURATION=(.*)', value)
+    if res:
+        return (None, res.group(1))
 
 def _cueout_simple(line):
     # this needs to be called after _cueout_elemental
     # as it would capture those cues incompletely
     param, value = line.split(':', 1)
-    res = re.match('^(\d+(?:\.\d)?\d*)$', value)
+    res = re.match(r'^(\d+(?:\.\d)?\d*)$', value)
     if res:
         return (None, res.group(1))
-
 
 def _parse_cueout(line, state, prevline):
     _cueout_state = (_cueout_no_duration(line)
                      or _cueout_elemental(line, state, prevline)
                      or _cueout_envivio(line, state, prevline)
+                     or _cueout_duration(line)
                      or _cueout_simple(line))
     if _cueout_state:
         state['current_cue_out_scte35'] = _cueout_state[0]
         state['current_cue_out_duration'] = _cueout_state[1]
 
-
 def _parse_server_control(line, data, state):
     attribute_parser = {
-        "can_block_reload": str,
-        "hold_back": lambda x: float(x),
-        "part_hold_back": lambda x: float(x),
-        "can_skip_until": lambda x: float(x)
+        "can_block_reload":     str,
+        "hold_back":            lambda x: float(x),
+        "part_hold_back":       lambda x: float(x),
+        "can_skip_until":       lambda x: float(x),
+        "can_skip_dateranges":  str
     }
 
     data['server_control'] = _parse_attribute_list(
         protocol.ext_x_server_control, line, attribute_parser
     )
-
 
 def _parse_part_inf(line, data, state):
     attribute_parser = {
@@ -409,7 +463,6 @@ def _parse_part_inf(line, data, state):
     data['part_inf'] = _parse_attribute_list(
         protocol.ext_x_part_inf, line, attribute_parser
     )
-
 
 def _parse_rendition_report(line, data, state):
     attribute_parser = remove_quotes_parser('uri')
@@ -421,7 +474,6 @@ def _parse_rendition_report(line, data, state):
     )
 
     data['rendition_reports'].append(rendition_report)
-
 
 def _parse_part(line, data, state):
     attribute_parser = remove_quotes_parser('uri')
@@ -437,6 +489,9 @@ def _parse_part(line, data, state):
         part['program_date_time'] = state['current_program_date_time']
         state['current_program_date_time'] += datetime.timedelta(seconds=part['duration'])
 
+    part['dateranges'] = state.pop('dateranges', None)
+    part['gap_tag'] = state.pop('gap', None)
+
     if 'segment' not in state:
         state['segment'] = {}
     segment = state['segment']
@@ -445,20 +500,16 @@ def _parse_part(line, data, state):
 
     segment['parts'].append(part)
 
-
 def _parse_skip(line, data, state):
-    attribute_parser = {
-        "skipped_segments": int
-    }
+    attribute_parser = remove_quotes_parser('recently_removed_dateranges')
+    attribute_parser['skipped_segments'] = int
 
     data['skip'] = _parse_attribute_list(protocol.ext_x_skip, line, attribute_parser)
-
 
 def _parse_session_data(line, data, state):
     quoted = remove_quotes_parser('data_id', 'value', 'uri', 'language')
     session_data = _parse_attribute_list(protocol.ext_x_session_data, line, quoted)
     data['session_data'].append(session_data)
-
 
 def _parse_session_key(line, data, state):
     params = ATTRIBUTELISTPATTERN.split(line.replace(protocol.ext_x_session_key + ':', ''))[1::2]
@@ -468,13 +519,41 @@ def _parse_session_key(line, data, state):
         key[normalize_attribute(name)] = remove_quotes(value)
     data['session_keys'].append(key)
 
+def _parse_preload_hint(line, data, state):
+    attribute_parser = remove_quotes_parser('uri')
+    attribute_parser['type'] = str
+    attribute_parser['byterange_start'] = int
+    attribute_parser['byterange_length'] = int
+
+    data['preload_hint'] = _parse_attribute_list(
+        protocol.ext_x_preload_hint, line, attribute_parser
+    )
+
+def _parse_daterange(line, date, state):
+    attribute_parser = remove_quotes_parser('id', 'class', 'start_date', 'end_date')
+    attribute_parser['duration'] = float
+    attribute_parser['planned_duration'] = float
+    attribute_parser['end_on_next'] = str
+    attribute_parser['scte35_cmd'] = str
+    attribute_parser['scte35_out'] = str
+    attribute_parser['scte35_in'] = str
+
+    parsed = _parse_attribute_list(
+        protocol.ext_x_daterange, line, attribute_parser
+    )
+
+    if 'dateranges' not in state:
+        state['dateranges'] = []
+
+    state['dateranges'].append(parsed)
+
 
 def string_to_lines(string):
     return string.strip().splitlines()
 
 
 def remove_quotes_parser(*attrs):
-    return dict(list(zip(attrs, itertools.repeat(remove_quotes))))
+    return dict(zip(attrs, itertools.repeat(remove_quotes)))
 
 
 def remove_quotes(string):

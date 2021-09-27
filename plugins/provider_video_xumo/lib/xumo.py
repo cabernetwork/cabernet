@@ -41,23 +41,6 @@ class XUMO(PluginObj):
         self.unc_xumo_channels = self.uncompress(translations.xumo_channels)
         self.unc_xumo_program = self.uncompress(translations.xumo_program)
         
-
-    def refresh_channels_ext(self, _instance=None):
-        """
-        External request to refresh channels. Called from the plugin manager.
-        All tasks are namespace based so instance is ignored. 
-        This calls the scheduler to run the task.
-        """
-        self.refresh_obj('Channels', 'Refresh XUMO Channels')
-
-    def refresh_epg_ext(self, _instance=None):
-        """
-        External request to refresh epg. Called from the plugin manager.
-        All tasks are namespace based so instance is ignored.
-        This calls the scheduler to run the task.
-        """
-        self.refresh_obj('EPG', 'Refresh XUMO EPG')
-
     def scheduler_tasks(self):
         sched_epg_hours = self.utc_to_local_time(0)
         sched_epg_mins = random.randint(1,55)
@@ -67,41 +50,41 @@ class XUMO(PluginObj):
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
         if self.scheduler_db.save_task(
                 'Channels',
-                'Refresh XUMO Channels',
+                'Refresh {} Channels'.format(self.namespace),
                 self.name,
                 None,
                 'refresh_channels',
                 20,
                 'inline',
-                'Pulls channel lineup from XUMO'
+                'Pulls channel lineup from {}'.format(self.namespace)
                 ):
             self.scheduler_db.save_trigger(
                 'Channels',
-                'Refresh XUMO Channels',
+                'Refresh {} Channels'.format(self.namespace),
                 'startup')
             self.scheduler_db.save_trigger(
                 'Channels',
-                'Refresh XUMO Channels',
+                'Refresh {} Channels'.format(self.namespace),
                 'daily',
                 timeofday=sched_ch
                 )
         if self.scheduler_db.save_task(
                 'EPG',
-                'Refresh XUMO EPG',
+                'Refresh {} EPG'.format(self.namespace),
                 self.name,
                 None,
                 'refresh_epg',
                 10,
                 'thread',
-                'Pulls channel program data from XUMO'
+                'Pulls channel program data from {}'.format(self.namespace)
                 ):
             self.scheduler_db.save_trigger(
                 'EPG',
-                'Refresh XUMO EPG',
+                'Refresh {} EPG'.format(self.namespace),
                 'startup')
             self.scheduler_db.save_trigger(
                 'EPG',
-                'Refresh XUMO EPG',
+                'Refresh {} EPG'.format(self.namespace),
                 'daily',
                 timeofday=sched_epg
                 )

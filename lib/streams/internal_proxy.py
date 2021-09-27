@@ -46,12 +46,15 @@ from lib.db.db_channels import DBChannels
 from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
+MAX_OUT_QUEUE_SIZE = 6
+IDLE_COUNTER_MAX = 20
 
 class InternalProxy(Stream):
 
     is_m3u8_starting = 0
 
     def __init__(self, _plugins, _hdhr_queue):
+        global MAX_OUT_QUEUE_SIZE
         self.last_refresh = None
         self.channel_dict = None
         self.wfile = None
@@ -66,10 +69,10 @@ class InternalProxy(Stream):
         self.atsc = ATSCMsg()
         self.initialized_psi = False
         self.in_queue = Queue()
-        self.out_queue = Queue(maxsize=3)
+        self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
         self.terminate_queue = None
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
-        self.idle_counter = 30
+        self.idle_counter = -1
         
     def terminate(self, *args):
         try:
@@ -100,6 +103,7 @@ class InternalProxy(Stream):
         self.channel_dict = _channel_dict
         if not self.start_m3u8_queue_process():
             self.terminate()
+            return
         
         self.wfile = _wfile
         self.terminate_queue = _terminate_queue
@@ -130,12 +134,17 @@ class InternalProxy(Stream):
     def clear_queues(self):
         self.in_queue.close()
         self.out_queue.close()        
-    
+
     def play_queue(self):
+        global MAX_OUT_QUEUE_SIZE
+        global IDLE_COUNTER_MAX
         self.idle_counter += 1
-        if self.idle_counter > 20:
-            self.write_atsc_msg()
+        if self.idle_counter > IDLE_COUNTER_MAX:
             self.idle_counter = 0
+            raise exceptions.CabernetException('Provider has stop playing the stream. Terminating the connection {}' \
+                .format(self.t_m3u8.pid))
+        elif self.idle_counter == 6:
+            self.write_atsc_msg()
         while not self.out_queue.empty():
             self.idle_counter = 0
             out_queue_item = self.out_queue.get()
@@ -157,21 +166,29 @@ class InternalProxy(Stream):
                     self.duration = data['duration']
                     uri_decoded = urllib.parse.unquote(uri)
                     if self.check_ts_counter(uri_decoded):
-                        self.logger.info('Serving {} {} ({})s ({}B)' \
-                            .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data)))
+                        start_ttw = time.time()
                         self.write_buffer(self.video.data)
+                        delta_ttw = time.time() - start_ttw
+                        self.logger.info('Serving {} {} ({})s ({}B) ttw:{:.2f}s {}' \
+                            .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw, self.out_queue.qsize()))
+                        time.sleep(0.1)
                     else:
                         self.write_atsc_msg()
                 else:
                     self.write_atsc_msg()
             self.check_termination()
-            time.sleep(0.5 * self.duration)
+            if self.out_queue.qsize() <  2:
+                time.sleep(0.2)
         time.sleep(1)
         self.video.terminate()
 
     def write_buffer(self, _data):
         try:
+            self.wfile.flush()
+            x = self.wfile.write('{}\r\n'.format(len(_data)).encode())
             x = self.wfile.write(_data)
+            x = self.wfile.write('\r\n'.encode())
+            self.wfile.flush()
         except socket.timeout as ex:
             raise
         except IOError as e:
@@ -185,7 +202,7 @@ class InternalProxy(Stream):
             self.write_buffer(
                 self.atsc.format_video_packets())
         else:
-            self.logger.debug('No video data, Sending default ATSC Msg for channel {}' \
+            self.logger.debug('No video data, Sending Default ATSC Msg for channel {}' \
                 .format(self.t_m3u8.pid))
             self.write_buffer(
                 self.atsc.format_video_packets(
@@ -257,6 +274,7 @@ class InternalProxy(Stream):
             else:
                 status = self.out_queue.get()
                 if status['uri'] == 'terminate':
+                    InternalProxy.is_m3u8_starting = False
                     return False
                 elif status['uri'] == 'running':
                     is_running = True

@@ -16,18 +16,16 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import importlib
 import logging
 import urllib.request
-import queue
 import time
-import traceback
 from multiprocessing import Process
 from threading import Thread
 
 import lib.main as main
 import lib.schedule.schedule
+import lib.common.exceptions as exceptions
 from lib.common.decorators import getrequest
 from lib.db.db_scheduler import DBScheduler
 from lib.web.pages.templates import web_templates
@@ -143,11 +141,15 @@ class Scheduler(Thread):
                 call_f = getattr(mod, func_name)
                 call_f(self.plugins)
             else:
+                if _trigger['namespace'] not in self.plugins.plugins:
+                    self.logger.debug('{} scheduled tasks ignored. plugin missing' \
+                        .format(_trigger['namespace']))
+                    return
                 plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
                 if plugin_obj is None:
                     self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
                         .format(_trigger['namespace']))
-                    pass
+                    return
                 elif _trigger['instance'] is None:
                     call_f = getattr(plugin_obj, _trigger['funccall'])
                     call_f()
@@ -155,9 +157,13 @@ class Scheduler(Thread):
                     call_f = getattr(plugin_obj.instances[_trigger['instance']], 
                         _trigger['funccall'])
                     call_f()
-        except KeyError:
-            # happens when the plugin is removed, but scheduler still has data.
-            pass
+        except exceptions.CabernetException as ex:
+            self.logger.warning('{}'.format(str(ex)))
+        except Exception as ex:
+            self.logger.exception('{}{}'.format(
+                'UNEXPECTED EXCEPTION on GET=', ex))
+            raise
+        
 
         end = time.time()
         duration = int(end - start)
@@ -303,7 +309,7 @@ class Scheduler(Thread):
                 self.exec_trigger(task)
             else:
                 self.logger.warning('Invalid taskid when requesting to run task')
-            return None
+            return
 
         is_run = False
         default_trigger = None
@@ -320,5 +326,8 @@ class Scheduler(Thread):
             if default_trigger is not None:
                 self.queue.put({'cmd': 'run', 'uuid': trigger['uuid'] })
             else:
-                self.logger.warning('Need at least one non-startup trigger event to run manually')
-        return None
+                task = self.scheduler_db.get_task(_taskid)
+                if task is not None:
+                    self.exec_trigger(task)
+                else:
+                    self.logger.warning('Invalid taskid when requesting to run task')

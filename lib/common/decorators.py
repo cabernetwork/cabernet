@@ -50,7 +50,7 @@ def handle_url_except(f=None, timeout=None):
             except urllib.error.HTTPError as ex:
                 ex_save = str(ex)
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}" \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__name__, os.getpid(), ex_save, str(args[0]), ))
             except urllib.error.URLError as ex:
                 ex_save = str(ex)
                 self.logger.info("URLError in function {}, retrying (): {} {} {}" \

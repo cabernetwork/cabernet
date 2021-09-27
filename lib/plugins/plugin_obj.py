@@ -47,22 +47,9 @@ class PluginObj:
             ]).encode()
         self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
+    # INTERFACE METHODS
     # Plugin may have the following methods
     # used to interface to the app.
-
-    #def refresh_channels_ext(self, _instance=None):
-    """
-    External request to refresh channels. Called from the plugin manager.
-    All tasks are namespace based so instance is ignored. 
-    This calls the scheduler to run the task.
-    """
-    
-    #def refresh_epg_ext(self, _instance=None):
-    """
-    External request to refresh epg. Called from the plugin manager.
-    All tasks are namespace based so instance is ignored.
-    This calls the scheduler to run the task.
-    """
     
     def is_time_to_refresh_ext(self, _last_refresh, _instance):
         """
@@ -78,6 +65,9 @@ class PluginObj:
         Called from stream object.
         """
         return self.instances[_instance].get_channel_uri(sid)
+
+    # END OF INTERFACE METHODS
+
 
     def scheduler_tasks(self):
         """
@@ -159,14 +149,12 @@ class PluginObj:
             local_hours -= 24
         return local_hours
 
-
     def compress(self, _data):
         if type(_data) is str:
             _data = _data.encode()
         return base64.b64encode(_data).translate(
             _data.maketrans(self.def_trans,
             self.config_obj.data['main']['plugin_data'].encode()))
-
 
     def uncompress(self, _data):
         if type(_data) is str:

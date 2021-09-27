@@ -32,14 +32,14 @@ class Channels(PluginChannels):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
-        self.db_programs = DBEpgPrograms(self.instance_obj.config_obj.data)
+        self.db_programs = DBEpgPrograms(self.config)
         self.epg = EPG(_instance_obj)
 
     def get_channels(self):
         channels_url = ''.join([self.plugin_obj.unc_xumo_base,
             self.plugin_obj.unc_xumo_channels
             .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)])
-        ch_json = self.get_uri_data(channels_url)
+        ch_json = self.get_uri_json_data(channels_url)
         ch_list = []
         if len(ch_json) == 0:
             self.logger.warning('{} HTTP Channel Request Failed for instance {}' \
@@ -57,7 +57,7 @@ class Channels(PluginChannels):
 
             thumbnail = self.plugin_obj.unc_xumo_icons \
                 .format(ch_id)
-            thumbnail_size = channels.get_thumbnail_size(thumbnail)
+            thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
  
             channel = channel_dict['number']
             friendly_name = channel_dict['title']
@@ -70,6 +70,9 @@ class Channels(PluginChannels):
                     self.logger.warning('Missing XUMO category translation for: {}' \
                         .format(channel_dict['genre'][0]['value']))
                     groups_other = self.clean_group_name(channel_dict['genre'][0]['value'])
+            vod = False
+            if 'properties' in channel_dict and 'has_vod' in channel_dict['properties']:
+                vod = channel_dict['properties']['has_vod'] == 'true'
             
             channel = {
                 'id': ch_id,
@@ -83,6 +86,7 @@ class Channels(PluginChannels):
                 'groups_other': groups_other,
                 'thumbnail': thumbnail,
                 'thumbnail_size': thumbnail_size,
+                'VOD': vod
             }
             ch_list.append(channel)
         return ch_list
@@ -96,7 +100,7 @@ class Channels(PluginChannels):
             self.plugin_obj.unc_xumo_channel
             .format(_channel_id, start_hour)])
         time_now = time.time()
-        listing = self.get_uri_data(url)
+        listing = self.get_uri_json_data(url)
         prog_id = None
         for prog in listing['assets']:
             if time_now < prog['timestamps']['end']:

@@ -23,7 +23,6 @@ import threading
 from importlib import resources
 
 import lib.common.utils as utils
-from lib.config import config_callbacks
 from lib.db.db_config_defn import DBConfigDefn
 
 CONFIG_DEFN_PATH = 'lib.resources.config_defn'
@@ -137,7 +136,7 @@ class ConfigDefn:
             for section in list(self.config_defn[module]['sections'].keys()):
                 for key, settings in list(self.config_defn[module]['sections'][section]['settings'].items()):
                     if 'onInit' in settings:
-                        config_callbacks.call_function(settings['onInit'], section, key, _config_obj)
+                        self.call_function(settings['onInit'], section, key, _config_obj)
 
     def call_onchange(self, _area, _updated_data, _config_obj):
         results = ''
@@ -148,7 +147,7 @@ class ConfigDefn:
                     if key in _updated_data[section] and \
                             _updated_data[section][key][1] and \
                             'onChange' in setting_data:
-                        status = config_callbacks.call_function(setting_data['onChange'], section, key, _config_obj)
+                        status = self.call_function(setting_data['onChange'], section, key, _config_obj)
                         if status is None:
                             results += '<li>[{}][{}] implemented</li>'.format(section, key)
                         else:
@@ -160,8 +159,35 @@ class ConfigDefn:
             for section in list(_defn[module]['sections'].keys()):
                 for key, settings in list(_defn[module]['sections'][section]['settings'].items()):
                     if 'onDefnLoad' in settings:
-                        config_callbacks.call_ondefnload_function(settings['onDefnLoad'], section, key, self.config, _defn)
+                        self.call_ondefnload_function(settings['onDefnLoad'], section, key, self.config, _defn)
 
+    def call_function(self, _func_str, _section, _key, _config_obj):
+        """ calls the function in the definition.  If relative path
+            then assume module is relative to the plugins directory
+        """
+        mod_name, func_name = _func_str.rsplit('.', 1)
+        if mod_name.startswith('.'):
+            mod = importlib.import_module(
+                mod_name,
+                package=_config_obj.data['paths']['internal_plugins_pkg'])
+        else:
+            mod = importlib.import_module(mod_name)
+        func = getattr(mod, func_name)
+        return func(_config_obj, _section, _key)
+
+    def call_ondefnload_function(self, _func_str, _section, _key, _config, _defn):
+        """ calls the function in the definition.  If relative path
+            then assume module is relative to the plugins directory
+        """
+        mod_name, func_name = _func_str.rsplit('.', 1)
+        if mod_name.startswith('.'):
+            mod = importlib.import_module(
+                mod_name,
+                package=_config['paths']['internal_plugins_pkg'])
+        else:
+            mod = importlib.import_module(mod_name)
+        func = getattr(mod, func_name)
+        return func(_defn, _config, _section, _key)
 
     def save_defn_to_db(self, _delta_defn=None):
         if _delta_defn:

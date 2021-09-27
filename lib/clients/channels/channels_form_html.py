@@ -20,10 +20,10 @@ import io
 import urllib
 
 import lib.image_size.get_image_size as get_image_size
+import lib.common.utils as utils
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
-import lib.common.utils as utils
-import lib.clients.channels.channels as channels
+from lib.clients.channels.channels import ChannelsURL
 
 
 @getrequest.route('/api/channels_form')
@@ -51,7 +51,8 @@ def post_channels_html(_webserver):
     filter_dict = get_filter_data(_webserver.query_data)
     
     if sort_col is None:
-        results = channels.update_channels(_webserver.config, namespace, _webserver.query_data)
+        cu = ChannelsURL(_webserver.config)
+        results = cu.update_channels(namespace, _webserver.query_data)
         _webserver.do_mime_response(200, 'text/html', results)
     else:
         get_channels_form_html(_webserver, namespace, sort_col, sort_dir, filter_dict)
@@ -300,6 +301,15 @@ class ChannelsFormHTML:
                 quality = 'HD'
             else:
                 quality = 'SD'
+            if 'VOD' in sid_data['json']:
+                if sid_data['json']['VOD']:
+                    vod = 'VOD'
+                else:
+                    # Not sure what to call not VOD?
+                    vod = 'Live'
+            else:
+                vod = ''
+                
             max_image_size = self.lookup_config_size()
             if sid_data['thumbnail_size'] is not None:
                 image_size = sid_data['thumbnail_size']
@@ -351,8 +361,8 @@ class ChannelsFormHTML:
                 '</td></tr><tr><td style="border: none; background: none;">',
                 'size=', str(image_size), '   original_size=', str(original_size),
                 '</td></tr></table></td>',
-                '<td style="text-align: center">', quality, ' ',
-                sid_data['json']['callsign'], ' ', sid, '<br>',
+                '<td style="text-align: center">', quality, ' ', vod, ' ',
+                sid_data['json']['callsign'], ' ', sid,'<br>',
                 groups_other,
                 '</td>',
                 '</tr>'

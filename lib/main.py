@@ -115,11 +115,11 @@ def main(script_dir):
         LOGGER.info('Initiating Cabernet v{}'.format(utils.get_version_str()))
 
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
-        #if args.restart and config['main']['maintenance_mode']:
-        LOGGER.info('In maintenance mode, applying patches')
-        patcher.patch_upgrade(config_obj, utils.VERSION)
-        config_obj.write('main', 'maintenance_mode', False)
-        time.sleep(0.01)
+        if args.restart and config['main']['maintenance_mode']:
+            LOGGER.info('In maintenance mode, applying patches')
+            patcher.patch_upgrade(config_obj, utils.VERSION)
+            config_obj.write('main', 'maintenance_mode', False)
+            time.sleep(0.01)
 
         utils.cleanup_web_temp(config)
         plugins = init_plugins(config_obj)

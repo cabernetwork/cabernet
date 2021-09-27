@@ -17,8 +17,9 @@ substantial portions of the Software.
 """
 
 import io
-from io import StringIO
+import logging
 import urllib.request
+from io import StringIO
 from xml.sax.saxutils import escape
 
 import lib.common.utils as utils
@@ -26,6 +27,7 @@ from lib.clients.channels.templates import ch_templates
 from lib.common.decorators import getrequest
 from lib.db.db_channels import DBChannels
 import lib.image_size.get_image_size as get_image_size
+from lib.common.decorators import handle_url_except
 
 
 @getrequest.route('/playlist')
@@ -37,30 +39,35 @@ def playlist(_webserver):
 
 @getrequest.route('/channels.m3u')
 def channels_m3u(_webserver):
-    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'audio/x-mpegurl', get_channels_m3u(
         _webserver.config, _webserver.stream_url, 
         _webserver.query_data['name'], 
-        _webserver.query_data['instance']))
+        _webserver.query_data['instance'],
+        _webserver.plugins.plugins
+        ))
 
 
 @getrequest.route('/lineup.xml')
 def lineup_xml(_webserver):
-    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'application/xml', get_channels_xml(
-        _webserver.config, _webserver.stream_url, _webserver.query_data['name'], 
-        _webserver.query_data['instance']))
+        _webserver.config, _webserver.stream_url,
+        _webserver.query_data['name'], 
+        _webserver.query_data['instance'],
+        _webserver.plugins.plugins
+        ))
 
 
 @getrequest.route('/lineup.json')
 def lineup_json(_webserver):
-    #_webserver.plugins.refresh_channels(_webserver.query_data['name'])
     _webserver.do_mime_response(200, 'application/json', get_channels_json(
-        _webserver.config, _webserver.stream_url, _webserver.query_data['name'], 
-        _webserver.query_data['instance']))
+        _webserver.config, _webserver.stream_url, 
+        _webserver.query_data['name'], 
+        _webserver.query_data['instance'],
+        _webserver.plugins.plugins
+        ))
 
 
-def get_channels_m3u(_config, _base_url, _namespace, _instance):
+def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
 
     format_descriptor = '#EXTM3U'
     record_marker = '#EXTINF'
@@ -80,7 +87,10 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
-            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
+            if not _config[config_section]['enabled']:
+                continue
+            stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
             else:
@@ -103,7 +113,8 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'], 
                 sid_data['instance'], _config)
-            service_name = set_service_name(_config, sid_data)
+            ch_obj = ChannelsURL(_config)
+            service_name = ch_obj.set_service_name(sid_data)
             fakefile.write(
                 '%s\n' % (
                     record_marker + ':-1' + ' ' +
@@ -127,7 +138,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance):
     return fakefile.getvalue()
 
     
-def get_channels_json(_config, _base_url, _namespace, _instance):
+def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
     db = DBChannels(_config)
     ch_data = db.get_channels(_namespace, _instance)
     return_json = ''
@@ -139,7 +150,15 @@ def get_channels_json(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
-            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            if not _plugins[sid_data['namespace']].enabled:
+                continue
+            if not _plugins[sid_data['namespace']] \
+                .plugin_obj.instances[sid_data['instance']].enabled:
+                continue
+            config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
+            if not _config[config_section]['enabled']:
+                continue
+            stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
             else:
@@ -157,7 +176,7 @@ def get_channels_json(_config, _base_url, _namespace, _instance):
     return "[" + return_json[:-1] + "]"
 
 
-def get_channels_xml(_config, _base_url, _namespace, _instance):
+def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
     db = DBChannels(_config)
     ch_data = db.get_channels(_namespace, _instance)
     return_xml = ''
@@ -169,7 +188,15 @@ def get_channels_xml(_config, _base_url, _namespace, _instance):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
-            stream = _config[sid_data['namespace'].lower()]['player-stream_type']
+            if not _plugins[sid_data['namespace']].enabled:
+                continue
+            if not _plugins[sid_data['namespace']] \
+                .plugin_obj.instances[sid_data['instance']].enabled:
+                continue
+            config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
+            if not _config[config_section]['enabled']:
+                continue
+            stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
             else:
@@ -186,67 +213,77 @@ def get_channels_xml(_config, _base_url, _namespace, _instance):
     return "<Lineup>" + return_xml + "</Lineup>"
 
 
-def update_channels(_config, _namespace, _query_data):
-    db = DBChannels(_config)
-    ch_data = db.get_channels(_namespace, None)
-    results = 'Status Results<ul>'
-    for key, values in _query_data.items():
-        key_pair = key.split('-', 2)
-        uid = key_pair[0]
-        instance = key_pair[1]
-        name = key_pair[2]
-        value = values[0]
-        if name == 'enabled':
-            value = int(value)
-        
-        db_value = None
-        for ch_db in ch_data[uid]: 
-            if ch_db['instance'] == instance:
-                db_value = ch_db[name]
-                break
-        if value != db_value:
-            if value is None:
-                lookup_name = translate_main2json(name)
-                if lookup_name is not None:
-                    value = ch_db['json'][lookup_name]
-            results += ''.join(['<li>Updated [', uid, '][', instance, '][', name, '] to ', str(value), '</li>'])
-            ch_db[name] = value
-            if name == 'thumbnail':
-                thumbnail_size = get_thumbnail_size(value)
-                ch_db['thumbnail_size'] = thumbnail_size
-            db.update_channel(ch_db)
-    results += '</ul><hr>'
-    return results
+class ChannelsURL:
+
+    def __init__(self, _config):
+        self.logger = logging.getLogger(__name__)
+        self.config = _config
+
+    def update_channels(self, _namespace, _query_data):
+        db = DBChannels(self.config)
+        ch_data = db.get_channels(_namespace, None)
+        results = 'Status Results<ul>'
+        for key, values in _query_data.items():
+            key_pair = key.split('-', 2)
+            uid = key_pair[0]
+            instance = key_pair[1]
+            name = key_pair[2]
+            value = values[0]
+            if name == 'enabled':
+                value = int(value)
+            
+            db_value = None
+            for ch_db in ch_data[uid]: 
+                if ch_db['instance'] == instance:
+                    db_value = ch_db[name]
+                    break
+            if value != db_value:
+                if value is None:
+                    lookup_name = translate_main2json(name)
+                    if lookup_name is not None:
+                        value = ch_db['json'][lookup_name]
+                results += ''.join(['<li>Updated [', uid, '][', instance, '][', name, '] to ', str(value), '</li>'])
+                ch_db[name] = value
+                if name == 'thumbnail':
+                    thumbnail_size = get_thumbnail_size(value)
+                    ch_db['thumbnail_size'] = thumbnail_size
+                db.update_channel(ch_db)
+        results += '</ul><hr>'
+        return results
 
 
-def translate_main2json(_name):
-    if _name == 'display_number':
-        return 'number'
-    elif _name == 'display_name':
-        return 'name'
-    elif _name == 'thumbnail':
-        return _name
-    else:
-        return None
+    def translate_main2json(self, _name):
+        if _name == 'display_number':
+            return 'number'
+        elif _name == 'display_name':
+            return 'name'
+        elif _name == 'thumbnail':
+            return _name
+        else:
+            return None
 
-def get_thumbnail_size(_thumbnail):
-    thumbnail_size = (0, 0)
-    try:
+    @handle_url_except()
+    def get_thumbnail_size(self, _thumbnail):
+        thumbnail_size = (0, 0)
         with urllib.request.urlopen(_thumbnail) as resp:
             img_blob = resp.read()
             fp = io.BytesIO(img_blob)
             sz = len(img_blob)
             thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
-    except urllib.error.URLError as e:
-        pass
-    return thumbnail_size
+        return thumbnail_size
 
-    
-# returns the service name used to sync with the EPG channel name
-def set_service_name(_config, _sid_data):
-    updated_chnum = utils.wrap_chnum(
-        str(_sid_data['display_number']), _sid_data['namespace'], 
-        _sid_data['instance'], _config)
-    service_name = updated_chnum + \
-        ' ' + _sid_data['display_name']
-    return service_name
+
+
+    def set_service_name(self, _sid_data):
+        """
+        Returns the service name used to sync with the EPG channel name
+        """
+
+        updated_chnum = utils.wrap_chnum(
+            str(_sid_data['display_number']), _sid_data['namespace'], 
+            _sid_data['instance'], self.config)
+        service_name = updated_chnum + \
+            ' ' + _sid_data['display_name']
+        return service_name
+      
+

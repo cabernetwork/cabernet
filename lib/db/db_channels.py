@@ -182,7 +182,7 @@ class DBChannels(DB):
                     str(ch['thumbnail_size']),
                     True,
                     json.dumps(ch)))
-            except sqlite3.IntegrityError:
+            except sqlite3.IntegrityError as ex:
                 self.update(DB_CHANNELS_TABLE, (
                     ch['number'],
                     True,

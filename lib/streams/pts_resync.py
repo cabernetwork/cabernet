@@ -21,23 +21,25 @@ import os
 import subprocess
 import time
 from threading import Thread
+
+import lib.common.utils as utils
 from .stream_queue import StreamQueue
 
 
 class PTSResync:
 
-    def __init__(self, _config, _namespace, _id):
+    def __init__(self, _config, _config_section, _id):
         self.logger = logging.getLogger(__name__)
         self.config = _config
-        self.namespace = _namespace
+        self.config_section = _config_section
         self.id = _id
-        if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
+        if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
             self.ffmpeg_proc = self.open_ffmpeg_proc()
         else:
             self.ffmpeg_proc = None
         self.stream_queue = StreamQueue(188, self.ffmpeg_proc, _id)
-        if self.config[self.namespace]['player-enable_pts_resync']:
-            if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
+        if self.config[self.config_section]['player-enable_pts_resync']:
+            if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
                 self.logger.info('PTS Resync running ffmpeg')
 
     def video_to_stdin(self, _video):
@@ -55,23 +57,23 @@ class PTSResync:
             time.sleep(0.01)
             self.ffmpeg_proc.stdin.write(_video.data)
             self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
-            self.logger('Restarting PTSResync ffmpeg due to corrupted process start {}', os.getpid())
+            self.logger.info('Restarting PTSResync ffmpeg due to corrupted process start {}', os.getpid())
 
     def resequence_pts(self, _video):
-        if not self.config[self.namespace]['player-enable_pts_resync']:
+        if not self.config[self.config_section]['player-enable_pts_resync']:
             return
         if _video.data is None:
             return
-        if self.config[self.namespace]['player-pts_resync_type'] == 'ffmpeg':
+        if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
             t_in = Thread(target=self.video_to_stdin, args=(_video,))
             t_in.start()
             new_video = self.stream_queue.read()
             _video.data = new_video
-        elif self.config[self.namespace]['player-pts_resync_type'] == 'internal':
+        elif self.config[self.config_section]['player-pts_resync_type'] == 'internal':
             self.logger.warning('player-pts_resync_type internal NOT IMPLEMENTED')
         else:
             self.logger.error('player-pts_resync_type UNKNOWN TYPE {}'.format(
-                self.config[self.namespace]['player-pts_resync_type']))
+                self.config[self.config_section]['player-pts_resync_type']))
 
     def terminate(self):
         if self.ffmpeg_proc is not None:

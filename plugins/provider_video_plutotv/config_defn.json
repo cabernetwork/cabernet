@@ -35,21 +35,7 @@
                             "featuredImage"],
                         "level": 1,
                         "help": "M3U8 only used with subscriptions.  TVHeadend has bugs with the M3U8 file from PlutoTV. ffmpeg uses ffmpeg and ffprobe.  Internal is the most efficient and cleanest solution."
-                    },
-                    "channel-update_timeout":{
-                        "label": "Channel Update Timeout",
-                        "type": "integer",
-                        "default": 23,
-                        "level": 3,
-                        "help": "Default pulls channel data from PlutoTV in hours"
-                    },
-                    "channel-import_groups":{
-                        "label": "Import Channel Groups",
-                        "type": "boolean",
-                        "default": false,
-                        "level": 1,
-                        "help": "Imports groups from PlutoTV into the group other column"
-                    },
+                    },                    
                     "player-tuner_count":{
                         "label": "tuner_count",
                         "type": "integer",
@@ -57,78 +43,12 @@
                         "level": 2,
                         "help": "Number of streams active at one time"
                     },
-                    "player-stream_type":{
-                        "label": "stream_type",
-                        "type": "list",
-                        "default": "internalproxy",
-                        "values": ["m3u8redirect", "internalproxy", "streamlinkproxy", "ffmpegproxy"],
-                        "level": 1,
-                        "help": "M3U8 send m3u8 file directly to client.  ffmpeg uses ffmpeg for m3u8 urls. streamlink uses the python module streamlink. internal uses internally coded modules."
-                    },
-                    "player-enable_url_filter":{
-                        "label": "Enable URL Filtering",
-                        "type": "boolean",
-                        "default": false,
-                        "level": 3,
-                        "help": "Only works with internalproxy. Filters out streams from URL addresses based on regular expression"
-                    },
-                    "player-url_filter":{
-                        "label": "URL Filter",
-                        "type": "string",
-                        "default": "^.*(_ad/|google.com|plutotv_filler|Well_be_right|_AdPod|_Promo).*$",
-                        "level": 3,
-                        "help": "Only used with stream_type=internalproxy"
-                    },
-                    "player-enable_pts_filter":{
-                        "label": "Enable PTS Filtering",
-                        "type": "boolean",
-                        "default": false,
-                        "level": 3,
-                        "help": "Works with internalproxy and ffmpegproxy. Filters out corrupted PTS packets.  Requires ffprobe.exe"
-                    },
-                    "player-pts_minimum":{
-                        "label": "pts_minimum",
-                        "type": "integer",
-                        "default": 10000000,
-                        "level": 3,
-                        "help": "Default 10,000,000 or 108 seconds after midnight. Filters out non-standard streams that whose PTS starts at midnight."
-                    },
-                    "player-pts_max_delta":{
-                        "label": "pts_max_delta",
-                        "type": "integer",
-                        "default": 3000000,
-                        "level": 3,
-                        "help": "Default 3,000,000 or 32 seconds. when playing contiguous blocks of video, filters out any blocks that do not have a continuous PTS counter."
-                    },
-                    "player-enable_pts_resync":{
-                        "label": "Enable PTS/DTS Resync",
-                        "type": "boolean",
-                        "default": false,
-                        "level": 2,
-                        "help": "Works with internalproxy and ffmpegproxy. Corrects timing issues with the video and audio streams and makes them contiguous"
-                    },
-                    "player-pts_resync_type":{
-                        "label": "PTS/DTS Resync Type",
-                        "type": "list",
-                        "default": "ffmpeg",
-                        "values": ["ffmpeg", "internal"],
-                        "level": 2,
-                        "help": "Uses either ffmpeg genpts or internal resequencing"
-                    },
-
                     "epg-hours":{
                         "label": "EPG Hours to Pull",
                         "type": "integer",
                         "default": 14,
                         "level": 3,
                         "help": "PlutoTV max is 14 hours including 2 hours in the past."
-                    },
-                    "epg-min_refresh_rate":{
-                        "label": "EPG Min Refresh Rate",
-                        "type": "integer",
-                        "default": 3600,
-                        "level": 2,
-                        "help": "Default=3600 seconds (1 hours). When a HTTP request for epg data is received, will refresh the data if older than this value."
                     }
                 }
             }

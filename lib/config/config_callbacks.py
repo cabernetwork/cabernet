@@ -32,6 +32,8 @@ import lib.common.encryption as encryption
 import lib.config.config_defn as config_defn
 import lib.clients.hdhr.hdhr_server as hdhr_server
 from lib.db.db_config_defn import DBConfigDefn
+from lib.db.db_scheduler import DBScheduler
+from lib.clients.web_handler import WebHTTPHandler
 
 try:
     import cryptography
@@ -46,35 +48,6 @@ except ImportError:
 
 ENCRYPT_STRING = 'ENC::'
 
-
-def call_function(_func_str, _section, _key, _config_obj):
-    """ calls the function in the definition.  If relative path
-        then assume module is relative to the plugins directory
-    """
-    mod_name, func_name = _func_str.rsplit('.', 1)
-    if mod_name.startswith('.'):
-        mod = importlib.import_module(
-            mod_name,
-            package=_config_obj.data['paths']['internal_plugins_pkg'])
-    else:
-        mod = importlib.import_module(mod_name)
-    func = getattr(mod, func_name)
-    return func(_config_obj, _section, _key)
-
-
-def call_ondefnload_function(_func_str, _section, _key, _config, _defn):
-    """ calls the function in the definition.  If relative path
-        then assume module is relative to the plugins directory
-    """
-    mod_name, func_name = _func_str.rsplit('.', 1)
-    if mod_name.startswith('.'):
-        mod = importlib.import_module(
-            mod_name,
-            package=_config['paths']['internal_plugins_pkg'])
-    else:
-        mod = importlib.import_module(mod_name)
-    func = getattr(mod, func_name)
-    return func(_defn, _config, _section, _key)
 
 
 def noop(_config_obj, _section, _key):
@@ -302,8 +275,14 @@ def update_instance_label(_config_obj, _section, _key):
     section_data = db_confdefn.get_one_section_dict(areas[0], _section)
     section_data[_section]['label'] = value
     db_confdefn.add_section(areas[0], _section, section_data[_section])
+    # when instance label is updated, all tasks for that instance are removed
+    # a restart is needed. Note added to config label
+    db_scheduler = DBScheduler(_config_obj.data)
+    namespace, instance = _section.split('_', 1)
+    tasks = db_scheduler.get_tasks_by_name(namespace, instance)
+    for task in tasks:
+        WebHTTPHandler.sched_queue.put({'cmd': 'deltask', 'taskid': task['taskid'] })
 
-# onDefnLoad
 
 def set_theme_folders(_defn, _config, _section, _key):
     """

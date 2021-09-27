@@ -70,7 +70,14 @@
                         "default": false,
                         "level": 1,
                         "help": "Used during upgrades.  When enabled, causes the patch upgrades to be re-applied on a scheduler restart"
-                    },                    
+                    },
+                    "memory_usage":{
+                        "label": "Memory Usage",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "Turn on and set logging to DEBUG. This will generate a memory profile after each web request or scheduler trigger."
+                    },
                     "ostype":{
                         "label": "OS Type",
                         "type": "string",

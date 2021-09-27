@@ -19,6 +19,7 @@ substantial portions of the Software.
 
 import datetime
 import glob
+import linecache
 import logging
 import logging.config
 import mimetypes
@@ -31,10 +32,11 @@ import socket
 import struct
 import sys
 import time
+import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.3.10'
+VERSION = '0.9.4.0'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0'
@@ -47,6 +49,7 @@ def get_version_str():
 logger = None
 
 def logging_setup(_config):
+    global logger
     if os.environ.get('LOGS_DIR') is None:
         if _config['paths']['logs_dir'] is not None:
             os.environ['LOGS_DIR'] = _config['paths']['logs_dir']
@@ -93,6 +96,16 @@ def tm_parse(tm):
     tm = str(tm_date.strftime('%Y%m%d%H%M%S +0000'))
     return tm
 
+
+def convert_to_utc(tm):
+    """
+    Given a datetime obj with a timezone, convert it to UTC.
+    """
+    tm_blank = tm.replace(tzinfo=datetime.timezone.utc)
+    tm_utc = tm + (tm_blank - tm)
+    return tm_utc.replace(tzinfo=datetime.timezone.utc)
+    
+    
 
 def tm_local_parse(tm):
     tm_date = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc) + datetime.timedelta(seconds=tm / 1000)
@@ -198,6 +211,7 @@ def instance_config_section(_namespace, _instance):
 
 
 def process_image_url(_config, _thumbnail_url):
+    global logger
     if _thumbnail_url.startswith('file://'):
         filename = ntpath.basename(_thumbnail_url)
         mime_lookup = mimetypes.guess_type(filename)
@@ -239,6 +253,48 @@ def cleanup_web_temp(_config):
     for f in filelist:
         if os.path.isfile(f):
             os.remove(f)
+
+# MEMORY USAGE
+
+def start_mem_trace(_config):
+    if _config['main']['memory_usage']:
+        logger.warning('starting tracemalloc {}'.format(tracemalloc.is_tracing()))
+        tracemalloc.start()
+
+def end_mem_trace(_config):
+    if _config['main']['memory_usage'] and tracemalloc.is_tracing():
+        snapshot = tracemalloc.take_snapshot()
+        tracemalloc.stop()
+        return snapshot
+    else:
+        return None
+
+def display_top(_config, snapshot, key_type='lineno', limit=3):
+    if _config['main']['memory_usage'] and snapshot is not None:
+        snapshot = snapshot.filter_traces((
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        ))
+        top_stats = snapshot.statistics(key_type)
+
+        logging.debug('pid:{} Top {} lines'.format(os.getpid(), limit))
+        for index, stat in enumerate(top_stats[:limit], 1):
+            frame = stat.traceback[0]
+            # replace "/path/to/module/file.py" with "module/file.py"
+            filename = os.sep.join(frame.filename.split(os.sep)[-2:])
+            logging.debug("#%s: %s:%s: %.1f KiB"
+                  % (index, filename, frame.lineno, stat.size / 1024))
+            line = linecache.getline(frame.filename, frame.lineno).strip()
+            if line:
+                logging.debug('    %s' % line)
+
+        other = top_stats[limit:]
+        if other:
+            size = sum(stat.size for stat in other)
+            logging.debug("%s other: %.1f KiB" % (len(other), size / 1024))
+        total = sum(stat.size for stat in top_stats)
+        logging.debug("Total allocated size: %.1f KiB" % (total / 1024))
+
 
 # BYTE METHODS
 

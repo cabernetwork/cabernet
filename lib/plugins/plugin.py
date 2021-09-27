@@ -39,7 +39,6 @@ def register(func):
     return func
 
 
-
 class Plugin:
 
     # Temporarily used to register the plugin setup() function

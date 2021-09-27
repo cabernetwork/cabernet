@@ -19,12 +19,17 @@ substantial portions of the Software.
 import datetime
 import json
 import logging
+import io
+import os
+import pathlib
 import re
+import shutil
 import time
 import urllib.request
 
 import lib.m3u8 as m3u8
 import lib.common.utils as utils
+import lib.image_size.get_image_size as get_image_size
 from lib.db.db_channels import DBChannels
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
@@ -35,20 +40,35 @@ class PluginChannels:
     def __init__(self, _instance_obj):
         self.logger = logging.getLogger(__name__)
         self.instance_obj = _instance_obj
+        self.config = self.instance_obj.config_obj.data
         self.plugin_obj = _instance_obj.plugin_obj
         self.instance_key = _instance_obj.instance_key
-        self.db = DBChannels(self.instance_obj.config_obj.data)
+        self.db = DBChannels(self.config)
         self.config_section = self.instance_obj.config_section
 
-    @handle_url_except(timeout=10.0)
+    def get_channels(self):
+        """
+        Interface method to override
+        """
+        pass
+
+    @handle_url_except()
     @handle_json_except
-    def get_uri_data(self, _uri):
+    def get_uri_json_data(self, _uri):
         header = {
             'Content-Type': 'application/json',
             'User-agent': utils.DEFAULT_USER_AGENT}
         req = urllib.request.Request(_uri, headers=header)
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             return json.load(resp)
+
+    @handle_url_except()
+    def get_uri_data(self, _uri):
+        header = {
+            'User-agent': utils.DEFAULT_USER_AGENT}
+        req = urllib.request.Request(_uri, headers=header)
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            return resp.read()
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -63,8 +83,8 @@ class PluginChannels:
             update_needed = True
         else:
             delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.instance_obj.config_obj.data[
-                    self.plugin_obj.name.lower()]['channel-update_timeout']:
+            if delta.total_seconds() / 3600 >= self.config[
+                    self.config_section]['channel-update_timeout']:
                 update_needed = True
         if update_needed or force:
             i = 0
@@ -74,18 +94,74 @@ class PluginChannels:
                 time.sleep(0.5)
                 ch_dict = self.get_channels()
             if ch_dict == None:
-                self.logger.warning('Unable to retrieve channel data from {}, aborting refresh' \
-                    .format(self.plugin_obj.name))
+                self.logger.warning('Unable to retrieve channel data from {}:{}, aborting refresh' \
+                    .format(self.plugin_obj.name, self.instance_key))
                 return
 
-            if 'channel-import_groups' in self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]:
+            if 'channel-import_groups' in self.config[self.config_section]:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
-                    self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['channel-import_groups'])
+                    self.config[self.config_section]['channel-import_groups'])
             else:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict)
+            self.logger.debug('{}:{} Channel update complete' \
+                .format(self.plugin_obj.name, self.instance_key))
         else:
             self.logger.debug('Channel data still new for {} {}, not refreshing' \
                 .format(self.plugin_obj.name, self.instance_key))
 
     def clean_group_name(self, group_name):
         return re.sub('[ +&*%$#@!:;,<>?]', '', group_name)
+
+    @handle_url_except()
+    def get_thumbnail_size(self, _ch_uid, _thumbnail):
+        thumbnail_size = (0, 0)
+
+        if _ch_uid is not None:
+            ch_row = self.db.get_channel(_ch_uid, self.plugin_obj.name, self.instance_key)
+            if ch_row is not None:
+                ch_dict = ch_row['json']
+                if ch_row['json']['thumbnail'] == _thumbnail:
+                    return ch_row['json']['thumbnail_size']
+        with urllib.request.urlopen(_thumbnail) as resp:
+            img_blob = resp.read()
+            fp = io.BytesIO(img_blob)
+            sz = len(img_blob)
+            thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
+        return thumbnail_size
+
+    @handle_url_except
+    def get_best_stream(self, _url, _channel_id):
+        self.logger.debug('Determining best video stream for {}...' \
+            .format(_channel_id))
+        bestStream = None
+        videoUrlM3u = m3u8.load(_url,
+            headers={'User-agent': utils.DEFAULT_USER_AGENT})
+        self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
+
+        if len(videoUrlM3u.playlists) > 0:
+            for videoStream in videoUrlM3u.playlists:
+                if bestStream is None:
+                    bestStream = videoStream
+                elif videoStream.stream_info.resolution is None:
+                    if videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth:
+                        bestStream = videoStream
+                elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
+                      (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
+                    bestStream = videoStream
+                elif ((videoStream.stream_info.resolution[0] == bestStream.stream_info.resolution[0]) and
+                      (videoStream.stream_info.resolution[1] == bestStream.stream_info.resolution[1]) and
+                      (videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth)):
+                    bestStream = videoStream
+            if bestStream is not None:
+                if bestStream.stream_info.resolution is None:
+                    self.logger.debug('{} will use bandwidth at {} bps' \
+                        .format(_channel_id, str(bestStream.stream_info.bandwidth)))
+                else:
+                    self.logger.debug(_channel_id + " will use " +
+                        str(bestStream.stream_info.resolution[0]) + "x" +
+                        str(bestStream.stream_info.resolution[1]) +
+                        " resolution at " + str(bestStream.stream_info.bandwidth) + "bps")
+                return bestStream.absolute_uri
+        else:
+            self.logger.debug("No variant streams found for this station.  Assuming single stream only.")
+            return _url

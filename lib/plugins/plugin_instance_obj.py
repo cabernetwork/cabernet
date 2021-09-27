@@ -16,12 +16,10 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import logging
-import time
-import urllib.request
 
 import lib.common.utils as utils
+from lib.db.db_scheduler import DBScheduler
 
 
 class PluginInstanceObj:
@@ -31,13 +29,25 @@ class PluginInstanceObj:
         self.config_obj = _plugin_obj.config_obj
         self.plugin_obj = _plugin_obj
         self.instance_key = _instance_key
+        self.scheduler_db = DBScheduler(self.config_obj.data)
+        self.scheduler_tasks()
         self.enabled = True
         self.channels = None
         self.epg = None
+        if not self.config_obj.data[self.config_section]['enabled']:
+            self.enabled = False
+        else:
+            self.enabled = True
+
+    def scheduler_tasks(self):
+        """
+        dummy routine that will be overridden by subclass,
+        if scheduler tasks are needed at the instance level
+        """
+        pass
 
     def refresh_channels(self):
         if self.channels is not None and \
-                self.enabled and \
                 self.config_obj.data[self.config_section]['enabled']:
             self.channels.refresh_channels()
         else:
@@ -46,13 +56,7 @@ class PluginInstanceObj:
 
     def get_channel_uri(self, sid):
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
-            i = 0
-            uri = self.channels.get_channel_uri(sid)
-            while uri is None and i < 2:
-                i += 1
-                time.sleep(0.1)
-                uri = self.channels.get_channel_uri(sid)
-            return uri
+            return self.channels.get_channel_uri(sid)
         else:
             self.logger.debug('{}:{} Plugin instance disabled, not getting Channel uri' \
                 .format(self.plugin_obj.name, self.instance_key))
@@ -60,14 +64,12 @@ class PluginInstanceObj:
 
     def refresh_epg(self):
         if self.epg is not None and \
-                self.enabled and \
                 self.config_obj.data[self.config_section]['enabled']:
             self.epg.refresh_epg()
         else:
             self.logger.debug('{}:{} Plugin instance disabled, not refreshing EPG' \
                 .format(self.plugin_obj.name, self.instance_key))
 
-    
     def is_time_to_refresh(self, _last_refresh):
         return False
                 

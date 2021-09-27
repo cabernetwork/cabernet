@@ -104,14 +104,25 @@ class ScheduleHTML:
             '<div id="schedtasks" class="schedShow">',
             '<table class="schedTable" width=95%>'
         ])
+        
+        i = 0
         for task_dict in tasks:
+            i +=1
             if task_dict['area'] != current_area:
+                if i > 1:
+                    html = ''.join([html,
+                        '</div></div></div></td></tr>'
+                        ])
                 current_area = task_dict['area']
                 html = ''.join([html,
-                    '<tr>',
-                    '<td colspan=3><div class="schedSection">',
-                    current_area, '</div></td>'
-                    '</tr>',
+                    '<tr><td colspan=3>',
+                    '<div>',
+                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox" checked>',
+                    '<label for="schedcoll',str(i),'" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton schedSection">',
+                    current_area, '</label>',
+                    '<div title="', task_dict['title'], 
+                    '" class="collapsible-content">',
+                    '<div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">'
                 ])
 
             if task_dict['lastran'] is None:
@@ -143,14 +154,13 @@ class ScheduleHTML:
                     dur_delta = str(dur_mins) + ' minutes'
                 else:
                     dur_delta = str(task_dict['duration']) + ' seconds'
-
             html = ''.join([html,
-                '<tr>',
-                '<td class="schedIcon">',
+                '<div style="display: flex;">',
+                '<div class="schedIcon">',
                 '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', 
                 task_dict['taskid'], '")\'>',
-                '<i class="md-icon">schedule</i></a></td>',
-                '<td class="schedTask">',
+                '<i class="md-icon">schedule</i></a></div>',
+                '<div class="schedTask">',
                 '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=',
                 task_dict['taskid'], '")\'>',
                 '<div class="schedTitle">', task_dict['title'], '</div>',
@@ -158,8 +168,7 @@ class ScheduleHTML:
             ])
             if task_dict['active']:
                 html = ''.join([html,
-                    ' -- Currently Running</div>'
-                    '<div class="progress-line"></div>'
+                    ' -- Currently Running</div><div class="progress-line"></div>'
                 ])
                 play_name = ''
                 play_icon = ''
@@ -167,9 +176,8 @@ class ScheduleHTML:
                 delete_name = ''
             else:
                 html = ''.join([html,
-                    ' -- Last ran ', lastran_delta, ' ago, ',
-                    'taking ', dur_delta, '</div>'
-                    '<div class=""></div>'
+                    ' -- Last ran ', lastran_delta, ' ago, taking ', 
+                    dur_delta, '</div><div class=""></div>'
                 ])
                 play_name = '&run=1'
                 play_icon = 'play_arrow'
@@ -177,8 +185,7 @@ class ScheduleHTML:
                 delete_name = '&deltask=1'
 
             html = ''.join([html,
-                '</a></td>',
-                '<td class="schedIcon">',
+                '</a></div><div class="schedIcon">',
                 '<a href="#" onclick=\'load_sched_url("/api/schedulehtml?task=',
                 task_dict['taskid'], play_name, '")\'>',
                 '<i class="md-icon">', play_icon, '</i></a>',
@@ -187,13 +194,12 @@ class ScheduleHTML:
                 'onclick=\'load_sched_url("/api/schedulehtml?task=',
                 task_dict['taskid'], delete_name, '")\'>',
                 '<i class="md-icon">', delete_icon, '</i></a>',
-                '</td>',
-                '</tr>',
-                '<tr>',
-                '<td colspan=3><hr></td>',
-                '</tr>'
+                '</div></div><hr style="margin-top: 0;">'
             ])
-        return ''.join([html, '</table></div>'])
+        html = ''.join([html,
+            '</div></div></div></td></tr></table></div>'
+            ])
+        return html
  
     @property 
     def task(self):
@@ -390,19 +396,27 @@ class ScheduleHTML:
             '<option value="30">30 minutes</option>',
             '<option value="45">45 minutes</option>',
             '<option value="60">1 hour</option>',
+            '<option value="90">1.5 hours</option>',
             '<option value="120">2 hours</option>',
+            '<option value="150">2.5 hours</option>',
+            '<option value="165">2:45</option>',
             '<option value="180">3 hours</option>',
+            '<option value="210">3.5 hours</option>',
+            '<option value="225">3:45</option>',
             '<option value="240">4 hours</option>',
-            '<option value="330">5 hours, 30 minutes</option>',
-            '<option value="355">5 hours, 55 minutes</option>',
+            '<option value="330">5:30</option>',
             '<option value="360">6 hours</option>',
+            '<option value="420">7 hours</option>',
+            '<option value="450">7:30</option>',
             '<option value="480">8 hours</option>',
-            '<option value="690">11 hours, 30 minutes</option>',
-            '<option value="710">11 hours, 50 minutes</option>',
+            '<option value="690">11:30</option>',
             '<option value="720">12 hours</option>',
-            '<option value="1410">23 hours, 30 minutes</option>',
+            '<option value="1380">23 hours</option>',
+            '<option value="1410">23:30</option>',
             '<option value="1440">24 hours</option>',
+            '<option value="2820">47 hours</option>',
             '<option value="2880">2 days</option>',
+            '<option value="8640">6 days</option>',
             '<option value="10080">weekly</option>',
             '<option value="20160">2 weeks</option>',
             '</select><br><br>',
@@ -419,6 +433,9 @@ class ScheduleHTML:
             '<option value="120">2 hours</option>'
             '<option value="240">4 hours</option>'
             '<option value="480">8 hours</option>'
+            '<option value="720">12 hours</option>'
+            '<option value="960">16 hours</option>'
+            '<option value="1440">24 hours</option>'
             '</select><br><br>',
             '</td></tr>',
             '<tr><td><button type="submit">Add</button>',

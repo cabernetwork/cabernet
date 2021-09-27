@@ -34,3 +34,9 @@ ext_x_rendition_report = '#EXT-X-RENDITION-REPORT'
 ext_x_skip = '#EXT-X-SKIP'
 ext_x_session_data = '#EXT-X-SESSION-DATA'
 ext_x_session_key = '#EXT-X-SESSION-KEY'
+ext_x_preload_hint = '#EXT-X-PRELOAD-HINT'
+ext_x_daterange = "#EXT-X-DATERANGE"
+ext_x_gap = "#EXT-X-GAP"
+
+extgrp = '#EXTGRP'
+extvlcopt = '#EXTVLCOPT'

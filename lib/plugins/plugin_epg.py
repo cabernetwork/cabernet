@@ -33,13 +33,13 @@ class PluginEPG:
     def __init__(self, _instance_obj):
         self.logger = logging.getLogger(__name__)
         self.instance_obj = _instance_obj
+        self.config = self.instance_obj.config_obj.data
         self.instance_key = _instance_obj.instance_key
         self.plugin_obj = _instance_obj.plugin_obj
-        self.db = DBepg(self.instance_obj.config_obj.data)
+        self.db = DBepg(self.config)
         self.config_section = self.instance_obj.config_section
-        self.episode_adj = int(self.instance_obj.config_obj.data \
+        self.episode_adj = int(self.config \
             [self.instance_obj.config_section]['epg-episode_adjustment'])
-
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -49,19 +49,18 @@ class PluginEPG:
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             x = json.load(resp)
         return x
-    
-    
-    
+
     def refresh_epg(self):
         if not self.is_refresh_expired():
             self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.plugin_obj.name, self.instance_key))
             return
-        if not self.instance_obj.config_obj.data[self.instance_obj.config_section]['epg-enabled']:
+        if not self.config[self.instance_obj.config_section]['epg-enabled']:
             self.logger.info('EPG Collection not enabled for {} {}'
                 .format(self.plugin_obj.name, self.instance_key))
             return
         forced_dates, aging_dates = self.dates_to_pull()
         self.db.del_old_programs(self.plugin_obj.name, self.instance_key)
+
         for epg_day in forced_dates:
             self.refresh_programs(epg_day, False)
         for epg_day in aging_dates:
@@ -81,7 +80,7 @@ class PluginEPG:
         todaydate = datetime.date.today()
         forced_days = []
         aging_days = []
-        for x in range(0, self.instance_obj.config_obj.data[self.plugin_obj.name.lower()]['epg-days']):
+        for x in range(0, self.config[self.plugin_obj.name.lower()]['epg-days']):
             if x < self.config_obj.data[self.plugin_obj.name.lower()]['epg-days_start_refresh']:
                 forced_days.append(todaydate + datetime.timedelta(days=x))
             else:
@@ -98,8 +97,8 @@ class PluginEPG:
         if not last_update:
             return True
         expired_date = datetime.datetime.now() - datetime.timedelta(
-            seconds=self.instance_obj.config_obj.data[
-                self.plugin_obj.name.lower()]['epg-min_refresh_rate'])
+            seconds=self.config[
+                self.instance_obj.config_section]['epg-min_refresh_rate'])
         if last_update < expired_date:
             return True
         return False
