@@ -97,7 +97,6 @@ class PluginChannels:
                 self.logger.warning('Unable to retrieve channel data from {}:{}, aborting refresh' \
                     .format(self.plugin_obj.name, self.instance_key))
                 return
-
             if 'channel-import_groups' in self.config[self.config_section]:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
                     self.config[self.config_section]['channel-import_groups'])
@@ -115,6 +114,9 @@ class PluginChannels:
     @handle_url_except()
     def get_thumbnail_size(self, _ch_uid, _thumbnail):
         thumbnail_size = (0, 0)
+        if _thumbnail is None or _thumbnail == '':
+            return thumbnail_size
+            
 
         if _ch_uid is not None:
             ch_row = self.db.get_channel(_ch_uid, self.plugin_obj.name, self.instance_key)

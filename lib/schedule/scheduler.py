@@ -162,9 +162,6 @@ class Scheduler(Thread):
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION on GET=', ex))
-            raise
-        
-
         end = time.time()
         duration = int(end - start)
         time.sleep(0.2)

@@ -347,10 +347,11 @@ class M3U8Process(Thread):
             for m3u8_segment, key in zip(_playlist.segments, keys):
                 total_added += self.add_segment(m3u8_segment, key, _default_played=True)
             self.is_starting = False
+        else:
+            for m3u8_segment, key in zip(_playlist.segments, keys):
+                total_added += self.add_segment(m3u8_segment, key)
+                time.sleep(0.1)
 
-        for m3u8_segment, key in zip(_playlist.segments, keys):
-            total_added += self.add_segment(m3u8_segment, key)
-            time.sleep(0.1)
         return total_added
 
     def add_segment(self, _segment, _key, _default_played=False):
@@ -379,8 +380,8 @@ class M3U8Process(Thread):
                         'data': PLAY_LIST[uri]})
                     return 1
                 if _default_played:
-                    self.logger.debug('Skipping {} {}' \
-                        .format(uri, os.getpid()))
+                    self.logger.debug('Skipping {} {} {}' \
+                        .format(uri, os.getpid(), _segment.program_date_time))
             except ValueError:
                 # queue is closed, terminating
                 pass

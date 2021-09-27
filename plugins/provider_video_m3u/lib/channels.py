@@ -66,7 +66,10 @@ class Channels(PluginChannels):
                     ch_number = seg.additional_props['tvg-num']
                 elif 'tvg-chno' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-chno']
+                elif 'tvg-id' in seg.additional_props:
+                    ch_number = seg.additional_props['tvg-id']
                 else:
+                    self.logger.warning('No channel number provided and required in m3u file for channel {}.  Must include tvg-num, tvg-chno or tvg-id'.format(seg.title))
                     ch_number = None
 
                 if 'channelID' in seg.additional_props:
@@ -79,7 +82,7 @@ class Channels(PluginChannels):
                     # no id provided, skip
                     continue
 
-                if 'tvg-logo' in seg.additional_props:
+                if 'tvg-logo' in seg.additional_props and seg.additional_props['tvg-logo'] != '':
                     thumbnail = seg.additional_props['tvg-logo']
                     thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
                 else:
