@@ -160,7 +160,7 @@ class Updater:
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         IS_UPGRADING = False
-        self.tmp_mgmt.cleanup_tmp()
+        self.tmp_mgmt.cleanup_tmp(None)
         self.restart_app()
         
     def restart_app(self):

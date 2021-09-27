@@ -18,6 +18,7 @@ substantial portions of the Software.
 
 import gzip
 import logging
+import os
 import pathlib
 import shutil
 import time
