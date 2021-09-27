@@ -350,7 +350,7 @@ class M3U8Process(Thread):
         else:
             for m3u8_segment, key in zip(_playlist.segments, keys):
                 total_added += self.add_segment(m3u8_segment, key)
-                time.sleep(0.1)
+            time.sleep(0.1)
 
         return total_added
 
