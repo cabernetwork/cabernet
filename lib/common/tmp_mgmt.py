@@ -95,7 +95,7 @@ class TMPMgmt:
                 'Unable to unzip File, {} {}' \
                 .format(_filename, str(ex)))
 
-    def cleanup_tmp(self, folder):
+    def cleanup_tmp(self, folder=None):
         if folder is None:
             dir = pathlib.Path(self.config['paths']['tmp_dir'])
             for files in os.listdir(dir):
