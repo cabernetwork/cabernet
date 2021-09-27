@@ -48,13 +48,13 @@ class EPG(PluginEPG):
         
     def refresh_programs(self, _epg_day, use_cache=True):
     
-        ch_db = DBChannels(self.config)
-        if self.config[self.config_section]['epg-xmltv_file'] is None:
+        ch_db = DBChannels(self.config_obj.data)
+        if self.config_obj.data[self.config_section]['epg-xmltv_file'] is None:
             raise exceptions.CabernetException('{}:{} XMLTV File config not set, unable to get epg list' \
                 .format(self.plugin_obj.name, self.instance_key))
-        url = self.config[self.config_section]['epg-xmltv_file']
+        url = self.config_obj.data[self.config_section]['epg-xmltv_file']
         file_type = self.detect_filetype(url)
-        xmltv = XMLTV(self.config, url, file_type)
+        xmltv = XMLTV(self.config_obj.data, url, file_type)
         start_date = datetime.datetime.utcnow().date()
         while True:
             xmltv.set_date(start_date)
@@ -110,11 +110,11 @@ class EPG(PluginEPG):
     def get_blank_program(self, _start, _end, _ch_id, _ch_title, _groups):    
         start_time = utils.tm_local_parse(
             (_start
-            + self.config[self.config_section]['epg-start_adjustment'])
+            + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
         end_time = utils.tm_local_parse(
             (_end
-            + self.config[self.config_section]['epg-start_adjustment'])
+            + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
         dur_min = int((_end - _start) / 60)
         sid = str(_ch_id)
@@ -132,7 +132,7 @@ class EPG(PluginEPG):
     
 
     def detect_filetype(self, _filename):
-        file_type = self.config[self.config_section]['epg-xmltv_file_type']
+        file_type = self.config_obj.data[self.config_section]['epg-xmltv_file_type']
         if file_type == 'autodetect':
             extension = pathlib.Path(_filename).suffix
             if extension == '.gz':

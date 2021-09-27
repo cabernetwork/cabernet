@@ -54,12 +54,12 @@ class Channels(PluginChannels):
                 ch_callsign = channel_dict['name']
                 thumbnail = None
                 thumbnail_size = None
-                for tn in [self.config[self.plugin_obj.name.lower()]['channel-thumbnail'],
+                for tn in [self.config_obj.data[self.plugin_obj.name.lower()]['channel-thumbnail'],
                     "colorLogoPNG", "colorLogoSVG", "solidLogoSVG",
                     "solidLogoPNG", "thumbnail", "logo", "featuredImage"]:
                     if tn in channel_dict.keys():
                         thumbnail = channel_dict[tn]['path']
-                        thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
+                        thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
                         break
 
                 stream_url = channel_dict['stitched']['urls'][0]['url']
@@ -68,7 +68,7 @@ class Channels(PluginChannels):
                     .replace('&deviceModel=', '&deviceModel=Chrome') \
                     .replace('&deviceType=', '&deviceType=web') \
                     .replace('&sid=', '&sid=' + \
-                    self.config['main']['uuid'] + \
+                    self.config_obj.data['main']['uuid'] + \
                     str(counter))
                 counter += 1
                 channel = channel_dict['number']

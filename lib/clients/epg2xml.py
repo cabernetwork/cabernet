@@ -147,6 +147,7 @@ class EPG:
                     ch_data['display_number'], ch_data['namespace'],
                     ch_data['instance'], self.config)
                 c_out = EPG.sub_el(_et_root, 'channel', id=sid)
+
                 EPG.sub_el(c_out, 'display-name', _text='%s %s' %
                     (updated_chnum, ch_data['display_name']))
                 EPG.sub_el(c_out, 'display-name', _text='%s %s' % 
@@ -155,7 +156,7 @@ class EPG:
                 EPG.sub_el(c_out, 'display-name', _text=ch_data['json']['callsign'])
                 EPG.sub_el(c_out, 'display-name', _text=ch_data['display_name'])
 
-                if self.config['epg']['epg_channel_icon']:
+                if self.config['epg']['epg_channel_icon'] and ch_data['thumbnail'] is not None:
                     EPG.sub_el(c_out, 'icon', src=ch_data['thumbnail'])
                 break
         return _et_root

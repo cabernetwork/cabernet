@@ -47,6 +47,7 @@ class PluginInstanceObj:
         pass
 
     def refresh_channels(self):
+        self.config_obj.refresh_config_data()
         if self.channels is not None and \
                 self.config_obj.data[self.config_section]['enabled']:
             self.channels.refresh_channels()
@@ -63,6 +64,7 @@ class PluginInstanceObj:
             return None
 
     def refresh_epg(self):
+        self.config_obj.refresh_config_data()
         if self.epg is not None and \
                 self.config_obj.data[self.config_section]['enabled']:
             self.epg.refresh_epg()

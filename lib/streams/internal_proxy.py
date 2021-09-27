@@ -73,6 +73,7 @@ class InternalProxy(Stream):
         self.terminate_queue = None
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
         self.idle_counter = -1
+        self.is_starting = True
         
     def terminate(self, *args):
         try:
@@ -143,7 +144,7 @@ class InternalProxy(Stream):
             self.idle_counter = 0
             raise exceptions.CabernetException('Provider has stop playing the stream. Terminating the connection {}' \
                 .format(self.t_m3u8.pid))
-        elif self.idle_counter == 6:
+        elif self.idle_counter == 6 and self.is_starting:
             self.write_atsc_msg()
         while not self.out_queue.empty():
             self.idle_counter = 0
@@ -171,6 +172,7 @@ class InternalProxy(Stream):
                         delta_ttw = time.time() - start_ttw
                         self.logger.info('Serving {} {} ({})s ({}B) ttw:{:.2f}s {}' \
                             .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw, self.out_queue.qsize()))
+                        self.is_starting = False
                         time.sleep(0.1)
                     else:
                         self.write_atsc_msg()

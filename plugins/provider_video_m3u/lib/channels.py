@@ -40,14 +40,31 @@ class Channels(PluginChannels):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
-        self.tmp_mgmt = TMPMgmt(self.config)
+        self.tmp_mgmt = TMPMgmt(self.config_obj.data)
+        self.filter_dict = self.compile_m3u_filter(
+            self.config_obj.data[self.config_section]['channel-m3u_filter'])
+        
+        
+    def compile_m3u_filter(self, _str):
+        """
+        _dict contains a 
+        """
+        if _str is None:
+            return None
+        nv_dict = {}
+        split_nv = re.compile(r'([^ =]+)=([^,]+),*')
+        nv_pairs = re.findall(split_nv, _str)
+        for nv in nv_pairs:
+            nv_dict[nv[0]] = re.compile(nv[1])
+        return nv_dict
 
     def get_channels(self):
         global TMP_FOLDERNAME
-        if self.config[self.config_section]['channel-m3u_file'] is None:
+        i = 1
+        if self.config_obj.data[self.config_section]['channel-m3u_file'] is None:
             raise exceptions.CabernetException('{}:{} M3U File config not set, unable to get channel list' \
                 .format(self.plugin_obj.name, self.instance_key))
-        url = self.config[self.config_section]['channel-m3u_file']
+        url = self.config_obj.data[self.config_section]['channel-m3u_file']
         file_type = self.detect_filetype(url)
         try:
             dn_filename = self.tmp_mgmt.download_file(url, TMP_FOLDERNAME, None, file_type)
@@ -62,6 +79,8 @@ class Channels(PluginChannels):
                 .format(self.plugin_obj.name, len(m3u8_obj.segments),
                 self.instance_key))
             for seg in m3u8_obj.segments:
+                if self.is_m3u_filtered(seg):
+                    continue
                 if 'tvg-num' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-num']
                 elif 'tvg-chno' in seg.additional_props:
@@ -69,8 +88,9 @@ class Channels(PluginChannels):
                 elif 'tvg-id' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-id']
                 else:
-                    self.logger.warning('No channel number provided and required in m3u file for channel {}.  Must include tvg-num, tvg-chno or tvg-id'.format(seg.title))
-                    ch_number = None
+                    self.logger.warning('No channel number provided and required in m3u file for channel {}.  Should include tvg-num, tvg-chno or tvg-id.  Using counter.'.format(seg.title))
+                    ch_number = i
+                    i += 1
 
                 if 'channelID' in seg.additional_props:
                     ch_id = seg.additional_props['channelID']
@@ -78,17 +98,13 @@ class Channels(PluginChannels):
                     ch_id = seg.additional_props['tvg-id']
                 elif ch_number is not None:
                     ch_id = ch_number
-                else:
-                    # no id provided, skip
-                    continue
 
                 if 'tvg-logo' in seg.additional_props and seg.additional_props['tvg-logo'] != '':
                     thumbnail = seg.additional_props['tvg-logo']
-                    thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
+                    thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
                 else:
                     thumbnail = None
                     thumbnail_size = None
-
                 stream_url = seg.absolute_uri
                 
                 if 'group-title' in seg.additional_props:
@@ -123,14 +139,14 @@ class Channels(PluginChannels):
         self.logger.info('{}: Getting video stream info for {}' \
             .format(self.plugin_obj.name, _channel_id))
         ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
-        if self.config[self.config_section]['player-decode_url']:
+        if self.config_obj.data[self.config_section]['player-decode_url']:
             stream_url = urllib.parse.unquote(ch_dict['json']['stream_url'])
         else:
             stream_url = ch_dict['json']['stream_url']
         return self.get_best_stream(stream_url, _channel_id)
 
     def detect_filetype(self, _filename):
-        file_type = self.config[self.config_section]['channel-m3u_file_type']
+        file_type = self.config_obj.data[self.config_section]['channel-m3u_file_type']
         if file_type == 'autodetect':
             extension = pathlib.Path(_filename).suffix
             if extension == '.gz':
@@ -171,3 +187,18 @@ class Channels(PluginChannels):
                 '{}:{} M3U File unknown File Type {}' \
                 .format(self.plugin_obj.name, self.instance_key, _file_type))
     
+    def is_m3u_filtered(self, _segment):
+        """
+        format: name=regexvalue, Note: regex string cannot have a comma in it...
+        """
+        all_matched = True
+        if self.filter_dict is not None:
+            for filter in self.filter_dict:
+                if filter in _segment.additional_props:
+                    if not bool(re.search(self.filter_dict[filter], _segment.additional_props[filter])):
+                        all_matched = False
+                        break
+                else:
+                    all_matched = False
+                    break
+        return not all_matched

@@ -239,13 +239,13 @@ class ChannelsURL:
                     break
             if value != db_value:
                 if value is None:
-                    lookup_name = translate_main2json(name)
+                    lookup_name = self.translate_main2json(name)
                     if lookup_name is not None:
                         value = ch_db['json'][lookup_name]
                 results += ''.join(['<li>Updated [', uid, '][', instance, '][', name, '] to ', str(value), '</li>'])
                 ch_db[name] = value
                 if name == 'thumbnail':
-                    thumbnail_size = get_thumbnail_size(value)
+                    thumbnail_size = self.get_thumbnail_size(value)
                     ch_db['thumbnail_size'] = thumbnail_size
                 db.update_channel(ch_db)
         results += '</ul><hr>'
@@ -265,7 +265,15 @@ class ChannelsURL:
     @handle_url_except()
     def get_thumbnail_size(self, _thumbnail):
         thumbnail_size = (0, 0)
-        with urllib.request.urlopen(_thumbnail) as resp:
+        if _thumbnail is None or _thumbnail == '':
+            return thumbnail_size
+        h = {'User-Agent': utils.DEFAULT_USER_AGENT,
+            'Accept': '*/*',
+            'Accept-Encoding': 'identity',
+            'Connection': 'Keep-Alive'
+            }
+        req = urllib.request.Request(_thumbnail, headers=h)
+        with urllib.request.urlopen(req) as resp:
             img_blob = resp.read()
             fp = io.BytesIO(img_blob)
             sz = len(img_blob)

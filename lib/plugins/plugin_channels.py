@@ -40,10 +40,10 @@ class PluginChannels:
     def __init__(self, _instance_obj):
         self.logger = logging.getLogger(__name__)
         self.instance_obj = _instance_obj
-        self.config = self.instance_obj.config_obj.data
+        self.config_obj = self.instance_obj.config_obj
         self.plugin_obj = _instance_obj.plugin_obj
         self.instance_key = _instance_obj.instance_key
-        self.db = DBChannels(self.config)
+        self.db = DBChannels(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
 
     def get_channels(self):
@@ -83,7 +83,7 @@ class PluginChannels:
             update_needed = True
         else:
             delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.config[
+            if delta.total_seconds() / 3600 >= self.config_obj.data[
                     self.config_section]['channel-update_timeout']:
                 update_needed = True
         if update_needed or force:
@@ -97,9 +97,9 @@ class PluginChannels:
                 self.logger.warning('Unable to retrieve channel data from {}:{}, aborting refresh' \
                     .format(self.plugin_obj.name, self.instance_key))
                 return
-            if 'channel-import_groups' in self.config[self.config_section]:
+            if 'channel-import_groups' in self.config_obj.data[self.config_section]:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
-                    self.config[self.config_section]['channel-import_groups'])
+                    self.config_obj.data[self.config_section]['channel-import_groups'])
             else:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict)
             self.logger.debug('{}:{} Channel update complete' \
@@ -112,7 +112,7 @@ class PluginChannels:
         return re.sub('[ +&*%$#@!:;,<>?]', '', group_name)
 
     @handle_url_except()
-    def get_thumbnail_size(self, _ch_uid, _thumbnail):
+    def get_thumbnail_size(self, _thumbnail, _ch_uid, ):
         thumbnail_size = (0, 0)
         if _thumbnail is None or _thumbnail == '':
             return thumbnail_size
@@ -124,7 +124,14 @@ class PluginChannels:
                 ch_dict = ch_row['json']
                 if ch_row['json']['thumbnail'] == _thumbnail:
                     return ch_row['json']['thumbnail_size']
-        with urllib.request.urlopen(_thumbnail) as resp:
+        
+        h = {'User-Agent': utils.DEFAULT_USER_AGENT,
+            'Accept': '*/*',
+            'Accept-Encoding': 'identity',
+            'Connection': 'Keep-Alive'
+            }
+        req = urllib.request.Request(_thumbnail, headers=h)
+        with urllib.request.urlopen(req) as resp:
             img_blob = resp.read()
             fp = io.BytesIO(img_blob)
             sz = len(img_blob)

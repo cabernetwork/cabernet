@@ -65,8 +65,8 @@ class Scheduler(Thread):
         self.logger = logging.getLogger(__name__)
         self.plugins = _plugins
         self.queue = _queue
-        self.config = _plugins.config_obj.data
-        self.scheduler_db = DBScheduler(self.config)
+        self.config_obj = _plugins.config_obj
+        self.scheduler_db = DBScheduler(self.config_obj.data)
         self.scheduler_db.reset_activity()
         self.schedule = lib.schedule.schedule
         self.daemon = True
@@ -112,7 +112,6 @@ class Scheduler(Thread):
                 _trigger['area'], _trigger['title']))
             return
 
-        self.plugins.config_obj.refresh_config_data()
         self.scheduler_db.start_task(_trigger['area'], _trigger['title'])
         if _trigger['threadtype'] == 'thread':
             self.logger.info('Running threaded task {}:{}'.format(

@@ -32,7 +32,7 @@ class Channels(PluginChannels):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
-        self.db_programs = DBEpgPrograms(self.config)
+        self.db_programs = DBEpgPrograms(self.config_obj.data)
         self.epg = EPG(_instance_obj)
 
     def get_channels(self):
@@ -57,7 +57,7 @@ class Channels(PluginChannels):
 
             thumbnail = self.plugin_obj.unc_xumo_icons \
                 .format(ch_id)
-            thumbnail_size = self.get_thumbnail_size(ch_id, thumbnail)
+            thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
  
             channel = channel_dict['number']
             friendly_name = channel_dict['title']
