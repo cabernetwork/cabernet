@@ -34,7 +34,7 @@ from lib.db.db_config_defn import DBConfigDefn
 
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
 CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', '.github', 'build', 'misc']
-CODE_FILES_TO_IGNORE = ['config.ini']
+CODE_FILES_TO_IGNORE = ['config.ini', 'is_container']
 
 def scheduler_tasks(config):
     scheduler_db = DBScheduler(config)

@@ -22,6 +22,8 @@ import subprocess
 import time
 
 
+import lib.common.utils as utils
+
 class PTSValidation:
     logger = None
 
@@ -42,6 +44,9 @@ class PTSValidation:
         self.pts_json = None
         if PTSValidation.logger is None:
             PTSValidation.logger = logging.getLogger(__name__)
+        self.config_section = utils.instance_config_section(
+            self.channel_dict['namespace'], self.channel_dict['instance'])
+
 
     def check_pts(self, _video):
         """
@@ -63,7 +68,7 @@ class PTSValidation:
         if pts_data is None:
             return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': False}
 
-        pts_minimum = int(self.config[self.channel_dict['namespace'].lower()]['player-pts_minimum'])
+        pts_minimum = int(self.config[self.config_section]['player-pts_minimum'])
         if pts_data['first_pts'] < pts_minimum:
             if pts_data['last_pts'] < pts_minimum:
                 self.logger.debug('Small PTS for entire stream, drop and refresh buffer')
@@ -87,13 +92,13 @@ class PTSValidation:
             self.logger.debug('RARE CASE: Large PTS on front with small PTS on end.')
             return {'refresh_stream': True, 'byteoffset': 0, 'reread_buffer': False}
         elif pts_data['delta_from_prev'] > \
-                int(self.config[self.channel_dict['namespace'].lower()]['player-pts_max_delta']):
+                int(self.config[self.config_section]['player-pts_max_delta']):
             self.logger.debug('{} {}{}'.format(
                 'Large delta PTS between reads. Refreshing Stream',
                 'DELTA=', pts_data['delta_from_prev']))
             return {'refresh_stream': True, 'byteoffset': 0, 'reread_buffer': False}
         elif pts_data['pts_size'] > \
-                int(self.config[self.channel_dict['namespace'].lower()]['player-pts_max_delta']):
+                int(self.config[self.config_section]['player-pts_max_delta']):
             byte_offset = self.find_bad_pkt_offset(from_front=True)
             if byte_offset > 0:
                 self.logger.debug('{} {}{}'.format(
@@ -175,7 +180,7 @@ class PTSValidation:
             if size == 0 and 'size' in self.pts_json['packets'][i]:
                 size = int(self.pts_json['packets'][i]['size'])
             if abs(next_pkt_pts - prev_pkt_pts) \
-                    > int(self.config[self.channel_dict['namespace'].lower()]['player-pts_max_delta']):
+                    > int(self.config[self.config_section]['player-pts_max_delta']):
                 # found place where bad packets start
                 # only video codecs have byte position info
                 if from_front:
