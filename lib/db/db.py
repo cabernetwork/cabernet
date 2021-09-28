@@ -119,17 +119,21 @@ class DB:
     def get(self, _table, _where=None):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
-        try:
-            cur = self.sql_exec(sqlcmd, _where)
-            result = cur.fetchall()
-            cur.close()
-            return result
-        except sqlite3.OperationalError as e:
-            self.logger.warning('GET request ignored, {}'.format(e))
-            DB.conn[self.db_name][threading.get_ident()].rollback()
-            if cur is not None:
+        i = 2
+        while i > 0:
+            i -= 1
+            try:
+                cur = self.sql_exec(sqlcmd, _where)
+                result = cur.fetchall()
                 cur.close()
-            return None
+                return result
+            except sqlite3.OperationalError as e:
+                self.logger.warning('GET request ignored retrying {}, {}'.format(i, e))
+                DB.conn[self.db_name][threading.get_ident()].rollback()
+                if cur is not None:
+                    cur.close()
+                time.sleep(1)
+        return None
 
     def get_dict(self, _table, _where=None, sql=None):
         if sql is None:

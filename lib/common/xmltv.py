@@ -23,6 +23,7 @@ from xml.etree import ElementTree
 
 
 import lib.common.utils as utils
+import lib.common.exceptions as exceptions
 from lib.common.tmp_mgmt import TMPMgmt
 
 TMP_FOLDER = 'xmltv'
@@ -47,7 +48,12 @@ class XMLTV:
         self.has_future_dates = False
         self.start_date = None
         self.file_compressed = self.tmp_mgmt.download_file(self.url, TMP_FOLDER, None, self.file_type)
-        self.file = self.extract_file(self.file_compressed, self.file_type) 
+        if self.file_compressed is None:
+            self.file = None
+            raise exceptions.CabernetException('Unable to obtain XMLTV File {}' \
+                .format(self.url))
+        else:
+            self.file = self.extract_file(self.file_compressed, self.file_type) 
         self.context = None
         self.root_elem = None
 

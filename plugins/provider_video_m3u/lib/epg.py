@@ -67,8 +67,6 @@ class EPG(PluginEPG):
                     break
                 program_list.append(prog_one)
                 epg_ch_list[prog_one['channel']] = None
-
-
             ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
             for ch in ch_list.keys():
                 if not ch_list[ch][0]['enabled']:

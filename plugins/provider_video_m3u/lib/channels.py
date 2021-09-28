@@ -68,6 +68,9 @@ class Channels(PluginChannels):
         file_type = self.detect_filetype(url)
         try:
             dn_filename = self.tmp_mgmt.download_file(url, TMP_FOLDERNAME, None, file_type)
+            if dn_filename is None:
+                raise exceptions.CabernetException('{} M3U Channel Request Failed for instance {}' \
+                    .format(self.plugin_obj.name, self.instance_key))
             m3u_file = self.extract_file(dn_filename, file_type)
             m3u8_obj = m3u8.load(str(m3u_file))
 

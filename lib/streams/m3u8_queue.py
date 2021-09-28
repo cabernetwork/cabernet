@@ -344,19 +344,21 @@ class M3U8Process(Thread):
         if self.is_starting and not self.config[self.config_section]['player-play_all_segments']:
             seg_to_play = self.config[self.config_section]['player-segments_to_play']
             num_segments = len(_playlist.segments)
-            if seg_to_play > num_segments:
+            if _playlist.playlist_type == 'vod':
+                seg_to_play = num_segments
+            elif seg_to_play > num_segments:
                 seg_to_play = num_segments
             for i in range(num_segments-seg_to_play, num_segments):
                 total_added += self.add_segment(
                     _playlist.segments[i], keys[i])
             for m3u8_segment, key in zip(_playlist.segments, keys):
                 total_added += self.add_segment(m3u8_segment, key, _default_played=True)
+
             self.is_starting = False
         else:
             for m3u8_segment, key in zip(_playlist.segments, keys):
                 total_added += self.add_segment(m3u8_segment, key)
             time.sleep(0.1)
-
         return total_added
 
     def add_segment(self, _segment, _key, _default_played=False):

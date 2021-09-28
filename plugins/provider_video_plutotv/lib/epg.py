@@ -68,6 +68,10 @@ class EPG(PluginEPG):
         try:
             json_data = self.get_day_data()
             for day, day_data in json_data.items():
+                if day_data is None:
+                    self.logger.info('{}:{} Unable to update EPG, no data for day {}' \
+                        .format(self.plugin_obj.name, self.instance_key, day))                
+                    continue
                 program_list = []
                 for ch_data in day_data:
                     if 'timelines' in ch_data:

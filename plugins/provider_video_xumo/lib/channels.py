@@ -41,7 +41,7 @@ class Channels(PluginChannels):
             .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)])
         ch_json = self.get_uri_json_data(channels_url)
         ch_list = []
-        if len(ch_json) == 0:
+        if ch_json is None or len(ch_json) == 0:
             self.logger.warning('{} HTTP Channel Request Failed for instance {}' \
                 .format(self.plugin_obj.name, self.instance_key))
             raise exceptions.CabernetException('{} HTTP Channel Request Failed' \

@@ -88,8 +88,7 @@ sqlcmds = {
     'epg_name_get':
         """
         SELECT DISTINCT namespace FROM epg
-        """,
-
+        """
 }
 
 
@@ -133,7 +132,7 @@ class DBepg(DB):
         if not _instance:
             _instance = '%'
         result = self.get(DB_EPG_TABLE + '_last_update', (_namespace, _instance, _day,))
-        if len(result) == 0:
+        if result is None or len(result) == 0:
             return None
         else:
             last_update = result[0][0]

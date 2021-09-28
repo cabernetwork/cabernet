@@ -56,13 +56,14 @@ class CabernetUpgrade:
         """
         manifest = self.import_manifest()
         release_data_list = self.github_releases(manifest)
-        current_version = utils.VERSION
-        last_version = release_data_list[0]['tag_name']
-        next_version = self.get_next_release(release_data_list)
-        manifest['version'] = current_version
-        manifest['next_version'] = next_version
-        manifest['latest_version'] = last_version
-        self.save_manifest(manifest)
+        if release_data_list is not None:
+            current_version = utils.VERSION
+            last_version = release_data_list[0]['tag_name']
+            next_version = self.get_next_release(release_data_list)
+            manifest['version'] = current_version
+            manifest['next_version'] = next_version
+            manifest['latest_version'] = last_version
+            self.save_manifest(manifest)
 
     def import_manifest(self):
         """
@@ -88,19 +89,22 @@ class CabernetUpgrade:
         """
         self.plugin_db.save_plugin(_manifest)
         
-    @handle_json_except 
-    @handle_url_except 
     def github_releases(self, _manifest):
         url = ''.join([
             _manifest['github_repo_' + self.config['main']['upgrade_quality'] ],
             '/releases'
             ])
-        login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
-        release_req = urllib.request.Request(url, headers=login_headers)
-        with urllib.request.urlopen(release_req) as resp:
-            release_list = json.load(resp)
-        return release_list
+        return self.get_uri_data(url)
 
+    @handle_json_except 
+    @handle_url_except 
+    def get_uri_data(self, _uri):
+        header = {'Content-Type': 'application/json', 
+            'User-agent': utils.DEFAULT_USER_AGENT}
+        req = urllib.request.Request(_uri, headers=header)
+        with urllib.request.urlopen(req, timeout=10.0) as resp:
+            x = json.load(resp)
+        return x
 
     def get_next_release(self, release_data_list):
         current_version = self.config['main']['version']

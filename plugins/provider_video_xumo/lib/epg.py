@@ -87,6 +87,8 @@ class EPG(PluginEPG):
                     self.plugin_obj.unc_xumo_channel
                     .format(ch, hr)])
                 listing = self.get_uri_data(url)
+                if listing is None:
+                    continue
                 for prog in listing['assets']:
                     start_time = utils.tm_local_parse(prog['timestamps']['start'] * 1000)
                     key = (ch, start_time)
@@ -245,6 +247,8 @@ class EPG(PluginEPG):
             self.plugin_obj.unc_xumo_program
             .format(_prog)])
         listing = self.get_uri_data(url)
+        if listing is None:
+            return program
         program['title'] = listing['title']
         if 'descriptions' in listing:
             if 'large' in listing['descriptions'].keys():
