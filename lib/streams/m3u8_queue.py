@@ -342,8 +342,13 @@ class M3U8Process(Thread):
             keys = [None for i in range(0, len(_playlist.segments))]
             
         if self.is_starting and not self.config[self.config_section]['player-play_all_segments']:
-            seg = _playlist.segments[-1]
-            total_added += self.add_segment(seg, keys[-1])
+            seg_to_play = self.config[self.config_section]['player-segments_to_play']
+            num_segments = len(_playlist.segments)
+            if seg_to_play > num_segments:
+                seg_to_play = num_segments
+            for i in range(num_segments-seg_to_play, num_segments):
+                total_added += self.add_segment(
+                    _playlist.segments[i], keys[i])
             for m3u8_segment, key in zip(_playlist.segments, keys):
                 total_added += self.add_segment(m3u8_segment, key, _default_played=True)
             self.is_starting = False

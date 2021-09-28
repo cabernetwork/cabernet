@@ -660,17 +660,23 @@ class ATSCMsg:
         # http://www.etherguidesystems.com/Help/SDOs/MPEG/Syntax/TableSections/Pat.aspx
 
         section_length = (payload[1] & 0xf << 8) | payload[2]  # 12-bit field
+        program_map_pids = {}
 
         # after extra fields (transport_stream_id to last_section_num, by size, minus CRC-32 at end
         program_count = (section_length - 5) / 4 - 1
 
-        program_map_pids = {}
+        if section_length > 20:
+            print(section_length, program_count, len(payload))
+            self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
+            return program_map_pids
+
 
         for i in range(0, int(program_count)):
             at = 8 + (i * 4)  # skip headers, just get to the program numbers table
             program_number = struct.unpack("!H", payload[at:at + 2])[0]
             if at + 2 > len(payload):
                 break
+            #print(len(payload), at)
             program_map_pid = struct.unpack("!H", payload[at + 2:at + 2 + 2])[0]
 
             # the pid is only 13 bits, upper 3 bits of this field are 'reserved' (I see 0b111)

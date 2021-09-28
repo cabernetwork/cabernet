@@ -55,6 +55,13 @@
                         "level": 3,
                         "help": "When starting, will play the last segment.  If VOD type stream, then enable will cause the entire video to be played from the start."
                     },
+                    "player-segments_to_play":{
+                        "label": "Non-VOD Segments to Start",
+                        "type": "integer",
+                        "default": 1,
+                        "level": 2,
+                        "help": "When starting, will play the last xxx segments. '1' means no buffering. Each increase means about 6 seconds of buffering."
+                    },
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
                         "type": "boolean",

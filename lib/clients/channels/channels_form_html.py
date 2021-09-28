@@ -374,10 +374,22 @@ class ChannelsFormHTML:
 
     def get_input_text(self, _sid_data, _sid, _instance, _title):
         if _sid_data[_title] is not None:
-            return ''.join(['<input type="text" name="',
-                self.get_input_name(_sid, _instance, _title),
-                '" value="', _sid_data[_title], 
-                '" size="', str(len(_sid_data[_title])), '">'])
+            size = len(_sid_data[_title]) 
+            if size > 30:
+                rows = 1
+                if size > 70:
+                    rows = 2
+                return ''.join(['<textarea name="',
+                    self.get_input_name(_sid, _instance, _title),
+                    '" rows=', str(rows), ' cols=22>', _sid_data[_title], 
+                    '</textarea>'])
+            else:
+                if size > 24:
+                    size = 20
+                return ''.join(['<input type="text" name="',
+                    self.get_input_name(_sid, _instance, _title),
+                    '" value="', _sid_data[_title], 
+                    '" size="', str(int(size*.9)), '">'])
         else:
             return ''.join(['<input type="text" name="',
                 self.get_input_name(_sid, _instance, _title),

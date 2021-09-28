@@ -1,3 +1,9 @@
 table.sortable tbody tr[class$=-hide] {
     display: none;
 }
+textarea, input, select {
+    font-size: 90%;
+    font-weight: inherit;
+    text-decoration: none;
+    font-family: inherit;
+}
