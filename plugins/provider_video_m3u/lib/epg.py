@@ -77,6 +77,8 @@ class EPG(PluginEPG):
                     .format(self.plugin_obj.name, self.instance_key, ch, start_date))
                 # fill in default program data
                 start_hour = datetime.datetime.utcnow().hour - 2
+                if start_hour < 0:
+                    start_hour = 0
                 dt_start_day = datetime.datetime.combine(start_date, datetime.time())
                 for hr in range(start_hour,24):
                     dt_start_time = dt_start_day.replace(

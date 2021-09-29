@@ -112,6 +112,8 @@ class InternalProxy(Stream):
             try:
                 self.check_termination()
                 self.play_queue()
+                if not self.t_m3u8.is_alive():
+                    break
             except IOError as ex:
                 # Check we hit a broken pipe when trying to write back to the client
                 if ex.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
@@ -227,7 +229,13 @@ class InternalProxy(Stream):
         """
         Providers sometime add the same stream section back into the list.
         This methods catches this and informs the caller that it should be ignored.
-        """
+        """            
+        # counter = self.tc_match.findall(uri_decoded)
+        # if len(counter) != 0:
+            # counter = counter[0]
+        # else:
+            # counter = -1
+        # self.logger.debug('ts counter={}'.format(counter))
         if _uri == self.last_ts_filename:
             self.logger.warning('TC Counter Same section being transmitted, ignoring uri: {} m3u8pid:{} proxypid:{}' \
                 .format(_uri, self.t_m3u8.pid, os.getpid()))

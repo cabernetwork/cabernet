@@ -87,6 +87,7 @@ class M3U8Queue(Thread):
     def run(self):
         global OUT_QUEUE
         global STREAM_QUEUE
+        global TERMINATE_REQUESTED
         try:
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
@@ -102,12 +103,22 @@ class M3U8Queue(Thread):
                     continue
                 self.process_m3u8_item(queue_item)
         except (KeyboardInterrupt, EOFError):
+            TERMINATE_REQUESTED = True
             self.pts_resync.terminate()
             self.clear_queues()
             sys.exit()
         except Exception as ex:
+            TERMINATE_REQUESTED = True
+            STREAM_QUEUE.put({'uri': 'terminate'})
+            IN_QUEUE.put({'uri': 'terminate'})
+            if self.pts_resync is not None:
+                self.pts_resync.terminate()
+            self.clear_queues()
+            time.sleep(0.01)
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Queue=', ex))
+            sys.exit()
+                
 
     def decrypt_stream(self, _data):
         if _data['key'] and _data['key']['uri']:
@@ -184,6 +195,9 @@ class M3U8Queue(Thread):
                 return
             if not self.is_pts_valid():
                 PLAY_LIST[uri]['played'] = True
+                OUT_QUEUE.put({'uri': uri,
+                    'data': data,
+                    'stream': None})
                 return
             self.pts_resync.resequence_pts(self.video)
             if self.video.data is None:
@@ -442,8 +456,11 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
             except (KeyboardInterrupt, EOFError):
                 TERMINATE_REQUESTED = True
                 STREAM_QUEUE.put({'uri': 'terminate'})
-                time.sleep(5.0)
+                time.sleep(0.01)
                 sys.exit()
+        sys.exit()
+
+
     except Exception as ex:
         logger.exception('{}{}'.format(
             'UNEXPECTED EXCEPTION start=', ex))
