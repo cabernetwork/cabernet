@@ -74,7 +74,10 @@ def handle_url_except(f=None, timeout=None):
                 url_list[3] = urllib.parse.quote(url_list[3])
                 url_list[4] = urllib.parse.quote(url_list[4])
                 url_list[5] = urllib.parse.quote(url_list[5])
-                args[0] = urllib.parse.urlunparse(url_list)
+                new_url = urllib.parse.urlunparse(url_list)
+                args_list = list(args)
+                args_list[0] = new_url
+                args = tuple(args_list)
 
                 ex_save = str(ex)
                 self.logger.info('InvalidURL, encoding and trying again. In function {}() {} {} {}' \
