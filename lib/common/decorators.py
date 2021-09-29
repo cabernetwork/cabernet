@@ -67,6 +67,18 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = str(ex)
                 self.logger.info('Remote Server Disconnect Error in function {}(), retrying {} {} {}' \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+            except http.client.InvalidURL as ex:
+                url_tuple = urllib.parse.urlparse(args[0])
+                url_list = list(url_tuple)
+                url_list[2] = urllib.parse.quote(url_list[2])
+                url_list[3] = urllib.parse.quote(url_list[3])
+                url_list[4] = urllib.parse.quote(url_list[4])
+                url_list[5] = urllib.parse.quote(url_list[5])
+                args[0] = urllib.parse.urlunparse(url_list)
+
+                ex_save = str(ex)
+                self.logger.info('InvalidURL, encoding and trying again. In function {}() {} {} {}' \
+                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             time.sleep(1.0)
         self.logger.warning('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
             .format(f.__name__, os.getpid(), ex_save, str(args[0])))

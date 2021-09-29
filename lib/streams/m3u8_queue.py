@@ -29,6 +29,7 @@ from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from multiprocessing import Queue
+from queue import Empty
 from threading import Thread
 
 import lib.common.utils as utils
@@ -98,7 +99,8 @@ class M3U8Queue(Thread):
                     break
                 elif queue_item['uri'] == 'status':
                     OUT_QUEUE.put({'uri': 'running',
-                        'data': None})
+                        'data': None,
+                        'stream': None})
                     time.sleep(0.01)
                     continue
                 self.process_m3u8_item(queue_item)
@@ -263,16 +265,37 @@ class M3U8Process(Thread):
         self.last_refresh = time.time()
         self.plugins = _plugins
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
-        queue_item = IN_QUEUE.get()
+        i = 5
+        while i > 0 and IN_QUEUE.empty():
+            i -= 1
+            time.sleep(0.02)
+        if IN_QUEUE.empty():
+            self.logger.warning('1Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
+            TERMINATE_REQUESTED = True
+            time.sleep(0.01)
+            return
+        time.sleep(0.01)
+        try:
+            queue_item = IN_QUEUE.get(False, 1)
+        except Empty:
+            self.logger.debug('2Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
+            TERMINATE_REQUESTED = True
+            time.sleep(0.01)
+            return
+
         self.stream_uri = self.get_stream_uri()
         if not self.stream_uri:
             self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
-            OUT_QUEUE.put({'uri': 'terminate'})
+            OUT_QUEUE.put({'uri': 'terminate',
+                'data': None,
+                'stream': None})
             TERMINATE_REQUESTED = True
             time.sleep(0.01)
             return
         else:
-            OUT_QUEUE.put({'uri': 'running'})
+            OUT_QUEUE.put({'uri': 'running',
+                'data': None,
+                'stream': None})
             time.sleep(0.01)
         self.is_running = True
         self.duration = 6
@@ -438,12 +461,12 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
     global STREAM_QUEUE
     global OUT_QUEUE
     global TERMINATE_REQUESTED
+    logger = logging.getLogger(__name__)
     socket.setdefaulttimeout(5.0)
     IN_QUEUE = _m3u8_queue
     STREAM_QUEUE = Queue(maxsize=MAX_STREAM_QUEUE_SIZE)
     OUT_QUEUE = _data_queue
     p_m3u8 = M3U8Process(_config, _plugins, _channel_dict)
-    logger = logging.getLogger(__name__)
     try:
         while not TERMINATE_REQUESTED:
             try:
@@ -453,9 +476,12 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     time.sleep(1)
                 else:
                     logger.debug('UNKNOWN m3u8 queue request')
-            except (KeyboardInterrupt, EOFError):
+            except (KeyboardInterrupt, EOFError, TypeError):
                 TERMINATE_REQUESTED = True
-                STREAM_QUEUE.put({'uri': 'terminate'})
+                try:
+                    STREAM_QUEUE.put({'uri': 'terminate'})
+                except (EOFError, TypeError):
+                    pass
                 time.sleep(0.01)
                 sys.exit()
         sys.exit()

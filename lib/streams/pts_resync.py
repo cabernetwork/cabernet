@@ -43,21 +43,27 @@ class PTSResync:
                 self.logger.info('PTS Resync running ffmpeg')
 
     def video_to_stdin(self, _video):
-        try:
-            self.ffmpeg_proc.stdin.write(_video.data)
-        except BrokenPipeError as ex:
-            # This occurs when the process does not start correctly
-            self.stream_queue.terminate()
-            self.ffmpeg_proc.terminate()
+        i = 2
+        while i > 0:
+            i -= 1
             try:
-                self.ffmpeg_proc.communicate()
-            except ValueError:
-                pass
-            self.ffmpeg_proc = self.open_ffmpeg_proc()
-            time.sleep(0.01)
-            self.ffmpeg_proc.stdin.write(_video.data)
-            self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
-            self.logger.info('Restarting PTSResync ffmpeg due to corrupted process start {}', os.getpid())
+                self.ffmpeg_proc.stdin.write(_video.data)
+                break
+            except (BrokenPipeError, TypeError) as ex:
+                # This occurs when the process does not start correctly
+                self.stream_queue.terminate()
+                self.ffmpeg_proc.terminate()
+                try:
+                    self.ffmpeg_proc.communicate()
+                except ValueError:
+                    pass
+                while self.ffmpeg_proc.poll() is None:
+                    time.sleep(0.1)
+                self.ffmpeg_proc = self.open_ffmpeg_proc()
+                time.sleep(0.01)
+                self.logger.info('Restarting PTSResync ffmpeg due to corrupted process start {}'.format(os.getpid()))
+                self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
+
 
     def resequence_pts(self, _video):
         if not self.config[self.config_section]['player-enable_pts_resync']:

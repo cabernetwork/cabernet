@@ -20,6 +20,7 @@ import os
 import urllib
 import pathlib
 import logging
+import time
 from threading import Thread
 from logging import config
 from http.server import HTTPServer
@@ -175,10 +176,35 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.error('Unknown [player-stream_type] {}'
                 .format(self.config[section]['player-stream_type']))
             return
-        self.logger.info('Provider Connection Closed')
+        self.logger.info('Provider Connection Closed, ch_id={}'.format(sid))
         WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
+        time.sleep(0.01)
 
     def get_ns_inst_station(self, _station_data):
+        lowest_namespace = _station_data[0]['namespace']
+        lowest_instance = _station_data[0]['instance']
+        station = _station_data[0]
+        
+        # do simple checks first.
+        # is there only one channel?
+        if len(_station_data) == 1:
+            return lowest_namespace, \
+                lowest_instance, \
+                station
+        
+        # Is there only one channel instance enabled?
+        i = 0
+        for one_station in _station_data:
+            if one_station['enabled']:
+                station = one_station
+                i += 1
+        if i == 1:
+            return station['namespace'], \
+                station['instance'], \
+                station
+        
+        # round robin capability when instances are tied to a single provider
+        # must make sure the channel is enabled for both instances
         ns = []
         inst = []
         counter = {}
@@ -196,19 +222,16 @@ class TunerHttpHandler(WebHTTPHandler):
 
         # pick the instance with the lowest counter
         lowest_value = 100
-        lowest_instance = None
         for instance, value in counter.items():
             if value < lowest_value:
                 lowest_value = value
                 lowest_instance = instance
-        
-        lowest_namespace = None
         for i in range(len(inst)):
             if inst[i] == lowest_instance:
                 lowest_namespace = ns[i]
-        
+                break
+
         # find the station data associated with the pick
-        station = None
         for one_station in _station_data:
             if one_station['namespace'] == lowest_namespace and \
                     one_station['instance'] == lowest_instance:

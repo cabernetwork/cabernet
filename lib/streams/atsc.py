@@ -666,8 +666,9 @@ class ATSCMsg:
         program_count = (section_length - 5) / 4 - 1
 
         if section_length > 20:
-            print(section_length, program_count, len(payload))
-            self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
+            #print(section_length, program_count, len(payload))
+            #self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
+            # log for corrupted atsc msg
             return program_map_pids
 
 

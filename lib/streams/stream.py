@@ -40,16 +40,16 @@ class Stream:
 
     def find_tuner(self, _namespace, _instance, _ch_num, _tuner):
         # keep track of how many tuners we can use at a time
-        index = -1
+        found = -1
         scan_list = WebHTTPHandler.rmg_station_scans[_namespace]
         for index, scan_status in enumerate(scan_list):
             # the first idle tuner gets it
             if scan_status == 'Idle':
                 WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num}
-                self.logger.debug('Using tuner: [{}][{}]'.format(_namespace, _instance))
                 self.put_hdhr_queue(_namespace, index, _ch_num, 'Stream')
+                found = index
                 break
-        return index
+        return found
 
     def set_service_name(self, _channel_dict):
         updated_chnum = utils.wrap_chnum(
@@ -70,17 +70,18 @@ class Stream:
         A code other than 200 means do not tune
         dict also include a "tuner_index" that informs caller what tuner is allocated
         """
-        index = self.find_tuner(_namespace, _instance, _ch_num, _tuner)
-        if index >= 0:
+        i = self.find_tuner(_namespace, _instance, _ch_num, _tuner)
+        if i >= 0:
             return {
-                'tuner': index,
+                'tuner': i,
                 'code': 200,
                 'headers': {'Content-type': 'video/mp2t; Transfer-Encoding: chunked codecs="avc1.4D401E'},
                 'text': None}
         else:
-            self.logger.warning('All tuners already in use [{}][{}]'.format(_namespace, _instance))
+            self.logger.warning('All tuners already in use [{}][{}] {}' \
+                .format(_namespace, _instance, _tuner))
             return {
-                'tuner': index,
+                'tuner': i,
                 'code': 400,
                 'headers': {'Content-type': 'text/html'},
                 'text': web_templates['htmlError'].format('400 - All tuners already in use.')}

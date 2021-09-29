@@ -104,6 +104,8 @@ class Channels(PluginChannels):
 
                 if 'tvg-logo' in seg.additional_props and seg.additional_props['tvg-logo'] != '':
                     thumbnail = seg.additional_props['tvg-logo']
+                    if self.config_obj.data[self.config_section]['player-decode_url']:
+                        thumbnail = urllib.parse.unquote(thumbnail)
                     thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
                 else:
                     thumbnail = None
@@ -116,7 +118,6 @@ class Channels(PluginChannels):
                     groups_other = None
                 
                 ch_callsign = seg.title
-
                 channel = {
                     'id': ch_id,
                     'enabled': True,

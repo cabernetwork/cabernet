@@ -49,6 +49,7 @@ from .stream import Stream
 MAX_OUT_QUEUE_SIZE = 6
 IDLE_COUNTER_MAX = 20
 
+
 class InternalProxy(Stream):
 
     is_m3u8_starting = 0
@@ -155,10 +156,13 @@ class InternalProxy(Stream):
             if uri == 'terminate':
                 raise exceptions.CabernetException('m3u8 queue termination requested, aborting stream {}' \
                     .format(self.t_m3u8.pid))
+            elif uri == 'running':
+                continue
             data = out_queue_item['data']
             if data['filtered']:
                 self.logger.debug('Filtered, Sending ATSC Msg {}'.format(self.t_m3u8.pid))
                 self.write_buffer(out_queue_item['stream'])
+                time.sleep(0.5)
             else:
                 self.video.data = out_queue_item['stream']
                 if self.video.data is not None:
@@ -250,8 +254,7 @@ class InternalProxy(Stream):
         until python can do this correctly.
         """
         is_running = False
-        tries = 0
-        max_tries = 20
+        max_tries = 40
         while True:
             while InternalProxy.is_m3u8_starting != 0:
                 time.sleep(0.1)
@@ -266,6 +269,7 @@ class InternalProxy(Stream):
             self.t_m3u8.start()
             self.in_queue.put({'uri': 'status'})
             time.sleep(0.1)
+            tries = 0
             while self.out_queue.empty() and tries < max_tries:
                 tries += 1
                 time.sleep(0.2)
@@ -279,8 +283,18 @@ class InternalProxy(Stream):
                 self.t_m3u8.terminate()
                 self.t_m3u8.join()
                 tries = 0
-                self.logger.debug('m3u8_queue did not start correctly, restarting')
+                self.logger.debug('m3u8_queue did not start correctly, restarting {}' \
+                    .format(self.channel_dict['uid']))
+                try:
+                    while not self.out_queue.empty():
+                        self.out_queue.get()
+                except (Empty, EOFError):
+                    pass
+                self.clear_queues()
                 time.sleep(0.3)
+                self.in_queue = Queue()
+                self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
+
             else:
                 status = self.out_queue.get()
                 if status['uri'] == 'terminate':
