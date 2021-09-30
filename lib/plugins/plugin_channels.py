@@ -24,6 +24,7 @@ import os
 import pathlib
 import re
 import shutil
+import threading
 import time
 import urllib.request
 
@@ -116,7 +117,6 @@ class PluginChannels:
         thumbnail_size = (0, 0)
         if _thumbnail is None or _thumbnail == '':
             return thumbnail_size
-            
 
         if _ch_uid is not None:
             ch_row = self.db.get_channel(_ch_uid, self.plugin_obj.name, self.instance_key)
@@ -124,7 +124,6 @@ class PluginChannels:
                 ch_dict = ch_row['json']
                 if ch_row['json']['thumbnail'] == _thumbnail:
                     return ch_row['json']['thumbnail_size']
-        
         h = {'User-Agent': utils.DEFAULT_USER_AGENT,
             'Accept': '*/*',
             'Accept-Encoding': 'identity',
@@ -174,3 +173,8 @@ class PluginChannels:
         else:
             self.logger.debug("No variant streams found for this station.  Assuming single stream only.")
             return _url
+
+    def check_logger_refresh(self):
+        if not self.logger.isEnabledFor(40):
+            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger.notice('######## CHECKING AND UPDATING LOGGER4')

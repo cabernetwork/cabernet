@@ -21,6 +21,7 @@ import binascii
 import datetime
 import logging
 import string
+import threading
 import time
 import urllib.request
 
@@ -57,6 +58,7 @@ class PluginObj:
         be refreshed.
         Called from stream object.
         """
+        self.check_logger_refresh()
         return False
 
     def get_channel_uri_ext(self, sid, _instance=None):
@@ -64,6 +66,7 @@ class PluginObj:
         External request to return the uri for a m3u8 stream.
         Called from stream object.
         """
+        self.check_logger_refresh()
         return self.instances[_instance].get_channel_uri(sid)
 
     # END OF INTERFACE METHODS
@@ -169,6 +172,13 @@ class PluginObj:
             self.logger.error('Uncompression Error, invalid string {}' \
                 .format(_data))
             return None
+
+    def check_logger_refresh(self):
+        if not self.logger.isEnabledFor(40):
+            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            for inst, inst_obj in self.instances.items():
+                self.logger.notice('######## CHECKING AND UPDATING LOGGER')
+                inst_obj.check_logger_refresh()
 
     @property
     def name(self):

@@ -23,6 +23,7 @@ import os
 import re
 import socket
 import sys
+import threading
 import time
 import urllib.request
 from collections import OrderedDict
@@ -50,6 +51,7 @@ OUT_QUEUE = None
 TERMINATE_REQUESTED = False
 MAX_STREAM_QUEUE_SIZE = 10
 
+
 class M3U8Queue(Thread):
     """
     This runs as an independent process (one per stream) to get and process the 
@@ -60,7 +62,7 @@ class M3U8Queue(Thread):
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+str(threading.get_ident()))
         self.config = _config
         self.namespace = _channel_dict['namespace'].lower()
         self.pts_validation = None
@@ -255,7 +257,7 @@ class M3U8Process(Thread):
     """
     def __init__(self, _config, _plugins, _channel_dict):
         Thread.__init__(self)
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__+str(threading.get_ident()))
         global IN_QUEUE
         global OUT_QUEUE
         global TERMINATE_REQUESTED

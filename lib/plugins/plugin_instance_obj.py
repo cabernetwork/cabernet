@@ -17,6 +17,7 @@ substantial portions of the Software.
 """
 
 import logging
+import threading
 
 import lib.common.utils as utils
 from lib.db.db_scheduler import DBScheduler
@@ -75,6 +76,15 @@ class PluginInstanceObj:
     def is_time_to_refresh(self, _last_refresh):
         return False
                 
+    def check_logger_refresh(self):
+        if not self.logger.isEnabledFor(40):
+            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger.notice('######## CHECKING AND UPDATING LOGGER2')
+            if self.channels is not None:
+                self.channels.check_logger_refresh()
+            if self.epg is not None:
+                self.epg.check_logger_refresh()
+
     @property
     def config_section(self):
         return utils.instance_config_section(self.plugin_obj.name, self.instance_key)

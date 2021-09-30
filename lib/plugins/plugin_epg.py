@@ -19,6 +19,7 @@ substantial portions of the Software.
 import datetime
 import json
 import logging
+import threading
 import urllib.request
 
 import lib.common.utils as utils
@@ -102,3 +103,8 @@ class PluginEPG:
         if last_update < expired_date:
             return True
         return False
+
+    def check_logger_refresh(self):
+        if not self.logger.isEnabledFor(40):
+            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger.notice('######## CHECKING AND UPDATING LOGGER3')
