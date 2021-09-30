@@ -397,6 +397,7 @@ class ChannelsFormHTML:
 
 
     def get_input_name(self, _sid, _instance, _title):
+        _sid = _sid.replace('-', '%2d')
         return  ''.join([_sid, '-', _instance, '-', _title])
 
     @property

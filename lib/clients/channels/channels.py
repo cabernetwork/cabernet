@@ -225,7 +225,7 @@ class ChannelsURL:
         results = 'Status Results<ul>'
         for key, values in _query_data.items():
             key_pair = key.split('-', 2)
-            uid = key_pair[0]
+            uid = key_pair[0].replace('%2d', '-')
             instance = key_pair[1]
             name = key_pair[2]
             value = values[0]
