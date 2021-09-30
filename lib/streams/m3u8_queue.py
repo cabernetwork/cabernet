@@ -461,6 +461,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
     global STREAM_QUEUE
     global OUT_QUEUE
     global TERMINATE_REQUESTED
+    utils.logging_setup(_plugins.config_obj.data)
     logger = logging.getLogger(__name__)
     socket.setdefaulttimeout(5.0)
     IN_QUEUE = _m3u8_queue

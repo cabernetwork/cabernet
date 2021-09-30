@@ -141,7 +141,7 @@ class PluginChannels:
     @handle_url_except
     def get_best_stream(self, _url, _channel_id):
         self.logger.notice('{}: Getting best video stream info for {} {}' \
-            .format(self.plugin_obj.name, _channel_id, stream_url))
+            .format(self.plugin_obj.name, _channel_id, _url))
         bestStream = None
         videoUrlM3u = m3u8.load(_url,
             headers={'User-agent': utils.DEFAULT_USER_AGENT})

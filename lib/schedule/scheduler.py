@@ -143,19 +143,18 @@ class Scheduler(Thread):
                 if _trigger['namespace'] not in self.plugins.plugins:
                     self.logger.debug('{} scheduled tasks ignored. plugin missing' \
                         .format(_trigger['namespace']))
-                    return
-                plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
-                if plugin_obj is None:
-                    self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
-                        .format(_trigger['namespace']))
-                    return
-                elif _trigger['instance'] is None:
-                    call_f = getattr(plugin_obj, _trigger['funccall'])
-                    call_f()
                 else:
-                    call_f = getattr(plugin_obj.instances[_trigger['instance']], 
-                        _trigger['funccall'])
-                    call_f()
+                    plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
+                    if plugin_obj is None:
+                        self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
+                            .format(_trigger['namespace']))
+                    elif _trigger['instance'] is None:
+                        call_f = getattr(plugin_obj, _trigger['funccall'])
+                        call_f()
+                    else:
+                        call_f = getattr(plugin_obj.instances[_trigger['instance']], 
+                            _trigger['funccall'])
+                        call_f()
         except exceptions.CabernetException as ex:
             self.logger.warning('{}'.format(str(ex)))
         except Exception as ex:
