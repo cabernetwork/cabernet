@@ -386,6 +386,8 @@ class ChannelsFormHTML:
             else:
                 if size > 24:
                     size = 20
+                elif size < 3:
+                    size = 3
                 return ''.join(['<input type="text" name="',
                     self.get_input_name(_sid, _instance, _title),
                     '" value="', _sid_data[_title], 

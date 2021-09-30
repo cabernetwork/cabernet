@@ -36,7 +36,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.4.16'
+VERSION = '0.9.4.17'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0'
@@ -47,6 +47,7 @@ def get_version_str():
     return VERSION
 
 logger = None
+LOG_LVL_NOTICE = 25
 
 def logging_setup(_config):
     global logger
@@ -59,6 +60,11 @@ def logging_setup(_config):
                 logging.critical(e)
                 raise e
     if str(logging.getLevelName('NOTUSED')).startswith('Level'):
+        logging.addLevelName(LOG_LVL_NOTICE, 'NOTICE')
+        def notice(self, message, *args, **kws):
+            if self.isEnabledFor(LOG_LVL_NOTICE):
+                self._log(LOG_LVL_NOTICE, message, args, **kws) 
+        logging.Logger.notice = notice
         try:
             logging.config.fileConfig(fname=_config['paths']['config_file'])
         except FileNotFoundError:
@@ -68,6 +74,7 @@ def logging_setup(_config):
             logging.critical(e)
             raise e
         logging.addLevelName(100, 'NOTUSED')
+
     logger = logging.getLogger(__name__)
 
 def clean_exit(exit_code=0):

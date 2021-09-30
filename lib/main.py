@@ -112,7 +112,7 @@ def main(script_dir):
 
         LOGGER.warning('#########################################')
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
-        LOGGER.info('Initiating Cabernet v{}'.format(utils.get_version_str()))
+        LOGGER.notice('Cabernet v{}'.format(utils.get_version_str()))
 
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
         if args.restart and config['main']['maintenance_mode']:
@@ -143,13 +143,13 @@ def main(script_dir):
         if opersystem in ['Windows']:
             time.sleep(2)
             pickle_it.delete_pickle(plugins.__class__.__name__)
-        LOGGER.info('Cabernet is now online.')
+        LOGGER.notice('Cabernet is now online.')
 
         RESTART_REQUESTED = False
         while not RESTART_REQUESTED:            
             time.sleep(5)
         terminate_queue.put('shutdown')
-        LOGGER.info('Shutting Down and Restarting...')
+        LOGGER.notice('Shutting Down and Restarting...')
         RESTART_REQUESTED = False
         time.sleep(3)
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
@@ -186,7 +186,7 @@ def init_versions(_plugins):
 
 
 def init_webadmin(_config, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
-    LOGGER.info('Starting admin website on {}:{}'.format(
+    LOGGER.notice('Starting admin website on {}:{}'.format(
         _config['web']['plex_accessible_ip'],
         _config['web']['web_admin_port']))
     webadmin = Process(target=web_admin.start, args=(_plugins, _hdhr_queue, _terminate_queue, _sched_queue))
@@ -196,7 +196,7 @@ def init_webadmin(_config, _plugins, _hdhr_queue, _terminate_queue, _sched_queue
 
 
 def init_tuner(_config, _plugins, _hdhr_queue, _terminate_queue):
-    LOGGER.info('Starting streaming tuner website on {}:{}'.format(
+    LOGGER.notice('Starting streaming tuner website on {}:{}'.format(
         _config['web']['plex_accessible_ip'],
         _config['web']['plex_accessible_port']))
     tuner = Process(target=web_tuner.start, args=(_plugins, _hdhr_queue, _terminate_queue,))
@@ -211,7 +211,7 @@ def init_scheduler(_config, _plugins, _sched_queue):
 
 def init_ssdp(_config):
     if not _config['ssdp']['disable_ssdp']:
-        LOGGER.info('Starting SSDP service on port 1900')
+        LOGGER.notice('Starting SSDP service on port 1900')
         ssdp_serverx = Process(target=ssdp_server.ssdp_process, args=(_config,))
         ssdp_serverx.daemon = True
         ssdp_serverx.start()
@@ -222,7 +222,7 @@ def init_ssdp(_config):
 
 def init_hdhr(_config, _hdhr_queue):
     if not _config['hdhomerun']['disable_hdhr']:
-        LOGGER.info('Starting HDHR service on port 65001')
+        LOGGER.notice('Starting HDHR service on port 65001')
         hdhr_serverx = Process(target=hdhr_server.hdhr_process, args=(_config, _hdhr_queue,))
         hdhr_serverx.start()
         time.sleep(0.1)

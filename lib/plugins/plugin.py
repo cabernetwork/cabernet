@@ -70,7 +70,7 @@ class Plugin:
             self.logger.debug('Plugin disabled in config.ini for {}'.format(self.name))
             return
         self.load_instances()
-        self.logger.info('Plugin created for {}'.format(self.name))
+        self.logger.notice('Plugin created for {}'.format(self.name))
 
     def load_config_defn(self):
         try:

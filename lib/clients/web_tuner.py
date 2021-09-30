@@ -176,7 +176,7 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.error('Unknown [player-stream_type] {}'
                 .format(self.config[section]['player-stream_type']))
             return
-        self.logger.info('Provider Connection Closed, ch_id={}'.format(sid))
+        self.logger.notice('Provider Connection Closed, ch_id={}'.format(sid))
         WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
         time.sleep(0.01)
 

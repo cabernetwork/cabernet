@@ -105,8 +105,7 @@ class InternalProxy(Stream):
         self.channel_dict = _channel_dict
         if not self.start_m3u8_queue_process():
             self.terminate()
-            return
-        
+            return        
         self.wfile = _wfile
         self.terminate_queue = _terminate_queue
         while True:
@@ -274,29 +273,17 @@ class InternalProxy(Stream):
                 tries += 1
                 time.sleep(0.2)
             if tries >= max_tries:
-                while not self.in_queue.empty():
-                    try:
-                        self.in_queue.get()
-                        time.sleep(0.1)
-                    except (Empty, EOFError) as e:
-                        pass
-                self.t_m3u8.terminate()
-                self.t_m3u8.join()
+                self.m3u8_terminate()
                 tries = 0
-                self.logger.debug('m3u8_queue did not start correctly, restarting {}' \
-                    .format(self.channel_dict['uid']))
-                try:
-                    while not self.out_queue.empty():
-                        self.out_queue.get()
-                except (Empty, EOFError):
-                    pass
-                self.clear_queues()
-                time.sleep(0.3)
-                self.in_queue = Queue()
-                self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
-
             else:
-                status = self.out_queue.get()
+                try:
+                    # queue is not empty, but it sticks here anyway...
+                    status = self.out_queue.get(False, 3)
+                except Empty:
+                    self.m3u8_terminate()
+                    tries = 0
+                    continue
+
                 if status['uri'] == 'terminate':
                     InternalProxy.is_m3u8_starting = False
                     return False
@@ -307,3 +294,24 @@ class InternalProxy(Stream):
                         .format(status['uri']))
         InternalProxy.is_m3u8_starting = False
         return True
+
+    def m3u8_terminate(self):
+        while not self.in_queue.empty():
+            try:
+                self.in_queue.get()
+                time.sleep(0.1)
+            except (Empty, EOFError) as e:
+                pass
+        self.t_m3u8.terminate()
+        self.t_m3u8.join()
+        self.logger.debug('m3u8_queue did not start correctly, restarting {}' \
+            .format(self.channel_dict['uid']))
+        try:
+            while not self.out_queue.empty():
+                self.out_queue.get()
+        except (Empty, EOFError):
+            pass
+        self.clear_queues()
+        time.sleep(0.3)
+        self.in_queue = Queue()
+        self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)

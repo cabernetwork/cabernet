@@ -60,7 +60,7 @@ class Channels(PluginChannels):
 
     def get_channels(self):
         global TMP_FOLDERNAME
-        i = 1
+        ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
         if self.config_obj.data[self.config_section]['channel-m3u_file'] is None:
             raise exceptions.CabernetException('{}:{} M3U File config not set, unable to get channel list' \
                 .format(self.plugin_obj.name, self.instance_key))
@@ -88,13 +88,10 @@ class Channels(PluginChannels):
                     ch_number = seg.additional_props['tvg-num']
                 elif 'tvg-chno' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-chno']
-                elif 'tvg-id' in seg.additional_props:
-                    ch_number = seg.additional_props['tvg-id']
                 else:
-                    self.logger.warning('No channel number provided and required in m3u file for channel {}.  Should include tvg-num, tvg-chno or tvg-id.  Using counter.'.format(seg.title))
-                    ch_number = i
-                    i += 1
-
+                    ch_number = ch_num_enum
+                    ch_num_enum += 1
+                    
                 if 'channelID' in seg.additional_props:
                     ch_id = seg.additional_props['channelID']
                 elif 'tvg-id' in seg.additional_props:
@@ -140,8 +137,6 @@ class Channels(PluginChannels):
             raise
     
     def get_channel_uri(self, _channel_id):
-        self.logger.info('{}: Getting video stream info for {}' \
-            .format(self.plugin_obj.name, _channel_id))
         ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
         if self.config_obj.data[self.config_section]['player-decode_url']:
             stream_url = urllib.parse.unquote(ch_dict['json']['stream_url'])

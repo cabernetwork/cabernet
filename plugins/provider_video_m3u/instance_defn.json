@@ -62,6 +62,13 @@
                         "level": 1,
                         "help": "Imports groups from M3U into the group other column"
                     },
+                    "channel-start_ch_num":{
+                        "label": "Starting Ch Number",
+                        "type": "integer",
+                        "default": 1,
+                        "level": 1,
+                        "help": "When channel number is not provided, will use this incrementally."
+                    },
                     "player-stream_type":{
                         "label": "stream_type",
                         "type": "list",

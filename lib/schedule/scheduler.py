@@ -114,17 +114,17 @@ class Scheduler(Thread):
 
         self.scheduler_db.start_task(_trigger['area'], _trigger['title'])
         if _trigger['threadtype'] == 'thread':
-            self.logger.info('Running threaded task {}:{}'.format(
+            self.logger.notice('Running threaded task {}:{}'.format(
                 _trigger['area'], _trigger['title']))
             t_event = Thread(target=self.call_trigger, args=(_trigger,))
             t_event.start()
         elif _trigger['threadtype'] == 'process':
-            self.logger.info('Running process task {}:{}'.format(
+            self.logger.notice('Running process task {}:{}'.format(
                 _trigger['area'], _trigger['title']))
             p_event = Process(target=self.call_trigger, args=(_trigger,))
             p_event.start()
         else:
-            self.logger.info('Running inline task {}:{}'.format(
+            self.logger.notice('Running inline task {}:{}'.format(
                 _trigger['area'], _trigger['title']))
             self.call_trigger(_trigger)
 
@@ -242,7 +242,7 @@ class Scheduler(Thread):
             self.logger.warning('Badly formed scheduled request {} {}'.format(_queue_item, repr(e)))
         
     def delete_trigger(self, _uuid):
-        self.logger.info('Deleting trigger {}'.format(_uuid))
+        self.logger.notice('Deleting trigger {}'.format(_uuid))
         jobs = self.schedule.get_jobs(_uuid)
         for job in jobs:
             self.schedule.cancel_job(job)
@@ -285,7 +285,7 @@ class Scheduler(Thread):
 
     def create_trigger(self, _area, _title, _timetype, timeofday=None, 
             dayofweek=None, interval=-1, timelimit=-1, randdur=-1):
-        self.logger.info('Creating trigger {}:{}:{}'.format(_area, _title, _timetype))
+        self.logger.notice('Creating trigger {}:{}:{}'.format(_area, _title, _timetype))
         uuid = self.scheduler_db.save_trigger(_area, _title, _timetype, timeofday, 
             dayofweek, interval, timelimit, randdur)
         trigger = self.scheduler_db.get_trigger(uuid)

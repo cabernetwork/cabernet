@@ -97,7 +97,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             elif filerequest.call_url(self, self.content_path):
                 pass
             else:
-                self.logger.info('UNKNOWN HTTP Request {}'.format(self.content_path))
+                self.logger.notice('UNKNOWN HTTP Request {}'.format(self.content_path))
                 self.do_mime_response(501, 'text/html', 
                     web_templates['htmlError'].format('501 - Not Implemented'))
             snapshot = utils.end_mem_trace(self.config)
@@ -137,7 +137,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             if postrequest.call_url(self, self.content_path):
                 pass
             else:
-                self.logger.info('UNKNOWN HTTP POST Request {}'.format(self.content_path))
+                self.logger.notice('UNKNOWN HTTP POST Request {}'.format(self.content_path))
                 self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Not Implemented'))
         except Exception as ex:
             self.logger.exception('{}{}'.format(
