@@ -31,6 +31,7 @@ import lib.common.utils as utils
 from lib.plugins.plugin_channels import PluginChannels
 from lib.common.decorators import handle_url_except
 from lib.common.tmp_mgmt import TMPMgmt
+from lib.db.db_scheduler import DBScheduler
 
 from .translations import plutotv_groups
 
@@ -130,7 +131,11 @@ class Channels(PluginChannels):
                     'stream_url': stream_url
                 }
                 ch_list.append(channel)
-            self.tmp_mgmt.cleanup_tmp(TMP_FOLDERNAME)
+
+            sched_db = DBScheduler(self.config_obj.data)
+            active = sched_db.get_num_active()
+            if active < 2:
+                self.tmp_mgmt.cleanup_tmp(TMP_FOLDERNAME)
             return ch_list
         except exceptions.CabernetException as ex:
             self.tmp_mgmt.cleanup_tmp(TMP_FOLDERNAME)

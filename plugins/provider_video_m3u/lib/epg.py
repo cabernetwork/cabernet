@@ -31,6 +31,7 @@ from lib.common.decorators import handle_json_except
 from lib.common.xmltv import XMLTV
 from lib.plugins.plugin_epg import PluginEPG
 from lib.db.db_channels import DBChannels
+from lib.db.db_scheduler import DBScheduler
 
 from .translations import plutotv_tv_genres
 
@@ -103,7 +104,10 @@ class EPG(PluginEPG):
                 start_date += datetime.timedelta(days=1)
             else:
                 break
-        xmltv.cleanup_tmp_folder()
+        sched_db = DBScheduler(self.config_obj.data)
+        active = sched_db.get_num_active()
+        if active < 2:
+            xmltv.cleanup_tmp_folder()
         self.logger.debug('Refreshed EPG Completed for {}:{}'
             .format(self.plugin_obj.name, self.instance_key))
 

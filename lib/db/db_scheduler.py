@@ -130,6 +130,13 @@ sqlcmds = {
         FROM task
         WHERE taskid = ?
         """,
+    'task_num_active_get':
+        """
+        SELECT count(*)
+        FROM task
+        WHERE active='1'
+        """,
+        
     'task_del':
         """
         DELETE FROM task WHERE
@@ -238,8 +245,6 @@ class DBScheduler(DB):
             _name, _instance,
         ))
 
-
-
     def get_task(self, _id):
         task = self.get_dict(DB_TASK_TABLE + '_by_id', (
             _id,
@@ -280,6 +285,9 @@ class DBScheduler(DB):
 
     def get_active_status(self, _taskid):
         return self.get_dict(DB_TASK_TABLE + '_active', (_taskid,))[0]['active']
+
+    def get_num_active(self):
+        return self.get(DB_TASK_TABLE + '_num_active')[0][0]
 
     def save_trigger(self, _area, _title, _timetype, timeofday=None, 
             dayofweek=None, interval=-1, timelimit=-1, randdur=-1):

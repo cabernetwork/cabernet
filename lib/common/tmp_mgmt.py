@@ -50,8 +50,7 @@ class TMPMgmt:
                 .joinpath(_folder) \
                 .joinpath(_filename)
         buf_size = 2 * 16 * 16 * 1024
-            
-            
+
         if not save_path.parent.is_dir():
             save_path.parent.mkdir()
         h = {'User-agent': utils.DEFAULT_USER_AGENT}
@@ -96,6 +95,7 @@ class TMPMgmt:
                 .format(_filename, str(ex)))
 
     def cleanup_tmp(self, folder=None):
+        self.logger.debug('Cleaning up tmp folder, subfolder {}'.format(folder))
         if folder is None:
             dir = pathlib.Path(self.config['paths']['tmp_dir'])
             for files in os.listdir(dir):
