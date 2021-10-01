@@ -117,8 +117,9 @@ class XMLTV:
         if self.start_date is None or self.start_date == dt_utc.date():
             program = {'channel': elem.attrib['channel'], 'progid': None,
                 'start': elem.attrib['start'], 'stop': elem.attrib['stop'],
-                'length': None, 'title': None, 'subtitle': None,
-                'entity_type': None, 'desc': None, 'short_desc': None,
+                'length': 0, 'title': None, 'subtitle': None,
+                'entity_type': None, 'desc': 'Not Available',
+                'short_desc': 'Not Available',
                 'video_quality': None, 'cc': False, 'live': False, 
                 'finale': False, 'premiere': False, 'air_date': None, 
                 'formatted_date': None, 'icon': None, 'rating': None,
