@@ -175,6 +175,7 @@ class M3U8Queue(Thread):
         global OUT_QUEUE
         uri = _queue_item['uri']
         data = _queue_item['data']
+        self.video.data = self.get_uri_data(uri)
         if data['filtered']:
             OUT_QUEUE.put({'uri': uri,
                 'data': data,
@@ -182,7 +183,6 @@ class M3U8Queue(Thread):
             PLAY_LIST[uri]['played'] = True
             time.sleep(0.01)
         else:
-            self.video.data = self.get_uri_data(uri)
             if self.video.data is None:
                 PLAY_LIST[uri]['played'] = True
                 return
@@ -327,15 +327,15 @@ class M3U8Process(Thread):
                     break
                 removed += self.remove_from_stream_queue(playlist)
                 added += self.add_to_stream_queue(playlist)
-                if added == 0 and self.duration > 0:
-                    self.sleep(0.7)
-                elif self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
+                if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, self.channel_dict['instance']):
                     self.stream_uri = self.get_stream_uri()
                     self.logger.debug('M3U8: {} {}' \
                         .format(self.stream_uri, os.getpid()))
                     self.last_refresh = time.time()
                     self.sleep(0.3)
+                elif added == 0 and self.duration > 0:
+                    self.sleep(0.7)
                 else:
                     self.sleep(0.7)
         except Exception as ex:
