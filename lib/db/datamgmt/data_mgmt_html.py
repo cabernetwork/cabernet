@@ -89,6 +89,7 @@ def reset_channels(_config, _name, _reset_edits):
 
 def reset_epg(_config, _name):
     db_epg = DBepg(_config)
+    db_epg.del_old_programs(_name, None, '0 day')
     db_epg.set_last_update(_name)
     if _name is None:
         return 'EPG updated and will refresh all days on next request'

@@ -251,7 +251,10 @@ class XMLTV:
         
     def get_p_desc(self, elem):
         event, elem = next(self.iterator, (None, None))
-        return elem.text
+        if elem.text is None:
+            return 'Not Available'
+        else:
+            return elem.text
 
     def get_p_length(self, elem):
         event, elem = next(self.iterator, (None, None))

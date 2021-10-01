@@ -153,7 +153,7 @@
                         "type": "boolean",
                         "default": true,
                         "level": 1,
-                        "help": "If disabled, will not populate the XMLTV output with this instance"
+                        "help": "If disabled, will not ingest or populate the XMLTV output with this instance"
                     },
                     "epg-xmltv_file":{
                         "label": "XMLTV File",

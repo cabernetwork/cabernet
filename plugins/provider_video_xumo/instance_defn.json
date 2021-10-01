@@ -120,11 +120,11 @@
                         "help": "Uses either ffmpeg genpts or internal resequencing"
                     },
                     "epg-enabled":{
-                        "label": "EPG Collection Enabled",
+                        "label": "XMLTV Enabled",
                         "type": "boolean",
                         "default": true,
                         "level": 1,
-                        "help": "Disable if you have multiple instances for the same city"
+                        "help": "If disabled, will not ingest or populate the XMLTV output with this instance"
                     },
                     "epg-prefix":{
                         "label": "EPG Channel Prefix",

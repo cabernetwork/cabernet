@@ -36,22 +36,23 @@ substantial portions of the Software.
 # 240 Other/Unknown Grey
 
 groups = {
-    'MOVIES': 'Movies',
     'COMEDY': 'Comedy',
     'CLASSICS': 'Classics',
-    'MYSTERY': 'Mystery',
-    'SPANISH': 'Spanish',
-    'ENTERTAINMENT': 'Entertainment',
-    'DOCUMENTARIES': 'Documentaries',
-    'GAMING': 'Gaming',
     'DIY': 'DIY',
+    'DOCUMENTARIES': 'Documentaries',
+    'ENTERTAINMENT': 'Entertainment',
+    'GAMING': 'Gaming',
+    'HOLIDAY': 'Holiday',
     'KIDS': 'Kids',
     'LIFESTYLE': 'Lifestyle',
-    'NEWS': 'News',
-    'NEW': 'New',
+    'MOVIES': 'Movies',
     'MUSIC': 'Music',
+    'MYSTERY': 'Mystery',
+    'NEW': 'New',
+    'NEWS': 'News',
     'REALITY': 'Reality',
     'SCIENCE': 'Science',
+    'SPANISH': 'Spanish',
     'SPORTS': 'Sports',
     'TRAVEL': 'Travel'
     }

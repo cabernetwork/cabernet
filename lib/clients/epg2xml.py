@@ -143,6 +143,9 @@ class EPG:
                 config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
                 if not self.config[config_section]['enabled']:
                     continue
+                if not self.config[config_section]['epg-enabled']:
+                    continue
+
                 updated_chnum = utils.wrap_chnum(
                     ch_data['display_number'], ch_data['namespace'],
                     ch_data['instance'], self.config)
@@ -176,6 +179,9 @@ class EPG:
                             break
                         config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
                         if not self.config[config_section]['enabled']:
+                            skip = True
+                            break
+                        if not self.config[config_section]['epg-enabled']:
                             skip = True
                             break
             except KeyError:
