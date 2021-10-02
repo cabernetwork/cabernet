@@ -380,9 +380,9 @@ class M3U8Process(Thread):
         else:
             keys = [None for i in range(0, len(_playlist.segments))]
             
+        num_segments = len(_playlist.segments)
         if self.is_starting and not self.config[self.config_section]['player-play_all_segments']:
             seg_to_play = self.config[self.config_section]['player-segments_to_play']
-            num_segments = len(_playlist.segments)
             if _playlist.playlist_type == 'vod':
                 seg_to_play = num_segments
             elif seg_to_play > num_segments:
@@ -396,7 +396,16 @@ class M3U8Process(Thread):
                     _playlist.segments[i], keys[i])
             self.is_starting = False
         else:
-            for m3u8_segment, key in reversed(list(zip(_playlist.segments, keys))):
+            last_key = list(PLAY_LIST.keys())[-1]
+            i = 0
+            for index, segment in enumerate(reversed(_playlist.segments)):
+                uri = segment.absolute_uri
+                dt = segment.current_program_date_time
+                uri_dt = (uri, dt)
+                if last_key == uri_dt:
+                    i = num_segments - index
+            for m3u8_segment, key in zip(_playlist \
+                    .segments[i:num_segments], keys[i:num_segments]):
                 added = self.add_segment(m3u8_segment, key)
                 total_added += added
                 if added == 0:
