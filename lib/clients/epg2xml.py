@@ -68,14 +68,18 @@ class EPG:
             xml_out = None
 
             self.epg_db.init_get_query(self.namespace, self.instance)
-            day_data, ns, inst = self.epg_db.get_next_row()
+            day_data, ns, inst, day = self.epg_db.get_next_row()
+            self.logger.debug('Processing EPG data {}:{} {}' \
+                .format(ns, inst, day))
             self.prog_processed = []
             while day_data:
                 xml_out = self.gen_minimal_header_xml()
                 self.gen_program_xml(xml_out, day_data, channel_list, ns, inst)
                 self.write_xml(xml_out)
                 xml_out.clear()
-                day_data, ns, inst = self.epg_db.get_next_row()
+                day_data, ns, inst, day = self.epg_db.get_next_row()
+                self.logger.debug('Processing EPG data {}:{} {}' \
+                    .format(ns, inst, day))
             self.epg_db.close_query()
             self.webserver.wfile.write(b'</tv>\r\n')
             self.webserver.wfile.flush()

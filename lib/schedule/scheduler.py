@@ -88,10 +88,10 @@ class Scheduler(Thread):
         - Sets up the Schedule/Job objects based on database
         - Loops getting queue events and runs any pending triggers
         """
+        self.setup_triggers()
         triggers = self.scheduler_db.get_triggers_by_type('startup')
         for trigger in triggers:
             self.exec_trigger(trigger)
-        self.setup_triggers()
         while not self.stop_thread:
             self.schedule.run_pending()
             for i in range(30):
@@ -250,7 +250,7 @@ class Scheduler(Thread):
     def run_trigger(self, _uuid):
         jobs = self.schedule.get_jobs(_uuid)
         if len(jobs) == 0:
-            self.logger.info('Invalid uuid for run request')
+            self.logger.info('Invalid trigger uuid job in schedule for run request {}'.format(_uuid))
         else:
             for job in jobs:
                 job.run()

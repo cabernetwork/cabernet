@@ -78,7 +78,7 @@ sqlcmds = {
     'epg_get':
         """
         SELECT * FROM epg WHERE
-            namespace LIKE ? AND instance LIKE ? ORDER BY day
+            namespace LIKE ? AND instance LIKE ? ORDER BY day LIMIT ? OFFSET ?
         """,
     'epg_one_get':
         """
@@ -165,9 +165,10 @@ class DBepg(DB):
         if row:
             namespace = row['namespace']
             instance = row['instance']
+            day = row['day']
             json_data = json.loads(row['json'])
             row = json_data
-        return row, namespace, instance
+        return row, namespace, instance, day
 
     def close_query(self):
         self.cur.close()

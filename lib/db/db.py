@@ -44,6 +44,9 @@ class DB:
         self.db_name = _db_name
         self.sqlcmds = _sqlcmds
         self.cur = None
+        self.offset = -1
+        self.where = None
+        self.sqlcmd = None
 
         self.db_fullpath = pathlib.Path(self.config['paths']['db_dir']) \
             .joinpath(_db_name + DB_EXT)
@@ -68,50 +71,59 @@ class DB:
     def add(self, _table, _values):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_ADD_ROW])]
-        try:
-            cur = self.sql_exec(sqlcmd, _values)
-            DB.conn[self.db_name][threading.get_ident()].commit()
-            lastrow = cur.lastrowid
-            cur.close()
-            return lastrow
-        except sqlite3.OperationalError as e:
-            self.logger.warning('Add request ignored, {}'.format(e))
-            DB.conn[self.db_name][threading.get_ident()].rollback()
-            if cur is not None:
+        i = 5
+        while i > 0:
+            i -= 1
+            try:
+                cur = self.sql_exec(sqlcmd, _values)
+                DB.conn[self.db_name][threading.get_ident()].commit()
+                lastrow = cur.lastrowid
                 cur.close()
-            return None
+                return lastrow
+            except sqlite3.OperationalError as e:
+                self.logger.warning('Add request ignored, retrying {}'.format(e))
+                DB.conn[self.db_name][threading.get_ident()].rollback()
+                if cur is not None:
+                    cur.close()
+        return None
 
     def delete(self, _table, _values):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_DELETE])]
-        try:
-            cur = self.sql_exec(sqlcmd, _values)
-            DB.conn[self.db_name][threading.get_ident()].commit()
-            lastrow = cur.lastrowid
-            cur.close()
-            return lastrow
-        except sqlite3.OperationalError as e:
-            self.logger.warning('Delete request ignored, {}'.format(e))
-            DB.conn[self.db_name][threading.get_ident()].rollback()
-            if cur is not None:
+        i = 5
+        while i > 0:
+            i -= 1
+            try:
+                cur = self.sql_exec(sqlcmd, _values)
+                DB.conn[self.db_name][threading.get_ident()].commit()
+                lastrow = cur.lastrowid
                 cur.close()
-            return None
+                return lastrow
+            except sqlite3.OperationalError as e:
+                self.logger.warning('Delete request ignored, retrying {}'.format(e))
+                DB.conn[self.db_name][threading.get_ident()].rollback()
+                if cur is not None:
+                    cur.close()
+        return None
 
     def update(self, _table, _values=None):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_UPDATE])]
-        try:
-            cur = self.sql_exec(sqlcmd, _values)
-            DB.conn[self.db_name][threading.get_ident()].commit()
-            lastrow = cur.lastrowid
-            cur.close()
-            return lastrow
-        except sqlite3.OperationalError as e:
-            self.logger.warning('Update request ignored, {}'.format(e))
-            DB.conn[self.db_name][threading.get_ident()].rollback()
-            if cur is not None:
+        i = 5
+        while i > 0:
+            i -= 1
+            try:
+                cur = self.sql_exec(sqlcmd, _values)
+                DB.conn[self.db_name][threading.get_ident()].commit()
+                lastrow = cur.lastrowid
                 cur.close()
-            return None
+                return lastrow
+            except sqlite3.OperationalError as e:
+                self.logger.warning('Update request ignored, retrying {}'.format(e))
+                DB.conn[self.db_name][threading.get_ident()].rollback()
+                if cur is not None:
+                    cur.close()
+        return None
 
     def commit(self):
         DB.conn[self.db_name][threading.get_ident()].commit()
@@ -119,7 +131,7 @@ class DB:
     def get(self, _table, _where=None):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
-        i = 2
+        i = 5
         while i > 0:
             i -= 1
             try:
@@ -132,7 +144,6 @@ class DB:
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
-                time.sleep(1)
         return None
 
     def get_dict(self, _table, _where=None, sql=None):
@@ -140,34 +151,42 @@ class DB:
             sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
         else:
             sqlcmd = sql
-        cur = self.sql_exec(sqlcmd, _where)
-        records = cur.fetchall()
-        rows = []
-        for row in records:
-            rows.append(dict(zip([c[0] for c in cur.description], row)))
-        cur.close()
-        return rows
+        i = 5
+        while i > 0:
+            i -= 1
+            try:
+                cur = self.sql_exec(sqlcmd, _where)
+                records = cur.fetchall()
+                rows = []
+                for row in records:
+                    rows.append(dict(zip([c[0] for c in cur.description], row)))
+                cur.close()
+                return rows
+            except sqlite3.OperationalError as e:
+                self.logger.warning('GET request ignored retrying {}, {}'.format(i, e))
+                DB.conn[self.db_name][threading.get_ident()].rollback()
+                if cur is not None:
+                    cur.close()
+        return None
 
     def get_init(self, _table, _where=None):
         """
-            Cursor must remain active following the call.
-            runs the query and returns the first row
-            while maintaining the cursor.
-            Get_dict_next returns the next row
+            Requires "LIMIT ? OFFSET ?" at the end of the sql statement
         """
-        sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
-        self.cur = self.sql_exec(sqlcmd, _where)
+        self.sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
+        self.where = list(_where)
+        self.offset = 0
 
     def get_dict_next(self):
-        """
-            Cursor must remain active following the call.
-            Termination of the cursor mut be handled externally
-        """    
-        row = self.cur.fetchone()
-        row_dict = None
-        if row:
-            row_dict = dict(zip([c[0] for c in self.cur.description], row))
-        return row_dict
+        w_list = self.where.copy()
+        w_list.extend((1, self.offset))
+        self.cur = self.sql_exec(self.sqlcmd, tuple(w_list))
+        records = self.cur.fetchall()
+        self.offset += 1
+        if len(records) == 0:
+            return None
+        row = records[0]
+        return dict(zip([c[0] for c in self.cur.description], row))
 
     def reinitialize_tables(self):
         self.drop_tables()
@@ -177,7 +196,6 @@ class DB:
         for table in self.sqlcmds[''.join([SQL_CREATE_TABLES])]:
             cur = self.sql_exec(table)
         DB.conn[self.db_name][threading.get_ident()].commit()
-            
 
     def drop_tables(self):
         for table in self.sqlcmds[SQL_DROP_TABLES]:

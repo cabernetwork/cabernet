@@ -102,7 +102,7 @@ sqlcmds = {
         """,        
     'channels_updated_update':
         """
-        UPDATE channels SET updated = False
+        UPDATE channels SET updated = False WHERE namespace=? AND instance=?
         """,
     'channels_atsc_update':
         """
@@ -162,7 +162,10 @@ class DBChannels(DB):
         """
         Assume the list is complete and will remove any old channels not updated
         """
-        self.update(DB_CHANNELS_TABLE + '_updated')        
+        if _instance is None or _namespace is None:
+            self.logger.warning('Saving Channel List: Namespace or Instance is None {}:{}'
+                .format(_namespace, _instance))
+        self.update(DB_CHANNELS_TABLE + '_updated', (_namespace, _instance,))        
         for ch in _ch_dict:
             if save_edit_groups:
                 edit_groups = ch['groups_other']
