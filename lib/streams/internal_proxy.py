@@ -47,7 +47,7 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 6
-IDLE_COUNTER_MAX = 200
+IDLE_COUNTER_MAX = 60
 
 
 class InternalProxy(Stream):
