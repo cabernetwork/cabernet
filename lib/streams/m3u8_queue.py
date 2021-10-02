@@ -335,9 +335,9 @@ class M3U8Process(Thread):
                     self.last_refresh = time.time()
                     self.sleep(0.3)
                 elif added == 0 and self.duration > 0:
-                    self.sleep(0.7)
+                    self.sleep(0.8)
                 else:
-                    self.sleep(0.7)
+                    self.sleep(0.8)
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Process=', ex))
@@ -387,16 +387,20 @@ class M3U8Process(Thread):
                 seg_to_play = num_segments
             elif seg_to_play > num_segments:
                 seg_to_play = num_segments
-            for i in range(num_segments-seg_to_play, num_segments):
+            
+            skipped_seg = num_segments-seg_to_play
+            for m3u8_segment, key in zip(_playlist.segments[0:skipped_seg], keys[0:skipped_seg]):
+                total_added += self.add_segment(m3u8_segment, key, _default_played=True)
+            for i in range(skipped_seg, num_segments):
                 total_added += self.add_segment(
                     _playlist.segments[i], keys[i])
-            for m3u8_segment, key in zip(_playlist.segments, keys):
-                total_added += self.add_segment(m3u8_segment, key, _default_played=True)
-
             self.is_starting = False
         else:
-            for m3u8_segment, key in zip(_playlist.segments, keys):
-                total_added += self.add_segment(m3u8_segment, key)
+            for m3u8_segment, key in reversed(list(zip(_playlist.segments, keys))):
+                added = self.add_segment(m3u8_segment, key)
+                total_added += added
+                if added == 0:
+                    break
             time.sleep(0.1)
         return total_added
 
@@ -458,6 +462,8 @@ class M3U8Process(Thread):
                     self.logger.debug('Removed {} from play queue {}' \
                         .format(segment_key[0], os.getpid()))
                 continue
+            else:
+                break
         return total_removed
 
     def set_cue_status(self, _segment):
