@@ -396,14 +396,18 @@ class M3U8Process(Thread):
                     _playlist.segments[i], keys[i])
             self.is_starting = False
         else:
-            last_key = list(PLAY_LIST.keys())[-1]
-            i = 0
-            for index, segment in enumerate(reversed(_playlist.segments)):
-                uri = segment.absolute_uri
-                dt = segment.current_program_date_time
-                uri_dt = (uri, dt)
-                if last_key == uri_dt:
-                    i = num_segments - index
+            key_list = list(PLAY_LIST.keys())
+            if len(key_list) == 0:
+                i = 0
+            else:
+                last_key = list(PLAY_LIST.keys())[-1]
+                i = 0
+                for index, segment in enumerate(reversed(_playlist.segments)):
+                    uri = segment.absolute_uri
+                    dt = segment.current_program_date_time
+                    uri_dt = (uri, dt)
+                    if last_key == uri_dt:
+                        i = num_segments - index
             for m3u8_segment, key in zip(_playlist \
                     .segments[i:num_segments], keys[i:num_segments]):
                 added = self.add_segment(m3u8_segment, key)
