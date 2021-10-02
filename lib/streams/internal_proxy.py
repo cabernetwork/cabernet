@@ -75,6 +75,7 @@ class InternalProxy(Stream):
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
         self.idle_counter = -1
         self.is_starting = True
+        self.cue = False
         
     def terminate(self, *args):
         try:
@@ -141,7 +142,8 @@ class InternalProxy(Stream):
     def play_queue(self):
         global MAX_OUT_QUEUE_SIZE
         global IDLE_COUNTER_MAX
-        self.idle_counter += 1
+        if not self.cue:
+            self.idle_counter += 1
         if self.idle_counter > IDLE_COUNTER_MAX:
             self.idle_counter = 0
             raise exceptions.CabernetException('Provider has stop playing the stream. Terminating the connection {}' \
@@ -158,6 +160,12 @@ class InternalProxy(Stream):
             elif uri == 'running':
                 continue
             data = out_queue_item['data']
+            if data['cue'] == 'in':
+                self.cue = False
+                self.logger.debug('Turning M3U8 cue to False')
+            elif data['cue'] == 'out':
+                self.cue = True
+                self.logger.debug('Turning M3U8 cue to True')
             if data['filtered']:
                 self.logger.debug('Filtered, Sending ATSC Msg {}'.format(self.t_m3u8.pid))
                 self.write_buffer(out_queue_item['stream'])

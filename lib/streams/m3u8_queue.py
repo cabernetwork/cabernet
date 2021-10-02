@@ -175,7 +175,6 @@ class M3U8Queue(Thread):
         global OUT_QUEUE
         uri = _queue_item['uri']
         data = _queue_item['data']
-        self.video.data = self.get_uri_data(uri)
         if data['filtered']:
             OUT_QUEUE.put({'uri': uri,
                 'data': data,
@@ -183,6 +182,7 @@ class M3U8Queue(Thread):
             PLAY_LIST[uri]['played'] = True
             time.sleep(0.01)
         else:
+            self.video.data = self.get_uri_data(uri)
             if self.video.data is None:
                 PLAY_LIST[uri]['played'] = True
                 return
@@ -401,10 +401,12 @@ class M3U8Process(Thread):
         return total_added
 
     def add_segment(self, _segment, _key, _default_played=False):
+        self.set_cue_status(_segment)
         uri = _segment.absolute_uri
         if uri not in PLAY_LIST.keys():
             played = _default_played
             filtered = False
+            cue_status = self.set_cue_status(_segment)
             if self.file_filter is not None:
                 m = self.file_filter.match(urllib.parse.unquote(uri))
                 if m:
@@ -414,6 +416,7 @@ class M3U8Process(Thread):
                 'played': played,
                 'filtered': filtered,
                 'duration': _segment.duration,
+                'cue': cue_status,
                 'key': _key
             }
             if _segment.duration > 0:
@@ -453,6 +456,14 @@ class M3U8Process(Thread):
             else:
                 break
         return total_removed
+
+    def set_cue_status(self, _segment):
+        if _segment.cue_out_start:
+            return 'out'
+        elif _segment.cue_in:
+            return 'in'
+        else:
+            return None
 
 
 def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None):
