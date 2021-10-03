@@ -162,6 +162,7 @@ class DBepg(DB):
         row = self.get_dict_next()
         namespace = None
         instance = None
+        day = None
         if row:
             namespace = row['namespace']
             instance = row['instance']
