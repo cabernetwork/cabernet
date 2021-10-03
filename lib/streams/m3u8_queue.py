@@ -512,11 +512,11 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     time.sleep(1)
                 else:
                     logger.debug('UNKNOWN m3u8 queue request')
-            except (KeyboardInterrupt, EOFError, TypeError):
+            except (KeyboardInterrupt, EOFError, TypeError, ValueError):
                 TERMINATE_REQUESTED = True
                 try:
                     STREAM_QUEUE.put({'uri_dt': 'terminate'})
-                except (EOFError, TypeError):
+                except (EOFError, TypeError, ValueError):
                     pass
                 time.sleep(0.01)
                 sys.exit()
