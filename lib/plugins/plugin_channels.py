@@ -134,7 +134,10 @@ class PluginChannels:
             img_blob = resp.read()
             fp = io.BytesIO(img_blob)
             sz = len(img_blob)
-            thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
+            try:
+                thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
+            except get_image_size.UnknownImageFormat:
+                pass
         return thumbnail_size
 
     @handle_url_except

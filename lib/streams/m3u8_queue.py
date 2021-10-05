@@ -459,6 +459,28 @@ class M3U8Process(Thread):
     def remove_from_stream_queue(self, _playlist):
         global PLAY_LIST
         total_removed = 0
+        if _playlist.discontinuity_sequence is not None:
+            disc_index = 0
+            total_index = len(_playlist.segments)
+            url_list = [key[0] for key in PLAY_LIST]
+            for i, segment in enumerate(reversed(_playlist.segments)):
+                if segment.discontinuity:
+                    disc_index = total_index - i
+                    break
+            for segment in _playlist.segments[disc_index:total_index]:
+                s_uri = segment.absolute_uri
+                s_dt = segment.current_program_date_time
+                s_key = (s_uri, s_dt)
+                if s_key in PLAY_LIST.keys():
+                    continue
+                else:
+                    try:
+                        i = url_list.index(s_uri)
+                        PLAY_LIST = utils.rename_dict_key(list(PLAY_LIST.keys())[i], s_key, PLAY_LIST)
+                    except ValueError:
+                        # not in list
+                        pass
+            
         for segment_key in list(PLAY_LIST.keys()):
             is_found = False
             for segment_m3u8 in _playlist.segments:

@@ -82,6 +82,10 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = str(ex)
                 self.logger.info('InvalidURL, encoding and trying again. In function {}() {} {} {}' \
                     .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+            except http.client.IncompleteRead as ex:
+                ex_save = str(ex)
+                self.logger.info('Partial data from url received in function {}(), retrying. {} {} {}' \
+                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
             time.sleep(1.0)
         self.logger.warning('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
             .format(f.__name__, os.getpid(), ex_save, str(args[0])))
