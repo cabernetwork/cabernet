@@ -156,8 +156,6 @@ class ATSCMsg:
         i = 0
         video_len = len(_video.data)
         msg = None
-        self.logger.debug('Updating ATSC SDT with service info {} {}' \
-            .format(_service_provider, _service_name))
         while True:
             if i+ATSC_MSG_LEN > video_len: 
                 break
@@ -186,6 +184,9 @@ class ATSCMsg:
             i += ATSC_MSG_LEN
         if msg is None:
             self.logger.debug('Missing ATSC SDT Msg in stream, unable to update provider and service name')
+        else:
+            self.logger.debug('Updating ATSC SDT with service info {} {}' \
+                .format(_service_provider, _service_name))
 
     def gen_sld(self, _base_pid, _elements):
         # Table 6.29 Service Location Descriptor

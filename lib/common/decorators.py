@@ -221,6 +221,14 @@ class Request:
             self.url2func[_name](_webserver, *args, **kwargs)
             return True
         else:
+            # This should change to use a regular expression
+            longest_uri = ''
+            for uri in self.url2func.keys():
+                if _name.startswith(uri) and len(uri) > len(longest_uri):
+                    longest_uri = uri
+            if len(longest_uri) > 0:
+                self.url2func[longest_uri](_webserver, *args, **kwargs)
+                return True
             return False
 
 
@@ -254,7 +262,8 @@ class FileRequest(Request):
                 return True
         return False
 
-
 getrequest = GetRequest()
+gettunerrequest = GetRequest()
 postrequest = PostRequest()
 filerequest = FileRequest()
+

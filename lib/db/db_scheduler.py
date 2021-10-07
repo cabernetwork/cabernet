@@ -121,7 +121,21 @@ sqlcmds = {
         """
         SELECT *
         FROM task
+        WHERE namespace LIKE ?
+        ORDER BY task.area ASC, task.title ASC
+        """,
+    'task_by_instance_get':
+        """
+        SELECT *
+        FROM task
         WHERE namespace LIKE ? AND instance LIKE ?
+        ORDER BY task.area ASC, task.title ASC
+        """,
+    'task_by_active_get':
+        """
+        SELECT *
+        FROM task
+        WHERE namespace LIKE ? AND active LIKE ?
         ORDER BY task.area ASC, task.title ASC
         """,
     'task_active_get':
@@ -240,9 +254,19 @@ class DBScheduler(DB):
         if not _name:
             _name = '%'
         if not _instance:
-            _instance = '%'
-        return self.get_dict(DB_TASK_TABLE + '_by_name', (
-            _name, _instance,
+            return self.get_dict(DB_TASK_TABLE + '_by_name', (
+                _name,
+            ))
+        else:
+            return self.get_dict(DB_TASK_TABLE + '_by_instance', (
+                _name, _instance,
+            ))
+
+    def get_tasks_by_active(self, _active='1', _name=None):
+        if not _name:
+            _name = '%'
+        return self.get_dict(DB_TASK_TABLE + '_by_active', (
+            _name, _active,
         ))
 
     def get_task(self, _id):

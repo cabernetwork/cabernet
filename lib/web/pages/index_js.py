@@ -16,9 +16,13 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import json
+import urllib
+
 import lib.common.utils as utils
 from lib.common.decorators import getrequest
 from lib.db.db_plugins import DBPlugins
+from lib.db.db_scheduler import DBScheduler
 
 
 @getrequest.route('/api/index.js')
@@ -32,10 +36,9 @@ class IndexJS:
 
     @staticmethod
     def get(_config):
-    
         js = ''.join([
             'var upgrading = "running"; ',
-            '$(document).ready(function(){',
+            '$(document).ready(setTimeout(function(){',
                 '$(\'head\').append(\'<link rel="stylesheet"',
                     ' href="/modules/themes/',
                     _config['display']['theme'],
@@ -45,14 +48,35 @@ class IndexJS:
                     ' src="/modules/themes/',
                     _config['display']['theme'],
                     '/theme.js"></script>',
-                    '\')});',
-            '$(document).ready(setTimeout(function(){',
+                    '\');',
+                    
+                '$(\'#content\').html(\'<!DOCTYPE html><html><head>'
+                '<title>Dashboard</title>',
+                '<meta name="viewport" content="width=device-width, ',
+                'minimum-scale=1.0, maximum-scale=1.0">',
+                '<link rel=\"stylesheet\" type="text/css" href=\"/modules/dashboard/dashboard.css\">',
+                '<link rel=\"stylesheet\" type=\"text/css\" href=\"/modules/table/table.css\">',
+                '<script src=\"/modules/dashboard/dashboard.js\"></script>',
+                '<script src=\"/api/dashstatus.js\"></script></head>\');',
+                    
+                '$(\'#content\').append(\'<div id=\"logo\"></div>',
+                    IndexJS.get_version_div(_config),
+                    '<div id=\"dashboard\"></div>',
+                    '\');',
                 'logo = getComputedStyle(document.documentElement)',
                     '.getPropertyValue("--logo-url");',
-                    '$(\'#content\').html(\'<img class=\"splash\" src=\"\'+logo+\'\">',
-                    IndexJS.get_version_div(_config),
+                'if ( logo == \"\" ) { ',
+                    'setTimeout(function() {',
+                        'logo = getComputedStyle(document.documentElement)',
+                            '.getPropertyValue("--logo-url");',
+                        '$(\'#logo\').html(\'<img class=\"splash\" src=\"\'+logo+\'\">',
+                        '\');',
+                        '}, 2000);'
+                '} else {'
+                    '$(\'#logo\').html(\'<img class=\"splash\" src=\"\'+logo+\'\">',
                     '\');',
-                    '}, 1000));',
+                '}',
+                '}, 1000));',
             'function load_url(url) {',
                 '$(\"#content\").load(url);}',
             'function load_status_url(url) {',
@@ -64,7 +88,7 @@ class IndexJS:
                 'load_status_url(url);}, 700);',
                 '}});} else if ( upgrading == "success" ) {$(\"#status\").append(\"Upgrade complete, reload page\");',
                 ' upgrading = "running";',
-                '} else {$(\"#status\").append(\"Upgrade aborted\"); upgrading = "running";}}'
+                '} else {$(\"#status\").append(\"Upgrade aborted\"); upgrading = "running";}};'
         ])
         return js
 
@@ -95,12 +119,10 @@ class IndexJS:
                     '<b>Upgrade to ', next_version, '</b> &nbsp; </a> '
                 ])
 
-
         version_js = ''.join([
                 '<div style=\"padding: 1em; background: var(--docked-drawer-background); margin-left: auto;margin-right: auto;width: max-content;\">',
                 'Version: ', current_version, '<br>',
                 upgrade_js,
-                '</div><div id="status"></div>'
+                '</div>'
         ])
         return version_js
-
