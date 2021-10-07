@@ -54,5 +54,4 @@ class DashStatusJS:
     def get_scheduler_status(_config):
         scheduler_db = DBScheduler(_config)
         active_tasks = scheduler_db.get_tasks_by_active()
-        print('ACTIVE TASKS=', active_tasks)
         return json.dumps(active_tasks, default=str)
