@@ -53,11 +53,11 @@ class IndexJS:
                 '$(\'#content\').html(\'<!DOCTYPE html><html><head>'
                 '<title>Dashboard</title>',
                 '<meta name="viewport" content="width=device-width, ',
-                'minimum-scale=1.0, maximum-scale=1.0">',
+                'minimum-scale=1.0, maximum-scale=1.0"/>',
                 '<link rel=\"stylesheet\" type="text/css" href=\"/modules/dashboard/dashboard.css\">',
                 '<link rel=\"stylesheet\" type=\"text/css\" href=\"/modules/table/table.css\">',
                 '<script src=\"/modules/dashboard/dashboard.js\"></script>',
-                '<script src=\"/api/dashstatus.js\"></script></head>\');',
+                '</head>\');',
                     
                 '$(\'#content\').append(\'<div id=\"logo\"></div>',
                     IndexJS.get_version_div(_config),

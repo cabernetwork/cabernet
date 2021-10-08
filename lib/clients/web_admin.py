@@ -118,7 +118,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             snapshot = utils.end_mem_trace(self.config)
             utils.display_top(self.config, snapshot)
         except IOError as ex:
-            if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
+            if ex.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
                 self.logger.info('Connection dropped by end device {}'.format(ex))
             else:
                 self.logger.exception('{}{}'.format(

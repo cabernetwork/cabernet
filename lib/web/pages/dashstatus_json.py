@@ -16,42 +16,58 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import datetime
 import json
+import logging
 import urllib
 
 from lib.common.decorators import getrequest
+from lib.common.decorators import handle_url_except
 from lib.db.db_scheduler import DBScheduler
 
 
-@getrequest.route('/api/dashstatus.js')
-def pages_dashstatus_js(_webserver):
-    dashstatus_js = DashStatusJS() 
-    _webserver.do_mime_response(200, 'text/javascript', dashstatus_js.get(_webserver.config))
+@getrequest.route('/api/dashstatus.json')
+def pages_dashstatus_json(_webserver):
+    dashstatus_js = DashStatusJS(_webserver.config)
+    expire_time = datetime.datetime.utcnow()
+    expire_str = expire_time.strftime("%a, %d %b %Y %H:%M:%S GMT")
+    _webserver.do_dict_response({ 
+            'code': 200, 'headers': {'Content-type': 'application/json',
+            'Expires': expire_str
+            },
+            'text': dashstatus_js.get()
+            })
     return True
 
 
 class DashStatusJS:
 
-    @staticmethod
-    def get(_config):
+    def __init__(self, _config):
+        self.logger = logging.getLogger(__name__)
+        self.config = _config
+
+    def get(self):
         js = ''.join([
-            'var tunerstatus = ', DashStatusJS.get_tuner_status(_config),
-            '; var schedstatus = ', DashStatusJS.get_scheduler_status(_config)
+            '{ "tunerstatus": ', self.get_tuner_status(),
+            ', "schedstatus": ', self.get_scheduler_status(),
+            '}'
         ])
         return js
 
-    @staticmethod
-    def get_tuner_status(_config):
+    def get_tuner_status(self):
         web_tuner_url = 'http://localhost:' + \
-            str(_config['web']['plex_accessible_port'])
+            str(self.config['web']['plex_accessible_port'])
         url = ( web_tuner_url + '/tunerstatus')
-        req = urllib.request.Request(url)
+        return self.get_url(url)
+
+    @handle_url_except()
+    def get_url(self, _url):
+        req = urllib.request.Request(_url)
         with urllib.request.urlopen(req) as resp:
             result = resp.read()
         return result.decode('utf-8')
 
-    @staticmethod
-    def get_scheduler_status(_config):
-        scheduler_db = DBScheduler(_config)
+    def get_scheduler_status(self):
+        scheduler_db = DBScheduler(self.config)
         active_tasks = scheduler_db.get_tasks_by_active()
         return json.dumps(active_tasks, default=str)
