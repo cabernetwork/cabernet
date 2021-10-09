@@ -138,7 +138,9 @@ class M3U8Queue(Thread):
 
             if key_data is not None:
                 self.key_list[_data['key']['uri']] = key_data
-                if _data['key']['iv'].startswith('0x'):
+                if _data['key']['iv'] is None:
+                    iv = None
+                elif _data['key']['iv'].startswith('0x'):
                     iv = bytearray.fromhex(_data['key']['iv'][2:])
                 else:
                     iv = bytearray.fromhex(_data['key']['iv'])
@@ -528,14 +530,14 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
     global STREAM_QUEUE
     global OUT_QUEUE
     global TERMINATE_REQUESTED
-    utils.logging_setup(_plugins.config_obj.data)
-    logger = logging.getLogger(__name__)
-    socket.setdefaulttimeout(5.0)
-    IN_QUEUE = _m3u8_queue
-    STREAM_QUEUE = Queue(maxsize=MAX_STREAM_QUEUE_SIZE)
-    OUT_QUEUE = _data_queue
-    p_m3u8 = M3U8Process(_config, _plugins, _channel_dict)
     try:
+        utils.logging_setup(_plugins.config_obj.data)
+        logger = logging.getLogger(__name__)
+        socket.setdefaulttimeout(5.0)
+        IN_QUEUE = _m3u8_queue
+        STREAM_QUEUE = Queue(maxsize=MAX_STREAM_QUEUE_SIZE)
+        OUT_QUEUE = _data_queue
+        p_m3u8 = M3U8Process(_config, _plugins, _channel_dict)
         while not TERMINATE_REQUESTED:
             try:
                 q_item = IN_QUEUE.get()
@@ -558,5 +560,8 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
     except Exception as ex:
         logger.exception('{}{}'.format(
             'UNEXPECTED EXCEPTION start=', ex))
+        TERMINATE_REQUESTED = True
+        sys.exit()
+    except KeyboardInterrupt:
         TERMINATE_REQUESTED = True
         sys.exit()
