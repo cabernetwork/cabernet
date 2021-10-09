@@ -369,15 +369,21 @@ def _parse_byterange(line, state):
 
 
 def _parse_simple_parameter_raw_value(line, cast_to=str, normalize=False):
-    param, value = line.split(':', 1)
-    param = normalize_attribute(param.replace('#EXT-X-', ''))
-    if normalize:
-        value = value.strip().lower()
-    return param, cast_to(value)
+    try:
+        param, value = line.split(':', 1)
+        param = normalize_attribute(param.replace('#EXT-X-', ''))
+        if normalize:
+            value = value.strip().lower()
+        return param, cast_to(value)
+    except ValueError:
+        # badly formatted msg, return None
+        return None, None
 
 
 def _parse_and_set_simple_parameter_raw_value(line, data, cast_to=str, normalize=False):
     param, value = _parse_simple_parameter_raw_value(line, cast_to, normalize)
+    if param is None:
+        return None
     data[param] = value
     return data[param]
 

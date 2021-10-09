@@ -164,7 +164,7 @@ class TunerHttpHandler(WebHTTPHandler):
                     .format(self.real_namespace, self.real_instance, sid))
                 self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
                 return
-        except KeyError:
+        except (KeyError, TypeError):
             self.logger.warning('Unknown Channel ID, not found in database {} {} {}' \
                 .format(_namespace, _instance, sid))
             self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))

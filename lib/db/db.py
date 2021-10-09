@@ -19,6 +19,7 @@ substantial portions of the Software.
 import logging
 import os
 import pathlib
+import random
 import sqlite3
 import threading
 import time
@@ -68,6 +69,11 @@ class DB:
             del DB.conn[self.db_name][threading.get_ident()]
             raise e
 
+    def rnd_sleep(self, _sec):
+        r = random.randrange(0,50)
+        sec = _sec + r / 100
+        time.sleep(sec)
+
     def add(self, _table, _values):
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_ADD_ROW])]
@@ -81,10 +87,11 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('Add request ignored, retrying {}'.format(e))
+                self.logger.warning('Add request ignored, retrying {}, {}'.format(i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
+                self.rnd_sleep(0.3)
         return None
 
     def delete(self, _table, _values):
@@ -100,10 +107,11 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('Delete request ignored, retrying {}'.format(e))
+                self.logger.warning('Delete request ignored, retrying {}, {}'.format(i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
+                self.rnd_sleep(0.3)
         return None
 
     def update(self, _table, _values=None):
@@ -119,10 +127,11 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('Update request ignored, retrying {}'.format(e))
+                self.logger.warning('Update request ignored, retrying {}, {}'.format(i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
+                self.rnd_sleep(0.3)
         return None
 
     def commit(self):
@@ -144,9 +153,11 @@ class DB:
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
+                self.rnd_sleep(0.3)
         return None
 
     def get_dict(self, _table, _where=None, sql=None):
+        cur = None
         if sql is None:
             sqlcmd = self.sqlcmds[''.join([_table, SQL_GET])]
         else:
@@ -167,6 +178,7 @@ class DB:
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
+                self.rnd_sleep(0.3)
         return None
 
     def get_init(self, _table, _where=None):

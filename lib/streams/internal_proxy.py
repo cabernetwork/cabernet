@@ -153,6 +153,10 @@ class InternalProxy(Stream):
         while not self.out_queue.empty():
             self.idle_counter = 0
             out_queue_item = self.out_queue.get()
+            if out_queue_item['atsc'] is not None:
+                self.channel_dict['atsc'] = out_queue_item['atsc']
+                self.db_channels.update_channel_atsc(
+                    self.channel_dict)
             uri = out_queue_item['uri']
             if uri == 'terminate':
                 raise exceptions.CabernetException('m3u8 queue termination requested, aborting stream {}' \

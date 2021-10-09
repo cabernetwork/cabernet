@@ -102,7 +102,8 @@ class M3U8Queue(Thread):
                 elif queue_item['uri_dt'] == 'status':
                     OUT_QUEUE.put({'uri': 'running',
                         'data': None,
-                        'stream': None})
+                        'stream': None,
+                        'atsc': None})
                     time.sleep(0.01)
                     continue
                 self.process_m3u8_item(queue_item)
@@ -154,9 +155,8 @@ class M3U8Queue(Thread):
             if len(p_list) != 0:
                 self.atsc = p_list
                 self.channel_dict['atsc'] = p_list
-                self.db_channels.update_channel_atsc(
-                    self.channel_dict)
                 self.initialized_psi = True
+                return p_list
 
         elif not self.initialized_psi:
             p_list = self.atsc_msg.extract_psip(self.video.data)
@@ -164,10 +164,9 @@ class M3U8Queue(Thread):
                 if p_list[i][4:] != self.atsc[i][4:]:
                     self.atsc = p_list
                     self.channel_dict['atsc'] = p_list
-                    self.db_channels.update_channel_atsc(
-                        self.channel_dict)
                     self.initialized_psi = True
-                    break
+                    return p_list
+        return None
 
     def process_m3u8_item(self, _queue_item):
         global TERMINATE_REQUESTED
@@ -178,11 +177,14 @@ class M3U8Queue(Thread):
         if data['filtered']:
             OUT_QUEUE.put({'uri': uri_dt[0],
                 'data': data,
-                'stream': self.get_stream_from_atsc()})
+                'stream': self.get_stream_from_atsc(),
+                'atsc': None})
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
         else:
             self.video.data = self.get_uri_data(uri_dt[0])
+            if uri_dt not in PLAY_LIST.keys():
+                return
             if self.video.data is None:
                 PLAY_LIST[uri_dt]['played'] = True
                 return
@@ -190,7 +192,8 @@ class M3U8Queue(Thread):
                 # terminate if stream is not decryptable
                 OUT_QUEUE.put({'uri': 'terminate',
                     'data': data,
-                    'stream': None})
+                    'stream': None,
+                    'atsc': None})
                 TERMINATE_REQUESTED = True
                 self.pts_resync.terminate()
                 self.clear_queues()
@@ -201,20 +204,25 @@ class M3U8Queue(Thread):
                 PLAY_LIST[uri_dt]['played'] = True
                 OUT_QUEUE.put({'uri': uri_dt[0],
                     'data': data,
-                    'stream': None})
+                    'stream': None,
+                    'atsc': None
+                    })
                 return
             self.pts_resync.resequence_pts(self.video)
             if self.video.data is None:
                 OUT_QUEUE.put({'uri': uri_dt[0],
                     'data': data,
-                    'stream': self.video.data})
+                    'stream': self.video.data,
+                    'atsc': None})
                 PLAY_LIST[uri_dt]['played'] = True
                 time.sleep(0.01)
                 return
-            self.atsc_processing()
+            atsc_default_msg = self.atsc_processing()
             OUT_QUEUE.put({'uri': uri_dt[0],
                 'data': data,
-                'stream': self.video.data})
+                'stream': self.video.data,
+                'atsc': atsc_default_msg
+                })
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
 
@@ -290,14 +298,16 @@ class M3U8Process(Thread):
             self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
             OUT_QUEUE.put({'uri': 'terminate',
                 'data': None,
-                'stream': None})
+                'stream': None,
+                'atsc': None})
             TERMINATE_REQUESTED = True
             time.sleep(0.01)
             return
         else:
             OUT_QUEUE.put({'uri': 'running',
                 'data': None,
-                'stream': None})
+                'stream': None,
+                'atsc': None})
             time.sleep(0.01)
         self.is_running = True
         self.duration = 6

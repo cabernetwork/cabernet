@@ -249,6 +249,8 @@ class DBChannels(DB):
 
         rows_dict = {}
         rows = self.get_dict(DB_CHANNELS_TABLE, (_namespace, _instance,))
+        if rows is None:
+            return None
         for row in rows:
             ch = json.loads(row['json'])
             row['json'] = ch
