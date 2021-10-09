@@ -189,6 +189,11 @@ class M3U8Queue(Thread):
                 return
             if self.video.data is None:
                 PLAY_LIST[uri_dt]['played'] = True
+                OUT_QUEUE.put({'uri': uri_dt[0],
+                    'data': data,
+                    'stream': None,
+                    'atsc': None
+                    })
                 return
             if not self.decrypt_stream(data):
                 # terminate if stream is not decryptable
