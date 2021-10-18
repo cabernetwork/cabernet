@@ -17,6 +17,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import datetime
 import errno
 import logging
 import re
@@ -54,6 +55,26 @@ class EPG:
         self.namespace = _webserver.query_data['name']
         self.instance = _webserver.query_data['instance']
         self.tv_tag = False
+        self.today = datetime.datetime.utcnow().date()
+
+    def get_next_epg_day(self):
+        is_enabled = False
+        while not is_enabled:
+            day_data, ns, inst, day = self.epg_db.get_next_row()
+            if day_data is None:
+                is_enabled = True
+                break
+            if day < self.today:
+                continue
+            config_section = utils.instance_config_section(ns, inst)
+            if not self.config[ns.lower()]['enabled']:
+                continue
+            if not self.config[config_section]['enabled']:
+                continue
+            if not self.config[config_section]['epg-enabled']:
+                continue
+            is_enabled = True
+        return day_data, ns, inst, day
 
     def get_epg_xml(self, _webserver):
         try:
@@ -68,7 +89,8 @@ class EPG:
             xml_out = None
 
             self.epg_db.init_get_query(self.namespace, self.instance)
-            day_data, ns, inst, day = self.epg_db.get_next_row()
+            
+            day_data, ns, inst, day = self.get_next_epg_day()
             self.logger.debug('Processing EPG data {}:{} {}' \
                 .format(ns, inst, day))
             self.prog_processed = []
@@ -77,7 +99,7 @@ class EPG:
                 self.gen_program_xml(xml_out, day_data, channel_list, ns, inst)
                 self.write_xml(xml_out)
                 xml_out.clear()
-                day_data, ns, inst, day = self.epg_db.get_next_row()
+                day_data, ns, inst, day = self.get_next_epg_day()
                 self.logger.debug('Processing EPG data {}:{} {}' \
                     .format(ns, inst, day))
             self.epg_db.close_query()
@@ -145,6 +167,8 @@ class EPG:
                 if not ch_data['enabled']:
                     continue
                 config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
+                if not self.config[ch_data['namespace'].lower()]['enabled']:
+                    continue
                 if not self.config[config_section]['enabled']:
                     continue
                 if not self.config[config_section]['epg-enabled']:
@@ -182,6 +206,9 @@ class EPG:
                             skip = True
                             break
                         config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
+                        if not self.config[ch_data['namespace'].lower()]['enabled']:
+                            skip = True
+                            break
                         if not self.config[config_section]['enabled']:
                             skip = True
                             break

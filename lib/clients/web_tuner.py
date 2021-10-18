@@ -42,7 +42,7 @@ def tunerstatus(_webserver):
     _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans))
 
 
-@gettunerrequest.route('/watch')
+@gettunerrequest.route('RE:/watch/.+')
 def watch(_webserver):
     sid = _webserver.content_path.replace('/watch/', '')
     _webserver.do_tuning(sid, _webserver.query_data['name'], _webserver.query_data['instance'])
@@ -55,7 +55,7 @@ def logreset(_webserver):
     self.do_mime_response(200, 'text/html')
 
 
-@gettunerrequest.route('/auto/v')
+@gettunerrequest.route('RE:/auto/v.+')
 def logreset(_webserver):
     channel = _webserver.content_path.replace('/auto/v', '')
     station_list = TunerHttpHandler.channels_db.get_channels(

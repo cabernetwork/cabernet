@@ -1,0 +1,26 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "common":{
+                "label": "Common",
+                "sort": "Common1",
+                "icon": "cast",
+                "description": "Common settings for plugins",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "Will disable if an error occurs. Set to disable to disable all instances"
+                    }
+                }
+            }
+        }
+    }
+}
+

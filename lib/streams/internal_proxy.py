@@ -156,6 +156,8 @@ class InternalProxy(Stream):
             out_queue_item = self.out_queue.get()
             if out_queue_item['atsc'] is not None:
                 self.channel_dict['atsc'] = out_queue_item['atsc']
+                #self.logger.debug('###### SAVING TO DB {}'.format(len(out_queue_item['atsc'])))
+
                 self.db_channels.update_channel_atsc(
                     self.channel_dict)
             uri = out_queue_item['uri']

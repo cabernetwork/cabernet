@@ -37,7 +37,6 @@ import lib.common.utils as utils
 import lib.m3u8 as m3u8
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-from lib.db.db_channels import DBChannels
 from lib.streams.atsc import ATSCMsg
 from lib.streams.video import Video
 from .pts_validation import PTSValidation
@@ -67,6 +66,7 @@ class M3U8Queue(Thread):
         self.namespace = _channel_dict['namespace'].lower()
         self.pts_validation = None
         self.initialized_psi = False
+        self.first_segment = True
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.atsc_msg = ATSCMsg()
         self.channel_dict = _channel_dict
@@ -74,7 +74,6 @@ class M3U8Queue(Thread):
             self.pts_validation = PTSValidation(_config, _channel_dict)
         self.video = Video(self.config)
         self.atsc = _channel_dict['atsc']
-        self.db_channels = DBChannels(_config)
         self.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
         self.key_list = {}
         self.start()
@@ -158,6 +157,9 @@ class M3U8Queue(Thread):
                 self.atsc = p_list
                 self.channel_dict['atsc'] = p_list
                 self.initialized_psi = True
+                #self.logger.debug('###### SENDING PACKETS TO INTERNAL_PROXY {}'.format(len(p_list)))
+                #self.logger.debug('{}'.format(p_list))
+                
                 return p_list
 
         elif not self.initialized_psi:
@@ -215,6 +217,12 @@ class M3U8Queue(Thread):
                     'atsc': None
                     })
                 return
+                
+            if self.first_segment:
+                #print('writing out FIRST segment')
+                self.first_segment = False
+                #print('writing out FIRST segment')
+            
             self.pts_resync.resequence_pts(self.video)
             if self.video.data is None:
                 OUT_QUEUE.put({'uri': uri_dt[0],
@@ -406,6 +414,8 @@ class M3U8Process(Thread):
                 seg_to_play = num_segments
             
             skipped_seg = num_segments-seg_to_play
+            #total_added += self.add_segment(_playlist.segments[0], keys[0])
+            
             for m3u8_segment, key in zip(_playlist.segments[0:skipped_seg], keys[0:skipped_seg]):
                 total_added += self.add_segment(m3u8_segment, key, _default_played=True)
             for i in range(skipped_seg, num_segments):

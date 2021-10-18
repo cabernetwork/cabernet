@@ -46,6 +46,21 @@ class PluginChannels:
         self.instance_key = _instance_obj.instance_key
         self.db = DBChannels(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
+        self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
+
+
+    def set_channel_num(self, _number):
+        """
+        if _number is None then will set the channel number based
+        on the enum counter
+        """
+        if _number is None:
+            ch_number = self.ch_num_enum
+            self.ch_num_enum += 1
+            return ch_number
+        else:
+            return _number
+
 
     def get_channels(self):
         """
@@ -64,10 +79,10 @@ class PluginChannels:
             return json.load(resp)
 
     @handle_url_except()
-    def get_uri_data(self, _uri):
+    def get_uri_data(self, _uri, _data=None):
         header = {
             'User-agent': utils.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(_uri, headers=header)
+        req = urllib.request.Request(_uri, data=_data, headers=header)
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             return resp.read()
 

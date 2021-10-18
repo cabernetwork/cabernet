@@ -21,6 +21,7 @@ import http
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import socket
@@ -211,6 +212,8 @@ class Request:
     def route(self, *pattern):
         def wrap(func):
             for p in pattern:
+                if p.startswith('RE:'):
+                    p = re.compile(p.replace('RE:',''))
                 self.url2func[p] = func
             return func
         return wrap
@@ -225,14 +228,11 @@ class Request:
             self.url2func[_name](_webserver, *args, **kwargs)
             return True
         else:
-            # This should change to use a regular expression
-            longest_uri = ''
             for uri in self.url2func.keys():
-                if _name.startswith(uri) and len(uri) > len(longest_uri):
-                    longest_uri = uri
-            if len(longest_uri) > 0:
-                self.url2func[longest_uri](_webserver, *args, **kwargs)
-                return True
+                if type(uri) is re.Pattern:
+                    if len(uri.findall(_name)) > 0:
+                        self.url2func[uri](_webserver, *args, **kwargs)
+                        return True
             return False
 
 

@@ -66,6 +66,7 @@ class PluginEPG:
             self.refresh_programs(epg_day, False)
         for epg_day in aging_dates:
             self.refresh_programs(epg_day, True)
+        self.logger.info('{}:{} EPG update completed'.format(self.plugin_obj.name, self.instance_key))
 
     def refresh_programs(self, _epg_day, use_cache=True):
         """

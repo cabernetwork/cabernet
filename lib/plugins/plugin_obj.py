@@ -36,16 +36,16 @@ class PluginObj:
         self.plugin = _plugin
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
-        self.instances = {}
-        self.scheduler_db = DBScheduler(self.config_obj.data)
-        self.scheduler_tasks()
-        self.enabled = True
         self.def_trans = ''.join([
             string.ascii_uppercase,
             string.ascii_lowercase,
             string.digits,
             '+/'
             ]).encode()
+        self.instances = {}
+        self.scheduler_db = DBScheduler(self.config_obj.data)
+        self.scheduler_tasks()
+        self.enabled = True
         self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
     # INTERFACE METHODS

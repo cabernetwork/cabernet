@@ -32,6 +32,7 @@ xumo_groups = {
     'Food, Drink & Travel': groups['TRAVEL'],
     'Kids & Family':        groups['KIDS'],
     'Halloween HQ':         groups['HOLIDAY'],
+    'Holiday':              groups['HOLIDAY'],
     'Latinx':               groups['SPANISH'],
     'Latinx Heritage Month': groups['SPANISH'],
     'Lifestyle':            groups['LIFESTYLE'],

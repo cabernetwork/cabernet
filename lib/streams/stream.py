@@ -75,7 +75,7 @@ class Stream:
             return {
                 'tuner': i,
                 'code': 200,
-                'headers': {'Content-type': 'video/MP2T; Transfer-Encoding: chunked codecs="avc1.4D401E"'},
+                'headers': {'Content-type': 'video/MP2T;'},
                 'text': None}
         else:
             self.logger.warning('All tuners already in use [{}][{}]' \

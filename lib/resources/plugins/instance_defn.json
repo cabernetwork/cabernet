@@ -1,0 +1,33 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "common":{
+                "label": "Common",
+                "sort": "Common2",
+                "icon": "cast_connected",
+                "description": "Common settings for plugin Instances",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 0,
+                        "help": "Will disable this instance only"
+                    },
+                    "label":{
+                        "label": "Label",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "onChange": "lib.config.config_callbacks.update_instance_label",
+                        "help": "Please restart app following a change."
+                    }
+                }
+            }
+        }
+    }
+}
