@@ -104,7 +104,7 @@
     "GuideName": "DIY"
 },{
     "ChannelId": "9200012343",
-    "CallSign": "E!",
+    "CallSign": "E",
     "GuideName": "E!"
 },{
     "ChannelId": "9200006937",
@@ -204,7 +204,7 @@
     "GuideName": "Lifetime"
 },{
     "ChannelId": "9233009825",
-    "CallSign": "LIFEMOV",
+    "CallSign": "LifetimeM",
     "GuideName": "Lifetime Movies"
 },{
     "ChannelId": "9200009223",
@@ -272,7 +272,7 @@
     "GuideName": "Olympics"
 },{
     "ChannelId": "9200004949",
-    "CallSign": "OXYGN",
+    "CallSign": "Oxygen",
     "GuideName": "Oxygen"
 },{
     "ChannelId": "9233013810",
@@ -356,7 +356,7 @@
     "GuideName": "Univisión"
 },{
     "ChannelId": "9233004106",
-    "CallSign": "USA",
+    "CallSign": "USANetwork",
     "GuideName": "USA"
 },{
     "ChannelId": "9233000037",
