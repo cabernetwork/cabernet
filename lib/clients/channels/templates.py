@@ -20,6 +20,8 @@ ch_templates = {
 
     'jsonLineup':
         """{{
+            "ChannelId": "{}",
+            "CallSign": "{}",
             "GuideNumber": "{}",
             "GuideName": "{}",
             "URL": "http://{}",

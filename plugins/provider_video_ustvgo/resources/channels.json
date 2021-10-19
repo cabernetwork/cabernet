@@ -1,0 +1,373 @@
+[{
+    "ChannelId": "9233011874",
+    "CallSign": "ABC",
+    "GuideName": "ABC"
+},{
+    "ChannelId": "9200017734",
+    "CallSign": "ACCN",
+    "GuideName": "ACC"
+},{
+    "ChannelId": "9200004889",
+    "CallSign": "AE",
+    "GuideName": "A&E"
+},{
+    "ChannelId": "9233011832",
+    "CallSign": "AMC",
+    "GuideName": "AMC"
+},{
+    "ChannelId": "9200018479",
+    "CallSign": "Animal",
+    "GuideName": "Animal Planet"
+},{
+    "ChannelId": "9200014701",
+    "CallSign": "BBCAmerica",
+    "GuideName": "BBC America"
+},{
+    "ChannelId": "9200004533",
+    "CallSign": "BTN",
+    "GuideName": "Big Ten"
+},{
+    "ChannelId": "9233005931",
+    "CallSign": "BET",
+    "GuideName": "BET"
+},{
+    "ChannelId": "9233015844",
+    "CallSign": "Boomerang",
+    "GuideName": "Boomerang"
+},{
+    "ChannelId": "9200002886",
+    "CallSign": "Bravo",
+    "GuideName": "Bravo"
+},{
+    "ChannelId": "9233007144",
+    "CallSign": "CSPAN",
+    "GuideName": "C-SPAN"
+},{
+    "ChannelId": "9200018514",
+    "CallSign": "CBS",
+    "GuideName": "CBS"
+},{
+    "ChannelId": "9233015468",
+    "CallSign": "CBSSN",
+    "GuideName": "CBS Sports"
+},{
+    "ChannelId": "9233009829",
+    "CallSign": "Cinemax",
+    "GuideName": "Cinemax"
+},{
+    "ChannelId": "9200012085",
+    "CallSign": "CMT",
+    "GuideName": "CMT"
+},{
+    "ChannelId": "9200004848",
+    "CallSign": "CN",
+    "GuideName": "Cartoon Network"
+},{
+    "ChannelId": "9200009413",
+    "CallSign": "CNBC",
+    "GuideName": "CNBC"
+},{
+    "ChannelId": "9233013812",
+    "CallSign": "CNN",
+    "GuideName": "CNN"
+},{
+    "ChannelId": "9200000657",
+    "CallSign": "Comedy",
+    "GuideName": "Comedy Central"
+},{
+    "ChannelId": "9233011398",
+    "CallSign": "CW",
+    "GuideName": "CW"
+},{
+    "ChannelId": "9200014472",
+    "CallSign": "DA",
+    "GuideName": "Destination America"
+},{
+    "ChannelId": "9233004102",
+    "CallSign": "Discovery",
+    "GuideName": "Discovery"
+},{
+    "ChannelId": "9200018475",
+    "CallSign": "Disney",
+    "GuideName": "Disney"
+},{
+    "ChannelId": "9200016560",
+    "CallSign": "DisneyJr",
+    "GuideName": "DisneyJr"
+},{
+    "ChannelId": "9200004852",
+    "CallSign": "DisneyXD",
+    "GuideName": "DisneyXD"
+},{
+    "ChannelId": "9200012415",
+    "CallSign": "DIY",
+    "GuideName": "DIY"
+},{
+    "ChannelId": "9200012343",
+    "CallSign": "E!",
+    "GuideName": "E!"
+},{
+    "ChannelId": "9200006937",
+    "CallSign": "ESPN",
+    "GuideName": "ESPN"
+},{
+    "ChannelId": "9200012351",
+    "CallSign": "ESPN2",
+    "GuideName": "ESPN2"
+},{
+    "ChannelId": "9233011350",
+    "CallSign": "ESPNU",
+    "GuideName": "ESPNU"
+},{
+    "ChannelId": "9200006523",
+    "CallSign": "ESPNews",
+    "GuideName": "ESPNews"
+},{
+    "ChannelId": "9233009448",
+    "CallSign": "FoodNetwork",
+    "GuideName": "Food Network"
+},{
+    "ChannelId": "9233002271",
+    "CallSign": "FOX",
+    "GuideName": "FOX"
+},{
+    "ChannelId": "9200009124",
+    "CallSign": "FoxBusiness",
+    "GuideName": "Fox Business"
+},{
+    "ChannelId": "9233000410",
+    "CallSign": "FoxNews",
+    "GuideName": "Fox News"
+},{
+    "ChannelId": "9200006942",
+    "CallSign": "Freeform",
+    "GuideName": "Freeform"
+},{
+    "ChannelId": "9233008440",
+    "CallSign": "FS1",
+    "GuideName": "Fox Sports 1"
+},{
+    "ChannelId": "9200009884",
+    "CallSign": "FS2",
+    "GuideName": "Fox Sports 2"
+},{
+    "ChannelId": "9200006932",
+    "CallSign": "FX",
+    "GuideName": "FX"
+},{
+    "ChannelId": "9233013967",
+    "CallSign": "FXMovie",
+    "GuideName": "FX Movie"
+},{
+    "ChannelId": "9200018644",
+    "CallSign": "FXX",
+    "GuideName": "FXX"
+},{
+    "ChannelId": "9233005443",
+    "CallSign": "GOLF",
+    "GuideName": "Golf Channel"
+},{
+    "ChannelId": "9200019858",
+    "CallSign": "GSN",
+    "GuideName": "Game Show"
+},{
+    "ChannelId": "9200016034",
+    "CallSign": "Hallmark",
+    "GuideName": "Hallmark"
+},{
+    "ChannelId": "9200004886",
+    "CallSign": "HBO",
+    "GuideName": "HBO"
+},{
+    "ChannelId": "9233004104",
+    "CallSign": "HGTV",
+    "GuideName": "HGTV"
+},{
+    "ChannelId": "9233008002",
+    "CallSign": "History",
+    "GuideName": "History"
+},{
+    "ChannelId": "9233005762",
+    "CallSign": "HLN",
+    "GuideName": "Headline News"
+},{
+    "ChannelId": "9200020115",
+    "CallSign": "HMM",
+    "GuideName": "Hallmark Movies & Mysteries"
+},{
+    "ChannelId": "9200002243",
+    "CallSign": "ID",
+    "GuideName": "Investigation Discovery"
+},{
+    "ChannelId": "9200020452",
+    "CallSign": "Lifetime",
+    "GuideName": "Lifetime"
+},{
+    "ChannelId": "9233009825",
+    "CallSign": "LIFEMOV",
+    "GuideName": "Lifetime Movies"
+},{
+    "ChannelId": "9200009223",
+    "CallSign": "MLB",
+    "GuideName": "MLB Network"
+},{
+    "ChannelId": "9233003479",
+    "CallSign": "MotorTrend",
+    "GuideName": "Motor Trend"
+},{
+    "ChannelId": "9233006803",
+    "CallSign": "MSNBC",
+    "GuideName": "MSNBC"
+},{
+    "ChannelId": "9200014754",
+    "CallSign": "MTV",
+    "GuideName": "MTV"
+},{
+    "ChannelId": "9233002310",
+    "CallSign": "NatGEO",
+    "GuideName": "National Geographic"
+},{
+    "ChannelId": "9200004683",
+    "CallSign": "NatGEOWild",
+    "GuideName": "Nat Geo Wild"
+},{
+    "ChannelId": "9200000070",
+    "CallSign": "NBA",
+    "GuideName": "NBA Network"
+},{
+    "ChannelId": "9233009876",
+    "CallSign": "NBC",
+    "GuideName": "NBC"
+},{
+    "ChannelId": "9233000030",
+    "CallSign": "NBCSN",
+    "GuideName": "NBC Sports"
+},{
+    "ChannelId": "9200004330",
+    "CallSign": "NFL",
+    "GuideName": "NFL Network"
+},{
+    "ChannelId": "9233000241",
+    "CallSign": "NFLRZ",
+    "GuideName": "NFL Redzone"
+},{
+    "ChannelId": "9200006939",
+    "CallSign": "Nickelodeon",
+    "GuideName": "Nickelodeon"
+},{
+    "ChannelId": "9200020469",
+    "CallSign": "Nicktoons",
+    "GuideName": "Nicktoons"
+},{
+    "ChannelId": "9200005058",
+    "CallSign": "OAN",
+    "GuideName": "One America News"
+},{
+    "ChannelId": "9200002736",
+    "CallSign": "OWN",
+    "GuideName": "Oprah Winfrey Network"
+},{
+    "ChannelId": "9233008939",
+    "CallSign": "OLY",
+    "GuideName": "Olympics"
+},{
+    "ChannelId": "9200004949",
+    "CallSign": "OXYGN",
+    "GuideName": "Oxygen"
+},{
+    "ChannelId": "9233013810",
+    "CallSign": "Paramount",
+    "GuideName": "Paramount"
+},{
+    "ChannelId": "9233004141",
+    "CallSign": "PBS",
+    "GuideName": "PBS"
+},{
+    "ChannelId": "9200020464",
+    "CallSign": "POP",
+    "GuideName": "Pop"
+},{
+    "ChannelId": "9200019847",
+    "CallSign": "Science",
+    "GuideName": "Science"
+},{
+    "ChannelId": "9233002484",
+    "CallSign": "SECN",
+    "GuideName": "SEC Network"
+},{
+    "ChannelId": "9200016599",
+    "CallSign": "Showtime",
+    "GuideName": "Showtime"
+},{
+    "ChannelId": "9233013809",
+    "CallSign": "StarZ",
+    "GuideName": "Starz"
+},{
+    "ChannelId": "9233001687",
+    "CallSign": "SundanceTV",
+    "GuideName": "SundanceTV"
+},{
+    "ChannelId": "9200004316",
+    "CallSign": "SYFY",
+    "GuideName": "Syfy"
+},{
+    "ChannelId": "9233000403",
+    "CallSign": "TBS",
+    "GuideName": "TBS"
+},{
+    "ChannelId": "9200017928",
+    "CallSign": "TCM",
+    "GuideName": "Turner Classic Movies"
+},{
+    "ChannelId": "9200011857",
+    "CallSign": "Telemundo",
+    "GuideName": "Telemundo"
+},{
+    "ChannelId": "9200017917",
+    "CallSign": "Tennis",
+    "GuideName": "Tennis Network"
+},{
+    "ChannelId": "9233004112",
+    "CallSign": "TLC",
+    "GuideName": "TLC"
+},{
+    "ChannelId": "9233011830",
+    "CallSign": "TNT",
+    "GuideName": "TNT"
+},{
+    "ChannelId": "9233000035",
+    "CallSign": "Travel",
+    "GuideName": "Travel"
+},{
+    "ChannelId": "9200009547",
+    "CallSign": "TruTV",
+    "GuideName": "truTV (East)"
+},{
+    "ChannelId": "9233005468",
+    "CallSign": "TVLand",
+    "GuideName": "TV Land"
+},{
+    "ChannelId": "9200016258",
+    "CallSign": "TWC",
+    "GuideName": "The Weather Channel"
+},{
+    "ChannelId": "9200000867",
+    "CallSign": "Univision",
+    "GuideName": "Univisión"
+},{
+    "ChannelId": "9233004106",
+    "CallSign": "USA",
+    "GuideName": "USA"
+},{
+    "ChannelId": "9233000037",
+    "CallSign": "VH1",
+    "GuideName": "VH1"
+},{
+    "ChannelId": "9200018188",
+    "CallSign": "WETV",
+    "GuideName": "WE TV"
+},{
+    "ChannelId": "9200004247",
+    "CallSign": "YES",
+    "GuideName": "YES Network"
+}]

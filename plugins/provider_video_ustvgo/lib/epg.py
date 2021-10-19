@@ -38,6 +38,7 @@ class EPG(PluginEPG):
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
         self.db_programs = DBEpgPrograms(self.config_obj.data)
+        self.first_day = True
 
     def dates_to_pull(self):
         """
@@ -83,8 +84,11 @@ class EPG(PluginEPG):
         prev_midnight = int(epg_datetime.timestamp() // 86400 * 86400)
         next_midnight = int((epg_datetime.timestamp() // 86400)+1) * 86400
         prog_list = []
+        # process all the channels listed on the website with EPG data
+        ch_ids_processed = []
         for ch_dict in _prog_json:
             ch_id = str(ch_dict['channel']['sourceId'])
+            ch_ids_processed.append(ch_id)
             if ch_id not in _ch_list.keys():
                 continue
             if not _ch_list[ch_id][0]['enabled']:
@@ -108,7 +112,48 @@ class EPG(PluginEPG):
                     'se_progid': None,
                     'details': prog['programDetails']
                     })
+
+        # process the channels not listed with EPG data
+        extra_prog = self.process_missing_channels(ch_ids_processed, _ch_list)
+        prog_list = [ *prog_list, *extra_prog ]
         return prog_list
+
+
+    def process_missing_channels(self, _ch_ids_processed, _ch_list):
+        if not self.first_day:
+            return []
+        self.first_day = False
+        prog_list = []
+        for ch_id in _ch_list.keys():
+            if ch_id in _ch_ids_processed:
+                continue
+            if not _ch_list[ch_id][0]['enabled']:
+                continue
+
+            prog_json = self.get_uri_data(self.plugin_obj.unc_ustvgo_epg % (ch_id, ''))
+            if prog_json is None:
+                continue
+            prog_json = prog_json['items'][list(prog_json['items'].keys())[0]]
+            for prog in prog_json:
+                start_time = utils.tm_local_parse(prog['start_timestamp'] * 1000)
+                end_time = utils.tm_local_parse(prog['end_timestamp'] * 1000)
+                dur_min = dur_min = int((prog['start_timestamp'] - prog['end_timestamp']) / 60)
+                prog_list.append(
+                    {'channel': ch_id, 'progid': prog['id'], 'start': start_time, 'stop': end_time,
+                    'length': dur_min, 'title': prog['name'], 'subtitle': None, 'entity_type': None,
+                    'desc': 'Unavailable', 'short_desc': 'Unavailable',
+                    'video_quality': None, 'cc': None, 'live': None, 'finale': None,
+                    'premiere': None, 'air_date': None, 'formatted_date': None, 'icon': None,
+                    'rating': None, 'is_new': None, 'genres': None, 
+                    'directors': None, 'actors': None,
+                    'season': None, 'episode': None, 'se_common': None, 'se_xmltv_ns': None,
+                    'se_progid': None,
+                    'details': self.plugin_obj.unc_ustvgo_program % (prog['id'])
+                    })
+            
+        return prog_list
+
+
 
     def update_program_info(self, _prog):
         if 'details' not in _prog:
@@ -165,6 +210,7 @@ class EPG(PluginEPG):
         del _prog['details']
 
     def get_program_details(self, _prog):
+    
         prog_details = self.db_programs.get_program(self.plugin_obj.name, _prog['progid'])
         if len(prog_details) != 0:
             return json.loads(prog_details[0]['json'])
@@ -196,3 +242,4 @@ class EPG(PluginEPG):
 
         self.db_programs.save_program(self.plugin_obj.name, _prog['progid'], program)
         return program
+

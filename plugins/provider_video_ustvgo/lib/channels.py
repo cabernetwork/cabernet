@@ -21,6 +21,7 @@ import re
 import time
 import urllib.request
 import urllib.parse
+from importlib import resources
 
 import lib.common.utils as utils
 import lib.common.exceptions as exceptions
@@ -37,25 +38,26 @@ class Channels(PluginChannels):
         super().__init__(_instance_obj)
 
     def get_channels(self):
-    
-        ch_json = self.get_uri_json_data(self.plugin_obj.unc_ustvgo_channels)
+        """
+        USTVGO has numerous bad callsigns being listed.  A manual lookup table is 
+        being used at plugin/resource/channel.json
+        This will need to be periodically updated.  Currently, a manual process.
+        See https://github.com/benmoose39/ustvgo_to_m3u
+        Currently, the channel id must correlate to the national.json file, if present.
+        """
+        ch_real_callsigns = self.load_channel_lookup()
         ch_list = []
-        if ch_json is None or len(ch_json) == 0:
-            self.logger.warning('{} HTTP Channel Request Failed for instance {}' \
-                .format(self.plugin_obj.name, self.instance_key))
-            raise exceptions.CabernetException('{} HTTP Channel Request Failed' \
-                .format(self.plugin_obj.name))
         self.logger.info("{}: Found {} stations on instance {}"
-            .format(self.plugin_obj.name, len(ch_json),
+            .format(self.plugin_obj.name, len(ch_real_callsigns),
             self.instance_key))
-        for channel_dict in ch_json:
+        for channel_dict in ch_real_callsigns:
             hd = 0
-            ch_id = str(channel_dict['channel']['sourceId'])
-            ch_callsign = channel_dict['channel']['name']
+            ch_id = channel_dict['ChannelId']
+            ch_callsign = channel_dict['CallSign']
             thumbnail = None
             thumbnail_size = None
             ch_number = self.set_channel_num(None)
-            friendly_name = channel_dict['channel']['fullName']
+            friendly_name = channel_dict['GuideName']
             groups_other = None            
             channel = {
                 'id': ch_id,
@@ -71,6 +73,7 @@ class Channels(PluginChannels):
                 'thumbnail_size': thumbnail_size,
             }
             ch_list.append(channel)
+        ch_real_callsigns = None
         return ch_list
     
     def get_channel_uri(self, _channel_id):
@@ -83,3 +86,6 @@ class Channels(PluginChannels):
         data = urllib.parse.urlencode({'stream': _callsign}).encode()    
         return self.get_uri_data(self.plugin_obj.unc_ustvgo_stream, _data=data).decode('utf-8')
 
+    def load_channel_lookup(self):
+        json_file = resources.read_text(self.plugin_obj.plugin.plugin_path + '.resources', 'channels.json')
+        return json.loads(json_file)

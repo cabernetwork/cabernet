@@ -25,6 +25,7 @@ ustvgo_channels = 'gfpMXf5BjIUCXRpNtNHFzfkQzft8zb7otqUFksp/yNS3ywSAXNUF'
 ustvgo_png = 'gfpMXf5BjIUKzxdMgb5FXRpItbdPyx7NtqSMyIU/ybd8ts5QzfkQis5FXxS8'
 ustvgo_stream = 'gfpMXf5BjIUCXRpNtNHFzfkQtxdMkqSGgfW='
 ustvgo_epg = 'gfpMXf5BjIUCXRpNtNHFzfkQzft8zb7otqUvhMUm5YH7XISAXNUFuIrK'
+ustvgo_program = 'gfpMXf5BjIU6ybXPXfiQtwS3Xx78tbhFyZrMjRkLjR33XxoQzftKkN37tfrEts5Qzft8zb7otqUGXZU8XZdPtxrMkb7EXIH7XIURtb2='
 
 ustvgo_groups = {
     }
@@ -56,4 +57,5 @@ ustvgo_genres = {
     "Talk & Interview": [ tvh_genres['TALK_SHOW'] ],
     "Tech & Gaming": [ tvh_genres['TECHNOLOGY'] ],
     "Travel": [ tvh_genres['TRAVEL'] ],
+    "Variety Shows": [ tvh_genres['VARIETY'] ]
     }

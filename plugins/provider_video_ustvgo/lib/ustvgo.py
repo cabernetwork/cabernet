@@ -38,6 +38,8 @@ class USTVGO(PluginObj):
         self.unc_ustvgo_png = self.uncompress(translations.ustvgo_png)
         self.unc_ustvgo_stream = self.uncompress(translations.ustvgo_stream)
         self.unc_ustvgo_epg = self.uncompress(translations.ustvgo_epg)
+        self.unc_ustvgo_program = self.uncompress(translations.ustvgo_program)
+
 
     def scheduler_tasks(self):
         sched_ch_hours = random.randint(3,5)
@@ -83,6 +85,7 @@ class USTVGO(PluginObj):
             self.scheduler_db.save_trigger(
                 'EPG',
                 'Refresh {} EPG'.format(self.namespace),
-                'daily',
-                timeofday=sched_epg
+                'interval',
+                interval=160,
+                randdur=40
                 )

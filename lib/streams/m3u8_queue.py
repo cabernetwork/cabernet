@@ -574,7 +574,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
 
     except Exception as ex:
         logger.exception('{}{}'.format(
-            'UNEXPECTED EXCEPTION start=', ex))
+            'UNEXPECTED EXCEPTION startup=', str(ex)))
         TERMINATE_REQUESTED = True
         sys.exit()
     except KeyboardInterrupt:
