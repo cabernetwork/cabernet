@@ -11,6 +11,7 @@ import decimal
 import os
 import errno
 import math
+import logging
 
 from .protocol import ext_x_start, ext_x_key, ext_x_session_key, ext_x_map, extgrp, extvlcopt
 from .parser import parse, format_date_time

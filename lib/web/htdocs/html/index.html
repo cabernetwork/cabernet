@@ -41,7 +41,6 @@
     <link rel="stylesheet" type="text/css" href="/modules/emby-elements/emby-button/emby-button.css">
     <link rel="stylesheet" type="text/css" href="/modules/backdrop/style.css">
     <link rel="stylesheet" type="text/css" href="/modules/flexstyles.css">
-
     <title>cabernet</title>
 
     <style>
@@ -75,9 +74,10 @@
         }
     </style>
 
+    
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script type="text/javascript" src="/modules/navdrawer/navdrawer.js"></script>
     <script type="text/javascript" src="/api/index.js"></script>
+    <script type="text/javascript" src="/modules/navdrawer/navdrawer.js"></script>
 </head>
 
 <body>
@@ -187,17 +187,19 @@
             <div
                 class="scrollSlider flex-grow flex-direction-column padded-left padded-left-page padded-right padded-top-page padded-bottom-page dashboardContainer scrollSliderY">
                 <div class="dashboardSections" style="padding-top:.5em;">
-
-                <div id="content"></div>
-                <div class="dashboardFooter">
-                    <div style="height:1px;" class="ui-bar-inherit"></div>
-                    <div style="margin-top:1em;">
-                        <a is="emby-linkbutton" class="button-link emby-button" href="https://cabernetwork.github.io/"
-                            target="_blank">Cabernet</a>
-                        <a is="emby-linkbutton" class="button-link emby-button" href="https://tvheadend.org/boards/5/topics/43052"
-                            target="_blank">Community</a>
-                        <a is="emby-linkbutton" class="button-link emby-button" href="https://github.com/cabernetwork/cabernet"
-                            target="_blank">Github</a>
+                    <div><script id="contentState"></script></div>
+                    <div id="content"></div>
+                    <div id="status"></div>
+                    <div class="dashboardFooter">
+                        <div style="height:1px;" class="ui-bar-inherit"></div>
+                        <div style="margin-top:1em;">
+                            <a is="emby-linkbutton" class="button-link emby-button" href="https://cabernetwork.github.io/"
+                                target="_blank">Cabernet</a>
+                            <a is="emby-linkbutton" class="button-link emby-button" href="https://tvheadend.org/boards/5/topics/43052"
+                                target="_blank">Community</a>
+                            <a is="emby-linkbutton" class="button-link emby-button" href="https://github.com/cabernetwork/cabernet"
+                                target="_blank">Github</a>
+                        </div>
                     </div>
                 </div>
             </div>

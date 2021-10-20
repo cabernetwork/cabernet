@@ -20,6 +20,7 @@ from lib.common.decorators import getrequest
 
 
 @getrequest.route('/')
+@getrequest.route('/html/index.html')
 def root_url(_webserver):
     _webserver.send_response(302)
     _webserver.send_header('Location', 'html/index.html')

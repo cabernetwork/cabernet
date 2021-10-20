@@ -208,7 +208,7 @@ class EPG(PluginEPG):
         else:  # (season is not None) and (episode is None):
             se_common = 'S%02dE%02d' % (season, 0)
             se_xmltv_ns = ''.join([str(season - 1), '.', '0', '.0/1'])
-            se_prog_id = ''
+            se_prog_id = None
 
         if season is not None:
             subtitle = 'S%02dE%02d ' % (season, episode)

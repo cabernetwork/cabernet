@@ -61,6 +61,13 @@ def data_web(_webserver):
     _webserver.do_file_response(200, None, file_path)
 
 
+@getrequest.route('/tunerstatus')
+def tunerstatus(_webserver):
+    _webserver.send_response(302)
+    _webserver.send_header('Location',  '{}{}{}'.format('http://', _webserver.stream_url, '/tunerstatus'))
+    _webserver.end_headers()
+
+
 class WebAdminHttpHandler(WebHTTPHandler):
     # class variables
     hdhr_station_scan = -1
@@ -92,9 +99,9 @@ class WebAdminHttpHandler(WebHTTPHandler):
             self.plugins.config_obj.refresh_config_data()
             utils.start_mem_trace(self.config)
             self.config = self.plugins.config_obj.data
-            if getrequest.call_url(self, self.content_path):
+            if filerequest.call_url(self, self.content_path):
                 pass
-            elif filerequest.call_url(self, self.content_path):
+            elif getrequest.call_url(self, self.content_path):
                 pass
             else:
                 self.logger.notice('UNKNOWN HTTP Request {}'.format(self.content_path))
@@ -111,7 +118,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             snapshot = utils.end_mem_trace(self.config)
             utils.display_top(self.config, snapshot)
         except IOError as ex:
-            if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
+            if ex.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
                 self.logger.info('Connection dropped by end device {}'.format(ex))
             else:
                 self.logger.exception('{}{}'.format(

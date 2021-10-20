@@ -7,7 +7,7 @@ https://github.com/rocky4546
 This file is part of Cabernet
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software
-and associated documentation files (the “Software”), to deal in the Software without restriction,
+and associated documentation files (the "Software"), to deal in the Software without restriction,
 including without limitation the rights to use, copy, modify, merge, publish, distribute,
 sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
 is furnished to do so, subject to the following conditions:
@@ -16,24 +16,18 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-ch_templates = {
+from .channels import Channels
+from .epg import EPG
+from lib.plugins.plugin_instance_obj import PluginInstanceObj
 
-    'jsonLineup':
-        """{{
-            "ChannelId": "{}",
-            "CallSign": "{}",
-            "GuideNumber": "{}",
-            "GuideName": "{}",
-            "URL": "http://{}",
-            "HD": {}
-        }}""",
 
-    'xmlLineup':
-        """<Program>
-            <GuideNumber>{}</GuideNumber>
-            <GuideName>{}</GuideName>
-            <URL>http://{}</URL>
-            <HD>{}</HD>
-        </Program>"""
+class USTVGOInstance(PluginInstanceObj):
 
-}
+    def __init__(self, _ustvgo, _instance):
+        super().__init__(_ustvgo, _instance)
+        self.config_obj = _ustvgo.config_obj
+        if not self.config_obj.data[self.config_section]['enabled']:
+            return
+        self.channels = Channels(self)
+        self.epg = EPG(self)
+        

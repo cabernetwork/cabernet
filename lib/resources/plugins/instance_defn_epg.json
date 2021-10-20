@@ -1,0 +1,83 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "common":{
+                "label": "Common",
+                "sort": "Common2",
+                "icon": "cast_connected",
+                "description": "Common settings for plugin Instances",
+                "settings":{
+                    "epg-enabled":{
+                        "label": "XMLTV Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "If disabled, will not ingest or populate the XMLTV output with this instance"
+                    },
+                    "epg-xmltv_file":{
+                        "label": "XMLTV File",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "help": "Use http:// https:// or (Linux) file:/// (Windows) file:///C:/ Be careful when using spaces in the path"
+                    },
+                    "epg-xmltv_file_type":{
+                        "label": "XMLTV File Type",
+                        "type": "list",
+                        "default": "autodetect",
+                        "values": ["autodetect", "gzip", "zip", "xml"],
+                        "level": 1,
+                        "help": "When the extension of the file is not provided from the url, set this to define the type of file"
+                    },
+                    "epg-prefix":{
+                        "label": "EPG Channel Prefix",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "help": "If a number will ADD to the display channel number; otherwise, will prepend to the channel number as a string"
+                    },
+                    "epg-suffix":{
+                        "label": "EPG Channel Suffix",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "help": "Will append to the channel number as a string"
+                    },
+                    "epg-episode_adjustment":{
+                        "label": "Adjusts Episode number",
+                        "type": "list",
+                        "default": 0,
+                        "values": [1000, 2000, 3000, 4000, 5000],
+                        "level": 1,
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and M3U at the same time."
+                    },
+                    "epg-start_adjustment":{
+                        "label": "Start Time Adjustment",
+                        "type": "integer",
+                        "default": 0,
+                        "level": 2,
+                        "help": "Used to start each program x seconds after the program is suppose to start."
+                    },
+                    "epg-end_adjustment":{
+                        "label": "End Time Adjustment",
+                        "type": "integer",
+                        "default": 0,
+                        "level": 2,
+                        "help": "Used to start each program x seconds before the program is suppose to end."
+                    },
+                    "epg-min_refresh_rate":{
+                        "label": "EPG Min Refresh Rate",
+                        "type": "integer",
+                        "default": 3600,
+                        "level": 2,
+                        "help": "Default=3600 seconds (1 hours). When a HTTP request for epg data is received, will refresh the data if older than this value."
+                    }
+                }
+            }
+        }
+    }
+}

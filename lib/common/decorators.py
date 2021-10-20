@@ -21,6 +21,7 @@ import http
 import json
 import logging
 import os
+import re
 import socket
 import sys
 import socket
@@ -47,26 +48,30 @@ def handle_url_except(f=None, timeout=None):
                     x = 'unknown'
                 x = f(self, *args, **kwargs)
                 return x
+            except UnicodeDecodeError as ex:
+                ex_save = str(ex)
+                self.logger.info("UnicodeDecodeError in function {}(), retrying {} {} {}" \
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0]), ))            
             except urllib.error.HTTPError as ex:
                 ex_save = str(ex)
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}" \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0]), ))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0]), ))
             except urllib.error.URLError as ex:
                 ex_save = str(ex)
                 self.logger.info("URLError in function {}, retrying (): {} {} {}" \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
             except ConnectionResetError as ex:
                 ex_save = str(ex)
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}" \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
             except socket.timeout as ex:
                 ex_save = str(ex)
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}" \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
             except http.client.RemoteDisconnected as ex:
                 ex_save = str(ex)
                 self.logger.info('Remote Server Disconnect Error in function {}(), retrying {} {} {}' \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
             except http.client.InvalidURL as ex:
                 url_tuple = urllib.parse.urlparse(args[0])
                 url_list = list(url_tuple)
@@ -81,10 +86,14 @@ def handle_url_except(f=None, timeout=None):
 
                 ex_save = str(ex)
                 self.logger.info('InvalidURL, encoding and trying again. In function {}() {} {} {}' \
-                    .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
+            except http.client.IncompleteRead as ex:
+                ex_save = str(ex)
+                self.logger.info('Partial data from url received in function {}(), retrying. {} {} {}' \
+                    .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
             time.sleep(1.0)
         self.logger.warning('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
-            .format(f.__name__, os.getpid(), ex_save, str(args[0])))
+            .format(f.__qualname__, os.getpid(), ex_save, str(args[0])))
         return None
     return update_wrapper(wrapper_func, f)
 
@@ -94,7 +103,7 @@ def handle_json_except(f):
         try:
             return f(self, *args, **kwargs)
         except json.JSONDecodeError as jsonError:
-            self.logger.error("JSONError in function {}(): {}".format(f.__name__, str(jsonError)))
+            self.logger.error("JSONError in function {}(): {}".format(f.__qualname__, str(jsonError)))
             return None
     return update_wrapper(wrapper_func, f)
 
@@ -203,6 +212,8 @@ class Request:
     def route(self, *pattern):
         def wrap(func):
             for p in pattern:
+                if p.startswith('RE:'):
+                    p = re.compile(p.replace('RE:',''))
                 self.url2func[p] = func
             return func
         return wrap
@@ -217,6 +228,11 @@ class Request:
             self.url2func[_name](_webserver, *args, **kwargs)
             return True
         else:
+            for uri in self.url2func.keys():
+                if type(uri) is re.Pattern:
+                    if len(uri.findall(_name)) > 0:
+                        self.url2func[uri](_webserver, *args, **kwargs)
+                        return True
             return False
 
 
@@ -250,7 +266,8 @@ class FileRequest(Request):
                 return True
         return False
 
-
 getrequest = GetRequest()
+gettunerrequest = GetRequest()
 postrequest = PostRequest()
 filerequest = FileRequest()
+

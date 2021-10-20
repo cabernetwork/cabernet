@@ -57,7 +57,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 self.logger.warning('[%s] %s' % (self.address_string(), _format % args))
             else:
                 self.logger.info('[%s] %s' % (self.address_string(), _format % args))
-        except IndexError:
+        except (IndexError, ValueError):
             self.logger.error('[%s] %s' % (self.address_string(), _format % args))
 
     def get_query_data(self):

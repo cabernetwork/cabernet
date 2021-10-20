@@ -1,0 +1,466 @@
+[{
+    "ChannelId": "9233011874",
+    "CallSign": "ABC",
+    "GuideName": "ABC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/abc-269x151.jpg"
+},{
+    "ChannelId": "9200017734",
+    "CallSign": "ACCN",
+    "GuideName": "ACC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2021/06/accn.jpg"
+},{
+    "ChannelId": "9200004889",
+    "CallSign": "AE",
+    "GuideName": "A&E",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/AE.png"
+},{
+    "ChannelId": "9233011832",
+    "CallSign": "AMC",
+    "GuideName": "AMC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/AMC-1.png"
+},{
+    "ChannelId": "9200018479",
+    "CallSign": "Animal",
+    "GuideName": "Animal Planet",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/animal-planet.png"
+},{
+    "ChannelId": "9200014701",
+    "CallSign": "BBCAmerica",
+    "GuideName": "BBC America",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/BBC.jpg"
+},{
+    "ChannelId": "9200004533",
+    "CallSign": "BTN",
+    "GuideName": "Big Ten",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/BTN.jpg"
+},{
+    "ChannelId": "9233005931",
+    "CallSign": "BET",
+    "GuideName": "BET",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/bet-269x151.png"
+},{
+    "ChannelId": "9233015844",
+    "CallSign": "Boomerang",
+    "GuideName": "Boomerang",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Boomerang.png"
+},{
+    "ChannelId": "9200002886",
+    "CallSign": "Bravo",
+    "GuideName": "Bravo",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/bravo-269x151.png"
+},{
+    "ChannelId": "9233007144",
+    "CallSign": "CSPAN",
+    "GuideName": "C-SPAN",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/cspan-269x151-1.png"
+},{
+    "ChannelId": "9200018514",
+    "CallSign": "CBS",
+    "GuideName": "CBS",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/CBS-1.png"
+},{
+    "ChannelId": "9233015468",
+    "CallSign": "CBSSN",
+    "GuideName": "CBS Sports",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/cbssn.jpg"
+},{
+    "ChannelId": "9233009829",
+    "CallSign": "Cinemax",
+    "GuideName": "Cinemax",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/04/cinemax.jpg"
+},{
+    "ChannelId": "9200012085",
+    "CallSign": "CMT",
+    "GuideName": "CMT",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/cmt-1.png"
+},{
+    "ChannelId": "9200004848",
+    "CallSign": "CN",
+    "GuideName": "Cartoon Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/cartoon-network.jpg"
+},{
+    "ChannelId": "9200009413",
+    "CallSign": "CNBC",
+    "GuideName": "CNBC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/cnbc-1.jpg"
+},{
+    "ChannelId": "9233013812",
+    "CallSign": "CNN",
+    "GuideName": "CNN",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/CNN-1.png"
+},{
+    "ChannelId": "9200000657",
+    "CallSign": "Comedy",
+    "GuideName": "Comedy Central",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/comedy-central-269x151.png"
+},{
+    "ChannelId": "9233011398",
+    "CallSign": "CW",
+    "GuideName": "CW",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/cw-269x151.png"
+},{
+    "ChannelId": "9200014472",
+    "CallSign": "DA",
+    "GuideName": "Destination America",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Destination_America.png"
+},{
+    "ChannelId": "9233004102",
+    "CallSign": "Discovery",
+    "GuideName": "Discovery",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Discovery.png"
+},{
+    "ChannelId": "9200018475",
+    "CallSign": "Disney",
+    "GuideName": "Disney",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/disney-269x151.png"
+},{
+    "ChannelId": "9200016560",
+    "CallSign": "DisneyJr",
+    "GuideName": "DisneyJr",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/disney-jr-768x432-1.png"
+},{
+    "ChannelId": "9200004852",
+    "CallSign": "DisneyXD",
+    "GuideName": "DisneyXD",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/disney-xd-768x432-1.png"
+},{
+    "ChannelId": "9200012415",
+    "CallSign": "DIY",
+    "GuideName": "DIY",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/diy.png"
+},{
+    "ChannelId": "9200012343",
+    "CallSign": "E",
+    "GuideName": "E!",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/E.png"
+},{
+    "ChannelId": "9200006937",
+    "CallSign": "ESPN",
+    "GuideName": "ESPN",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/espn-269x151.png"
+},{
+    "ChannelId": "9200012351",
+    "CallSign": "ESPN2",
+    "GuideName": "ESPN2",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/espn2-269x151.png"
+},{
+    "ChannelId": "9233011350",
+    "CallSign": "ESPNU",
+    "GuideName": "ESPNU",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/espnu-269x151-1.png"
+},{
+    "ChannelId": "9200006523",
+    "CallSign": "ESPNews",
+    "GuideName": "ESPNews",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/espnews-269x151-1.png"
+},{
+    "ChannelId": "9233009448",
+    "CallSign": "FoodNetwork",
+    "GuideName": "Food Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/food-network-269x151.png"
+},{
+    "ChannelId": "9233002271",
+    "CallSign": "FOX",
+    "GuideName": "FOX",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/FOX-1.png"
+},{
+    "ChannelId": "9200009124",
+    "CallSign": "FoxBusiness",
+    "GuideName": "Fox Business",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/foxbusiness.jpg"
+},{
+    "ChannelId": "9233000410",
+    "CallSign": "FoxNews",
+    "GuideName": "Fox News",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/foxnews.jpg"
+},{
+    "ChannelId": "9200006942",
+    "CallSign": "Freeform",
+    "GuideName": "Freeform",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/freeform-269x151.png"
+},{
+    "ChannelId": "9233008440",
+    "CallSign": "FS1",
+    "GuideName": "Fox Sports 1",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/fs1-269x151.png"
+},{
+    "ChannelId": "9200009884",
+    "CallSign": "FS2",
+    "GuideName": "Fox Sports 2",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/fs2-269x151.png"
+},{
+    "ChannelId": "9200006932",
+    "CallSign": "FX",
+    "GuideName": "FX",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/fx-269x151.png"
+},{
+    "ChannelId": "9233013967",
+    "CallSign": "FXMovie",
+    "GuideName": "FX Movie",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/FXM.png"
+},{
+    "ChannelId": "9200018644",
+    "CallSign": "FXX",
+    "GuideName": "FXX",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/FXX.png"
+},{
+    "ChannelId": "9233005443",
+    "CallSign": "GOLF",
+    "GuideName": "Golf Channel",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/golf-269x151.png"
+},{
+    "ChannelId": "9200019858",
+    "CallSign": "GSN",
+    "GuideName": "Game Show",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/GSN.jpg"
+},{
+    "ChannelId": "9200016034",
+    "CallSign": "Hallmark",
+    "GuideName": "Hallmark",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/hallmark-chanel-logo.jpg"
+},{
+    "ChannelId": "9200004886",
+    "CallSign": "HBO",
+    "GuideName": "HBO",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/hbo-269x151.png"
+},{
+    "ChannelId": "9233004104",
+    "CallSign": "HGTV",
+    "GuideName": "HGTV",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/HGTV-269x151.png"
+},{
+    "ChannelId": "9233008002",
+    "CallSign": "History",
+    "GuideName": "History",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/History.png"
+},{
+    "ChannelId": "9233005762",
+    "CallSign": "HLN",
+    "GuideName": "Headline News",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/HLN.jpg"
+},{
+    "ChannelId": "9200020115",
+    "CallSign": "HMM",
+    "GuideName": "Hallmark Movies & Mysteries",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/HMM_logo_black-700x245.jpg"
+},{
+    "ChannelId": "9200002243",
+    "CallSign": "ID",
+    "GuideName": "Investigation Discovery",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/id-269x151.jpg"
+},{
+    "ChannelId": "9200020452",
+    "CallSign": "Lifetime",
+    "GuideName": "Lifetime",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Lifetime-269x151.png"
+},{
+    "ChannelId": "9233009825",
+    "CallSign": "LifetimeM",
+    "GuideName": "Lifetime Movies",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/lifetimeM.jpeg"
+},{
+    "ChannelId": "9200009223",
+    "CallSign": "MLB",
+    "GuideName": "MLB Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/05/MLB.png"
+},{
+    "ChannelId": "9233003479",
+    "CallSign": "MotorTrend",
+    "GuideName": "Motor Trend",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Motortrend-1.png"
+},{
+    "ChannelId": "9233006803",
+    "CallSign": "MSNBC",
+    "GuideName": "MSNBC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/msnbc_logo-269x151.jpg"
+},{
+    "ChannelId": "9200014754",
+    "CallSign": "MTV",
+    "GuideName": "MTV",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/mtv.jpg"
+},{
+    "ChannelId": "9233002310",
+    "CallSign": "NatGEO",
+    "GuideName": "National Geographic",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/National-Geographic-269x151.png"
+},{
+    "ChannelId": "9200004683",
+    "CallSign": "NatGEOWild",
+    "GuideName": "Nat Geo Wild",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/NatGeoWild.jpeg"
+},{
+    "ChannelId": "9200000070",
+    "CallSign": "NBA",
+    "GuideName": "NBA Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/nbatv-269x151.jpg"
+},{
+    "ChannelId": "9233009876",
+    "CallSign": "NBC",
+    "GuideName": "NBC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/nbc-logo.jpg"
+},{
+    "ChannelId": "9233000030",
+    "CallSign": "NBCSN",
+    "GuideName": "NBC Sports",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/nbcsn-269x151.jpg"
+},{
+    "ChannelId": "9200004330",
+    "CallSign": "NFL",
+    "GuideName": "NFL Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/nfln-logo-dark.png"
+},{
+    "ChannelId": "9233000241",
+    "CallSign": "NFLRZ",
+    "GuideName": "NFL Redzone",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/NFLRZ.jpg"
+},{
+    "ChannelId": "9200006939",
+    "CallSign": "Nickelodeon",
+    "GuideName": "Nickelodeon",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Nickelodeon_2009.png"
+},{
+    "ChannelId": "9200020469",
+    "CallSign": "Nicktoons",
+    "GuideName": "Nicktoons",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/nicktoons.png"
+},{
+    "ChannelId": "9200005058",
+    "CallSign": "OAN",
+    "GuideName": "One America News",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/09/OAN.jpg"
+},{
+    "ChannelId": "9200002736",
+    "CallSign": "OWN",
+    "GuideName": "Oprah Winfrey Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/own.jpg"
+},{
+    "ChannelId": "9233008939",
+    "CallSign": "OLY",
+    "GuideName": "Olympics",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/oly.jpg"
+},{
+    "ChannelId": "9200004949",
+    "CallSign": "Oxygen",
+    "GuideName": "Oxygen",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Oxygen-1.png"
+},{
+    "ChannelId": "9233013810",
+    "CallSign": "Paramount",
+    "GuideName": "Paramount",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/paramount.jpg"
+},{
+    "ChannelId": "9233004141",
+    "CallSign": "PBS",
+    "GuideName": "PBS",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/PBS.jpg"
+},{
+    "ChannelId": "9200020464",
+    "CallSign": "POP",
+    "GuideName": "Pop",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Pop_Network-1.png"
+},{
+    "ChannelId": "9200019847",
+    "CallSign": "Science",
+    "GuideName": "Science",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Science.jpg"
+},{
+    "ChannelId": "9233002484",
+    "CallSign": "SECN",
+    "GuideName": "SEC Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/sec.jpg"
+},{
+    "ChannelId": "9200016599",
+    "CallSign": "Showtime",
+    "GuideName": "Showtime",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Showtime-269x151.png"
+},{
+    "ChannelId": "9233013809",
+    "CallSign": "StarZ",
+    "GuideName": "Starz",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/StarZ-269x151.png"
+},{
+    "ChannelId": "9233001687",
+    "CallSign": "SundanceTV",
+    "GuideName": "SundanceTV",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/sundance-tv.jpg"
+},{
+    "ChannelId": "9200004316",
+    "CallSign": "SYFY",
+    "GuideName": "Syfy",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/syfy-269x151.png"
+},{
+    "ChannelId": "9233000403",
+    "CallSign": "TBS",
+    "GuideName": "TBS",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/tbs-269x151.png"
+},{
+    "ChannelId": "9200017928",
+    "CallSign": "TCM",
+    "GuideName": "Turner Classic Movies",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/05/TCM.png"
+},{
+    "ChannelId": "9200011857",
+    "CallSign": "Telemundo",
+    "GuideName": "Telemundo",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/Telemundo.png"
+},{
+    "ChannelId": "9200017917",
+    "CallSign": "Tennis",
+    "GuideName": "Tennis Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/TennisChannel.whiteBg.png"
+},{
+    "ChannelId": "9233004112",
+    "CallSign": "TLC",
+    "GuideName": "TLC",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/tlc-269x151.png"
+},{
+    "ChannelId": "9233011830",
+    "CallSign": "TNT",
+    "GuideName": "TNT",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/TNT.jpg"
+},{
+    "ChannelId": "9233000035",
+    "CallSign": "Travel",
+    "GuideName": "Travel",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Travel-269x151.png"
+},{
+    "ChannelId": "9200009547",
+    "CallSign": "TruTV",
+    "GuideName": "truTV (East)",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/TruTV-269x151.png"
+},{
+    "ChannelId": "9233005468",
+    "CallSign": "TVLand",
+    "GuideName": "TV Land",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/TVLand-269x151.png"
+},{
+    "ChannelId": "9200016258",
+    "CallSign": "TWC",
+    "GuideName": "The Weather Channel",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2018/10/Weather-Channel-269x151.png"
+},{
+    "ChannelId": "9200000867",
+    "CallSign": "Univision",
+    "GuideName": "Univisión",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/univisionlogo.jpg"
+},{
+    "ChannelId": "9233004106",
+    "CallSign": "USANetwork",
+    "GuideName": "USA",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/USA-Network-269x151.png"
+},{
+    "ChannelId": "9233000037",
+    "CallSign": "VH1",
+    "GuideName": "VH1",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/vh1.png"
+},{
+    "ChannelId": "9200018188",
+    "CallSign": "WETV",
+    "GuideName": "WE TV",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/08/wetv.jpg"
+},{
+    "ChannelId": "9200004247",
+    "CallSign": "YES",
+    "GuideName": "YES Network",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/04/yes.jpg"
+}]

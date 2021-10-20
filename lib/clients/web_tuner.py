@@ -17,15 +17,17 @@ substantial portions of the Software.
 """
 
 import os
-import urllib
-import pathlib
+import json
 import logging
+import pathlib
 import time
+import urllib
 from threading import Thread
 from logging import config
 from http.server import HTTPServer
 from urllib.parse import urlparse
 
+from lib.common.decorators import gettunerrequest
 from lib.web.pages.templates import web_templates
 from lib.db.db_config_defn import DBConfigDefn
 from lib.streams.m3u8_redirect import M3U8Redirect
@@ -33,6 +35,43 @@ from lib.streams.internal_proxy import InternalProxy
 from lib.streams.ffmpeg_proxy import FFMpegProxy
 from lib.streams.streamlink_proxy import StreamlinkProxy
 from .web_handler import WebHTTPHandler
+
+
+@gettunerrequest.route('/tunerstatus')
+def tunerstatus(_webserver):
+    _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans))
+
+
+@gettunerrequest.route('RE:/watch/.+')
+def watch(_webserver):
+    sid = _webserver.content_path.replace('/watch/', '')
+    _webserver.do_tuning(sid, _webserver.query_data['name'], _webserver.query_data['instance'])
+
+
+@gettunerrequest.route('/logreset')
+def logreset(_webserver):
+    logging.config.fileConfig(fname=self.config['paths']['config_file'], 
+        disable_existing_loggers=False)
+    self.do_mime_response(200, 'text/html')
+
+
+@gettunerrequest.route('RE:/auto/v.+')
+def logreset(_webserver):
+    channel = _webserver.content_path.replace('/auto/v', '')
+    station_list = TunerHttpHandler.channels_db.get_channels(
+        _webserver.query_data['name'], _webserver.query_data['instance'])
+    if channel not in station_list.keys():
+        # check channel number
+        for station in station_list.keys():
+            if station_list[station][0]['number'] == channel:
+                _webserver.do_tuning(station, _webserver.query_data['name'], 
+                    _webserver.query_data['instance'])
+                return
+    else:
+        _webserver.do_tuning(channel, _webserver.query_data['name'], 
+            _webserver.query_data['instance'])
+        return
+    _webserver.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
 
 
 class TunerHttpHandler(WebHTTPHandler):
@@ -50,6 +89,8 @@ class TunerHttpHandler(WebHTTPHandler):
         self.small_pkt_streaming = False
         self.real_namespace = None
         self.real_instance = None
+        self.content_path = None
+        self.query_data = None
         self.m3u8_redirect = M3U8Redirect(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
         self.internal_proxy = InternalProxy(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
         self.ffmpeg_proxy = FFMpegProxy(TunerHttpHandler.plugins, TunerHttpHandler.hdhr_queue)
@@ -69,30 +110,11 @@ class TunerHttpHandler(WebHTTPHandler):
 
     def do_GET(self):
         try:
-            content_path, query_data = self.get_query_data()
-            if content_path.startswith('/auto/v'):
-                channel = content_path.replace('/auto/v', '')
-                station_list = TunerHttpHandler.channels_db.get_channels(query_data['name'], query_data['instance'])
-                if channel not in station_list.keys():
-                    # check channel number
-                    for station in station_list.keys():
-                        if station_list[station]['number'] == channel:
-                            self.do_tuning(station, query_data['name'], query_data['instance'])
-                            return
-                else:
-                    self.do_tuning(channel, query_data['name'], query_data['instance'])
-                    return
-                self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
-
-            elif content_path.startswith('/logreset'):
-                logging.config.fileConfig(fname=self.config['paths']['config_file'], disable_existing_loggers=False)
-                self.do_mime_response(200, 'text/html')
-
-            elif content_path.startswith('/watch'):
-                sid = content_path.replace('/watch/', '')
-                self.do_tuning(sid, query_data['name'], query_data['instance'])
+            self.content_path, self.query_data = self.get_query_data()
+            if gettunerrequest.call_url(self, self.content_path):
+                pass
             else:
-                self.logger.warning('Unknown request to {}'.format(content_path))
+                self.logger.warning('Unknown request to {}'.format(self.content_path))
                 self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Not Implemented'))
         except Exception as ex:
             self.logger.exception('{}{}'.format(
@@ -100,13 +122,13 @@ class TunerHttpHandler(WebHTTPHandler):
 
     def do_POST(self):
         try:
-            content_path = self.path
-            query_data = {}
+            self.content_path = self.path
+            self.query_data = {}
             # get POST data
             if self.headers.get('Content-Length') != '0':
                 post_data = self.rfile.read(int(self.headers.get('Content-Length'))).decode('utf-8')
                 # if an input is empty, then it will remove it from the list when the dict is gen
-                query_data = urllib.parse.parse_qs(post_data)
+                self.query_data = urllib.parse.parse_qs(post_data)
 
             # get QUERYSTRING
             if self.path.find('?') != -1:
@@ -115,7 +137,7 @@ class TunerHttpHandler(WebHTTPHandler):
                 for get_data_item in get_data_elements:
                     get_data_item_split = get_data_item.split('=')
                     if len(get_data_item_split) > 1:
-                        query_data[get_data_item_split[0]] = get_data_item_split[1]
+                        self.query_data[get_data_item_split[0]] = get_data_item_split[1]
 
             self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Badly Formatted Message'))
         except Exception as ex:
@@ -142,7 +164,7 @@ class TunerHttpHandler(WebHTTPHandler):
                     .format(self.real_namespace, self.real_instance, sid))
                 self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
                 return
-        except KeyError:
+        except (KeyError, TypeError):
             self.logger.warning('Unknown Channel ID, not found in database {} {} {}' \
                 .format(_namespace, _instance, sid))
             self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))

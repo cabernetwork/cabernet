@@ -153,14 +153,14 @@ class Updater:
         self.config_obj.write('main', 'maintenance_mode', True)
 
         STATUS.data += 'Restarting app in 3...<br>\r\n'
+        self.tmp_mgmt.cleanup_tmp()
+        IS_UPGRADING = False
         time.sleep(0.8)
         STATUS.data += '2...<br>\r\n'
         time.sleep(0.8)
         STATUS.data += '1...<br>\r\n'
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
-        IS_UPGRADING = False
-        self.tmp_mgmt.cleanup_tmp()
         self.restart_app()
         
     def restart_app(self):

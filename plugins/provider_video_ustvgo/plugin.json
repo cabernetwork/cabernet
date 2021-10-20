@@ -1,0 +1,15 @@
+{
+    "id": "provider_video_ustvgo",
+    "name": "USTVGO",
+    "version": "0.5.4",
+    "provider-name": "rocky4546",
+    "summary": "Online TV Channels",
+    "description": "Watch TV Channels for free!",
+    "category": ["video"],
+    "license": "MIT License, Copyright (C) 2021 ROCKY4546",
+    "source": "https://github.com/cabernetwork/cabernet",
+    "forum": "https://tvheadend.org/boards/5/topics/43052",
+    "website": "https://ustvgo.tv/",
+    "icon": "resources/images/icon.png",
+    "fanart": "resources/images/fanart.png"
+}

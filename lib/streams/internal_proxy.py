@@ -60,6 +60,7 @@ class InternalProxy(Stream):
         self.channel_dict = None
         self.wfile = None
         self.file_filter = None
+        self.t_m3u8 = None
         self.duration = 6
         self.last_ts_filename = ''
         super().__init__(_plugins, _hdhr_queue)
@@ -148,11 +149,17 @@ class InternalProxy(Stream):
             self.idle_counter = 0
             raise exceptions.CabernetException('Provider has stop playing the stream. Terminating the connection {}' \
                 .format(self.t_m3u8.pid))
-        elif self.idle_counter == 6 and self.is_starting:
+        elif self.idle_counter % 6 == 0 and self.is_starting:
             self.write_atsc_msg()
         while not self.out_queue.empty():
             self.idle_counter = 0
             out_queue_item = self.out_queue.get()
+            if out_queue_item['atsc'] is not None:
+                self.channel_dict['atsc'] = out_queue_item['atsc']
+                #self.logger.debug('###### SAVING TO DB {}'.format(len(out_queue_item['atsc'])))
+
+                self.db_channels.update_channel_atsc(
+                    self.channel_dict)
             uri = out_queue_item['uri']
             if uri == 'terminate':
                 raise exceptions.CabernetException('m3u8 queue termination requested, aborting stream {}' \
@@ -262,6 +269,7 @@ class InternalProxy(Stream):
         """
         is_running = False
         max_tries = 40
+        restarts = 5
         while True:
             while InternalProxy.is_m3u8_starting != 0:
                 time.sleep(0.1)
@@ -269,7 +277,8 @@ class InternalProxy(Stream):
             time.sleep(0.01)
             if InternalProxy.is_m3u8_starting == threading.get_ident():
                 break
-        while not is_running:
+        while not is_running and restarts > 0:
+            restarts -= 1
             # Process is not thread safe.  Must do the same target, one at a time.
             self.t_m3u8 = Process(target=m3u8_queue.start, args=(
                 self.config, self.plugins, self.in_queue, self.out_queue, self.channel_dict,))
@@ -301,7 +310,7 @@ class InternalProxy(Stream):
                     self.logger.warning('Unknown response from m3u8queue: {}' \
                         .format(status['uri']))
         InternalProxy.is_m3u8_starting = False
-        return True
+        return restarts > 0
 
     def m3u8_terminate(self):
         while not self.in_queue.empty():

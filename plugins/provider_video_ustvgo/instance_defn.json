@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "plutotv":{
-                "label": "PlutoTV",
-                "sort": "PlutoTV2",
+            "ustvgo":{
+                "label": "USTVGO",
+                "sort": "USTVGO2",
                 "icon": "cast_connected",
-                "description": "Settings for PlutoTV Instances",
+                "description": "Settings for USTVGO Instances",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -38,7 +38,7 @@
                         "type": "boolean",
                         "default": false,
                         "level": 1,
-                        "help": "Imports groups from PlutoTV into the group other column"
+                        "help": "Imports groups from USTVGO into the group other column"
                     },
                     "channel-start_ch_num":{
                         "label": "Starting Ch Number",
@@ -79,9 +79,24 @@
                     "player-url_filter":{
                         "label": "URL Filter",
                         "type": "string",
-                        "default": "^.*(_ad/|google.com|plutotv_filler|Well_be_right|_AdPod|_Promo).*$",
+                        "default": null,
                         "level": 3,
                         "help": "Only used with stream_type=internalproxy"
+                    },
+                    "player-enable_pts_resync":{
+                        "label": "Enable PTS/DTS Resync",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "Works with internalproxy and ffmpegproxy. Corrects timing issues with the video and audio streams and makes them contiguous"
+                    },
+                    "player-pts_resync_type":{
+                        "label": "PTS/DTS Resync Type",
+                        "type": "list",
+                        "default": "ffmpeg",
+                        "values": ["ffmpeg", "internal"],
+                        "level": 2,
+                        "help": "Uses either ffmpeg genpts or internal resequencing"
                     },
                     "player-enable_pts_filter":{
                         "label": "Enable PTS Filtering",
@@ -104,25 +119,10 @@
                         "level": 3,
                         "help": "Default 3,000,000 or 32 seconds. when playing contiguous blocks of video, filters out any blocks that do not have a continuous PTS counter."
                     },
-                    "player-enable_pts_resync":{
-                        "label": "Enable PTS/DTS Resync",
-                        "type": "boolean",
-                        "default": false,
-                        "level": 2,
-                        "help": "Works with internalproxy and ffmpegproxy. Corrects timing issues with the video and audio streams and makes them contiguous"
-                    },
-                    "player-pts_resync_type":{
-                        "label": "PTS/DTS Resync Type",
-                        "type": "list",
-                        "default": "ffmpeg",
-                        "values": ["ffmpeg", "internal"],
-                        "level": 2,
-                        "help": "Uses either ffmpeg genpts or internal resequencing"
-                    },
                     "epg-enabled":{
                         "label": "XMLTV Enabled",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 1,
                         "help": "If disabled, will not ingest or populate the XMLTV output with this instance"
                     },
@@ -146,7 +146,7 @@
                         "default": 0,
                         "values": [1000, 2000, 3000, 4000, 5000],
                         "level": 1,
-                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and PlutoTV at the same time."
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and USTVGO at the same time."
                     },
                     "epg-start_adjustment":{
                         "label": "Start Time Adjustment",

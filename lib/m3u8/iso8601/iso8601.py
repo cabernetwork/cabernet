@@ -44,6 +44,8 @@ ISO8601_REGEX = re.compile(
                     (?P<timezone>
                         Z
                         |
+                        R
+                        |
                         (
                             (?P<tz_sign>[-+])
                             (?P<tz_hour>[0-9]{2})
@@ -84,6 +86,8 @@ def parse_timezone(
     tz = matches.get("timezone", None)
     if tz == "Z":
         return UTC
+    elif tz == "R":
+        return FixedOffset(5, 0, "-05:00")
     # This isn't strictly correct, but it's common to encounter dates without
     # timezones so I'll assume the default (which defaults to UTC).
     # Addresses issue 4.

@@ -61,7 +61,6 @@ class Channels(PluginChannels):
 
     def get_channels(self):
         global TMP_FOLDERNAME
-        ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
         if self.config_obj.data[self.config_section]['channel-m3u_file'] is None:
             raise exceptions.CabernetException('{}:{} M3U File config not set, unable to get channel list' \
                 .format(self.plugin_obj.name, self.instance_key))
@@ -85,13 +84,13 @@ class Channels(PluginChannels):
             for seg in m3u8_obj.segments:
                 if self.is_m3u_filtered(seg):
                     continue
+                ch_number = None
                 if 'tvg-num' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-num']
                 elif 'tvg-chno' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-chno']
                 else:
-                    ch_number = ch_num_enum
-                    ch_num_enum += 1
+                    ch_number = self.set_channel_num(ch_number)
                     
                 if 'channelID' in seg.additional_props:
                     ch_id = seg.additional_props['channelID']
