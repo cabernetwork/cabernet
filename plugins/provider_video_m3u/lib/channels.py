@@ -84,6 +84,7 @@ class Channels(PluginChannels):
             for seg in m3u8_obj.segments:
                 if self.is_m3u_filtered(seg):
                     continue
+                ch_number = None
                 if 'tvg-num' in seg.additional_props:
                     ch_number = seg.additional_props['tvg-num']
                 elif 'tvg-chno' in seg.additional_props:

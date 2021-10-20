@@ -48,6 +48,7 @@ xumo_tv_genres = {
     "Comedy": [ tvh_genres['COMEDY'] ],
     "Entertainment": [ tvh_genres['GAME'] ],
     "Kids": [ tvh_genres['KIDS'] ],
+    "Latino": [ tvh_genres['LANGUAGES'] ],
     "Lifestyle": [ tvh_genres['CULTURE'] ],
     "Movies": [ tvh_genres['MOVIE'] ],
     "Music": [ tvh_genres['MUSIC'] ],

@@ -178,6 +178,7 @@ class EPG(PluginEPG):
                 self.logger.info('Missing USTVGO genre translation for: {}' \
                         .format(genres))
                 genres = [x.strip() for x in genres.split(' & ')]
+        _prog['genres'] = genres
 
         if (season is None) and (episode is None):
             se_common = None
