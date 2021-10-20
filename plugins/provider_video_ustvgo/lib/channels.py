@@ -56,6 +56,9 @@ class Channels(PluginChannels):
             ch_callsign = channel_dict['CallSign']
             thumbnail = None
             thumbnail_size = None
+            if 'Thumbnail' in channel_dict:
+                thumbnail = channel_dict['Thumbnail']
+                thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
             ch_number = self.set_channel_num(None)
             friendly_name = channel_dict['GuideName']
             groups_other = None            
