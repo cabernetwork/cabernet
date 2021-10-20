@@ -87,6 +87,11 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
+            if not _plugins[sid_data['namespace']].enabled:
+                continue
+            if not _plugins[sid_data['namespace']] \
+                .plugin_obj.instances[sid_data['instance']].enabled:
+                continue
             config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
             if not _config[config_section]['enabled']:
                 continue
