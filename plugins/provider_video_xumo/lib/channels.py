@@ -67,7 +67,7 @@ class Channels(PluginChannels):
                     groups_other = xumo_groups[channel_dict['genre'][0]['value']]
                 else:
                     # Need to replace spaces with "_" and remove special characters.
-                    self.logger.warning('Missing XUMO category translation for: {}' \
+                    self.logger.warning('Missing XUMO group translation for: {}' \
                         .format(channel_dict['genre'][0]['value']))
                     groups_other = self.clean_group_name(channel_dict['genre'][0]['value'])
             vod = False

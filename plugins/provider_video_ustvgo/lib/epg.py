@@ -97,8 +97,12 @@ class EPG(PluginEPG):
                 start_seconds = prog['startTime']
                 if not prev_midnight <= start_seconds < next_midnight:
                     continue
-                start_time = utils.tm_local_parse(prog['startTime'] * 1000)
-                end_time = utils.tm_local_parse(prog['endTime'] * 1000)
+                start_time = utils.tm_local_parse((prog['startTime']
+                    + self.config_obj.data[self.config_section]['epg-start_adjustment']) 
+                    * 1000)
+                end_time = utils.tm_local_parse((prog['endTime']
+                    + self.config_obj.data[self.config_section]['epg-end_adjustment']) 
+                    * 1000)
                 dur_min = dur_min = int((prog['startTime'] - prog['endTime']) / 60)
                 prog_list.append(
                     {'channel': ch_id, 'progid': prog['programId'], 'start': start_time, 'stop': end_time,
@@ -135,8 +139,12 @@ class EPG(PluginEPG):
                 continue
             prog_json = prog_json['items'][list(prog_json['items'].keys())[0]]
             for prog in prog_json:
-                start_time = utils.tm_local_parse(prog['start_timestamp'] * 1000)
-                end_time = utils.tm_local_parse(prog['end_timestamp'] * 1000)
+                start_time = utils.tm_local_parse((prog['start_timestamp']
+                    + self.config_obj.data[self.config_section]['epg-start_adjustment']) 
+                    * 1000)
+                end_time = utils.tm_local_parse((prog['end_timestamp']
+                    + self.config_obj.data[self.config_section]['epg-end_adjustment']) 
+                    * 1000)
                 dur_min = dur_min = int((prog['start_timestamp'] - prog['end_timestamp']) / 60)
                 prog_list.append(
                     {'channel': ch_id, 'progid': prog['id'], 'start': start_time, 'stop': end_time,
