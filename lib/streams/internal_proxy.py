@@ -84,7 +84,7 @@ class InternalProxy(Stream):
                 self.in_queue.get()
         except (Empty, EOFError):
             pass
-        self.in_queue.put({'uri': 'terminate'})
+        self.in_queue.put({'uri_dt': 'terminate'})
         time.sleep(0.2)
         self.t_m3u8.terminate()
         self.t_m3u8.join()
