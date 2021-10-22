@@ -164,6 +164,11 @@ class M3U8Queue(Thread):
 
         elif not self.initialized_psi:
             p_list = self.atsc_msg.extract_psip(self.video.data)
+            if len(self.atsc) != len(p_list):
+                self.atsc = p_list
+                self.channel_dict['atsc'] = p_list
+                self.initialized_psi = True
+                return p_list
             for i in range(len(p_list)):
                 if p_list[i][4:] != self.atsc[i][4:]:
                     self.atsc = p_list
