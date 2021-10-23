@@ -48,6 +48,7 @@ class EPG(PluginEPG):
         return [1], []
 
     def refresh_programs(self, _epg_day, use_cache=True):
+        self.first_day = True
         ch_db = DBChannels(self.config_obj.data)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
 
