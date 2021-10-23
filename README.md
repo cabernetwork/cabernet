@@ -23,5 +23,16 @@ label = PlutoTV Instance
         - PTS/DTS Resync
 - From XML/JSON Links try some of the links
 
-Enjoy
+### 3. Notes
+- URL used can include plugin and instance levels to filter down to a specific set of data
+    - http://ipaddress:6077/channels.m3u
+    - http://ipaddress:6077/pLuToTv/channels.m3u
+    - http://ipaddress:6077/PlutoTV/Default/channels.m3u
+- config.ini group tag requirements
+    - All lower case
+    - Underscore separates the plugin name from the instance name
+    - Use a single word if possible or use underlines between words
+    - Do not change the instance name.  It is used throughout the system and is difficult to change.
+    - [plutotv_mychannels]
 
+Enjoy
