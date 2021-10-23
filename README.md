@@ -31,7 +31,7 @@ label = PlutoTV Instance
 - config.ini group tag requirements
     - All lower case
     - Underscore separates the plugin name from the instance name
-    - Use a single word if possible or use underlines between words
+    - Use a single word if possible for the instance name or use underlines between words
     - Do not change the instance name.  It is used throughout the system and is difficult to change.
     - [plutotv_mychannels]
 
