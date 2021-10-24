@@ -84,10 +84,15 @@ class InternalProxy(Stream):
                 self.in_queue.get()
         except (Empty, EOFError):
             pass
-        self.in_queue.put({'uri_dt': 'terminate'})
+        self.in_queue.put({'uri': 'terminate'})
         time.sleep(0.2)
-        self.t_m3u8.terminate()
-        self.t_m3u8.join()
+        # since t_m3u8 has been told to terminate, clear the out queue and then wait for t_m3u8  so it can cleanup ffmpeg
+        self.t_m3u8.join(timeout=15)
+        if self.t_m3u8.is_alive():
+            # this is not likely but if t_m3u8 does not self terminate then force it to terminate
+            self.logger.debug('t_m3u8 failed to self terminate. Forcing it to terminate {}' \
+                .format(self.t_m3u8.pid))
+            self.t_m3u8.terminate()
         time.sleep(0.5)
         self.t_m3u8 = None
         self.clear_queues()

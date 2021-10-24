@@ -94,8 +94,6 @@ class M3U8Queue(Thread):
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
                 if queue_item['uri_dt'] == 'terminate':
-                    self.pts_resync.terminate()
-                    self.clear_queues()
                     time.sleep(0.01)
                     break
                 elif queue_item['uri_dt'] == 'status':
@@ -122,6 +120,10 @@ class M3U8Queue(Thread):
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Queue=', ex))
             sys.exit()
+        # we are terminating so cleanup ffmpeg
+        if self.pts_resync is not None:
+            self.pts_resync.terminate()
+        self.clear_queues()
                 
 
     def decrypt_stream(self, _data):
@@ -272,9 +274,12 @@ class M3U8Queue(Thread):
         global STREAM_QUEUE
         global OUT_QUEUE
         global IN_QUEUE
-        STREAM_QUEUE.close()
-        OUT_QUEUE.close()
-        IN_QUEUE.close()
+        # closing a multiporcessing queue with 'close' without emptying it will prevent a process dependant on that queue 
+        # from terminating and fulfilling a 'join' if there was an entry in the queue
+        # so we need to proactivley clear all queue entries instead of closing the queues
+        clear_q(STREAM_QUEUE)
+        clear_q(OUT_QUEUE)
+        clear_q(IN_QUEUE)
 
 
 class M3U8Process(Thread):
@@ -372,6 +377,8 @@ class M3U8Process(Thread):
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Process=', ex))
         self.terminate()
+        # wait for m3u8_q to finish so it can cleanup ffmpeg
+        self.m3u8_q.join()
 
     def sleep(self, _time):
         for i in range(round(_time*10)):
@@ -400,6 +407,7 @@ class M3U8Process(Thread):
     def add_to_stream_queue(self, _playlist):
         global PLAY_LIST
         global STREAM_QUEUE
+        global TERMINATE_REQUESTED
         total_added = 0
         if _playlist.keys != [None]:
             keys = [{"uri": key.absolute_uri, "method": key.method, "iv": key.iv} \
@@ -444,12 +452,13 @@ class M3U8Process(Thread):
                     .segments[i:num_segments], keys[i:num_segments]):
                 added = self.add_segment(m3u8_segment, key)
                 total_added += added
-                if added == 0:
+                if added == 0 or TERMINATE_REQUESTED:
                     break
             time.sleep(0.1)
         return total_added
 
     def add_segment(self, _segment, _key, _default_played=False):
+        global TERMINATE_REQUESTED
         self.set_cue_status(_segment)
         uri = _segment.absolute_uri
         dt = _segment.current_program_date_time
@@ -473,7 +482,7 @@ class M3U8Process(Thread):
             if _segment.duration > 0:
                 self.duration = _segment.duration
             try:
-                if not played:
+                if not played and not TERMINATE_REQUESTED:
                     self.logger.debug('Added {} to play queue {}' \
                         .format(uri, os.getpid()))
                     STREAM_QUEUE.put({'uri_dt': uri_dt,
@@ -541,6 +550,17 @@ class M3U8Process(Thread):
         else:
             return None
 
+def clear_q(q):
+    try:
+        while True:
+            q.get_nowait()
+    except (Empty, ValueError):
+        pass
+
+def clear_queues():
+    clear_q(OUT_QUEUE)
+    clear_q(STREAM_QUEUE)
+    clear_q(IN_QUEUE)
 
 def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None):
     """
@@ -563,7 +583,13 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                 q_item = IN_QUEUE.get()
                 if q_item['uri'] == 'terminate':
                     TERMINATE_REQUESTED = True
-                    time.sleep(1)
+                    # clear queues in case queues are full (eg VOD) with queue.put stmts blocked 
+                    # p_m3u8 & m3u8_q then see TERMINATE_REQUESTED and exit including stopping ffmpeg
+                    clear_queues()
+                    time.sleep(0.01)
+                    p_m3u8.join()
+                    # finally make sure all queues are clear so that this process can be joined
+                    clear_queues()
                 else:
                     logger.debug('UNKNOWN m3u8 queue request')
             except (KeyboardInterrupt, EOFError, TypeError, ValueError):
