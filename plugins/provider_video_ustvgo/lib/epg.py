@@ -48,6 +48,7 @@ class EPG(PluginEPG):
         return [1], []
 
     def refresh_programs(self, _epg_day, use_cache=True):
+        self.first_day = True
         ch_db = DBChannels(self.config_obj.data)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
 
@@ -138,6 +139,7 @@ class EPG(PluginEPG):
             if prog_json is None:
                 continue
             prog_json = prog_json['items'][list(prog_json['items'].keys())[0]]
+            self.logger.debug('USTVGO: Adding minimal EPG data for channel {}'.format(ch_id))
             for prog in prog_json:
                 start_time = utils.tm_local_parse((prog['start_timestamp']
                     + self.config_obj.data[self.config_section]['epg-start_adjustment']) 

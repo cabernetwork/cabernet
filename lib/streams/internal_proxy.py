@@ -74,7 +74,7 @@ class InternalProxy(Stream):
         self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
         self.terminate_queue = None
         self.tc_match = re.compile( r'^.+[^\d]+(\d*)\.ts' )
-        self.idle_counter = -1
+        self.idle_counter = 0
         self.is_starting = True
         self.cue = False
         

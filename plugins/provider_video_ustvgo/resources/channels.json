@@ -219,11 +219,6 @@
     "GuideName": "Hallmark",
     "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/hallmark-chanel-logo.jpg"
 },{
-    "ChannelId": "9200004886",
-    "CallSign": "HBO",
-    "GuideName": "HBO",
-    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/hbo-269x151.png"
-},{
     "ChannelId": "9233004104",
     "CallSign": "HGTV",
     "GuideName": "HGTV",
@@ -368,16 +363,6 @@
     "CallSign": "SECN",
     "GuideName": "SEC Network",
     "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2020/09/sec.jpg"
-},{
-    "ChannelId": "9200016599",
-    "CallSign": "Showtime",
-    "GuideName": "Showtime",
-    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Showtime-269x151.png"
-},{
-    "ChannelId": "9233013809",
-    "CallSign": "StarZ",
-    "GuideName": "Starz",
-    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/StarZ-269x151.png"
 },{
     "ChannelId": "9233001687",
     "CallSign": "SundanceTV",
