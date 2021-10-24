@@ -235,7 +235,7 @@ def _parse_key(line):
 
 
 def _parse_extinf(line, data, state, lineno, strict):
-    chunks = line.replace(protocol.extinf + ':', '').split(',', 1)
+    chunks = line.replace(protocol.extinf + ':', '').rsplit(',', 1)
     if len(chunks) == 2:
         duration_and_props, title = chunks
     elif len(chunks) == 1:
