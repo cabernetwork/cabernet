@@ -220,14 +220,14 @@ class DBChannels(DB):
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.delete(DB_CHANNELS_TABLE, ('%', _namespace, _instance,))
+        return self.delete(DB_CHANNELS_TABLE, ('%', _namespace, _instance,))
     
     def del_status(self, _namespace=None, _instance=None):
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.delete(DB_STATUS_TABLE, (_namespace, _instance,))
+        return self.delete(DB_STATUS_TABLE, (_namespace, _instance,))
 
     def get_status(self, _namespace, _instance):
         result = self.get(DB_STATUS_TABLE,

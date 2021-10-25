@@ -31,6 +31,7 @@ import lib.db.datamgmt.backups as backups
 from lib.db.db_channels import DBChannels
 from lib.db.db_epg import DBepg
 from lib.db.db_scheduler import DBScheduler
+from lib.db.db_plugins import DBPlugins
 
 
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
@@ -66,6 +67,9 @@ def post_data_mgmt_html(_webserver):
                 _webserver.query_data['name'][0])
         elif action == 'reset_scheduler':
             html = reset_sched(_webserver.plugins.config_obj.data,
+                _webserver.query_data['name'][0])
+        elif action == 'del_instance':
+            html = del_instance(_webserver.plugins.config_obj.data,
                 _webserver.query_data['name'][0])
         else:
             # database action request
@@ -110,6 +114,49 @@ def reset_sched(_config, _name):
             ])
     return ''.join([html, 
         'Restart the app to re-populate the scheduler with defaults'])
+
+def del_instance(_config, _name):
+    if _name is None:
+        return 'Instance set to None. No instances deleted'
+    if ':' not in _name:
+        return 'Invalid action. Request ignored'
+    name_inst = _name.split(':',1)
+
+    html = ''
+    db_plugins = DBPlugins(_config)
+    num_del = db_plugins.del_instance(name_inst[0], name_inst[1])
+    if num_del > 0:
+        html = ''.join([html,
+            '<b>', _name, '</b> deleted from Plugins<br>'
+            ])
+
+    db_channels = DBChannels(_config)
+    db_channels.del_status(name_inst[0], name_inst[1])
+    num_del = db_channels.del_channels(name_inst[0], name_inst[1])
+    if num_del > 0:
+        html = ''.join([html, 
+            '<b>', _name, '</b> deleted from Channels<br>'
+            ])
+
+    db_epg = DBepg(_config)
+    db_epg.del_instance(name_inst[0], name_inst[1])
+    if num_del > 0:
+        html = ''.join([html, 
+            '<b>', _name, '</b> deleted from EPG<br>'
+            ])
+
+    db_sched = DBScheduler(_config)
+    task_list = db_sched.get_tasks_by_name(name_inst[0], name_inst[1])
+    for task in task_list:
+        db_sched.del_task(task['area'], task['title'])
+    if len(task_list) > 0:
+        html = ''.join([html, 
+            '<b>', _name, '</b> deleted from Scheduler<br>'
+            ])
+    return ''.join([html, 
+        'Restart the app to re-populate the scheduler with defaults'])
+
+
 
 
 def restore_from_backup(_plugins, _query_data):
@@ -214,6 +261,20 @@ class DataMgmtHTML:
             '<div>Scheduler will reload default tasks on next app restart</div></td>',
         ])
         html_select = self.select_reset_sched
+        html = ''.join([html, html_select,
+            '<tr><td colspan=3><hr></td></tr></table></form>',
+            '<form action="/api/data_mgmt" method="post">',
+            '<table class="dmTable" width=95%>',
+            '<tr>',
+            '<td class="dmIcon">',
+            '<i class="md-icon">inventory_2</i></td>',
+            '<td class="dmItem">',
+            '<div class="dmItemTitle">Delete Instance &nbsp; ',
+            '<input type="hidden" name="action" value="del_instance">',
+            '<button type="submit">Delete</button></div>',
+            '<div>Deletes the instance data from the database file.  Update config.ini, as needed, and restart app following a delete</div></td>',
+        ])
+        html_select = self.select_del_instance
         html = ''.join([html, html_select,
             '</select></td></tr>'
             '<tr><td colspan=3><hr></td></tr>',
@@ -380,3 +441,43 @@ class DataMgmtHTML:
                 ])
         return ''.join([html_option, '</select></td></tr>' ])
 
+    @property
+    def select_del_instance(self):
+        name_inst = []
+        db_plugins = DBPlugins(self.config)
+        name_inst_dict = db_plugins.get_instances()
+        for ns, inst_list in name_inst_dict.items():
+            for inst in inst_list:
+                name_inst.append(''.join([
+                    ns, ':', inst]))
+        db_channels = DBChannels(self.config)
+        name_inst_list = db_channels.get_channel_instances()
+        self.update_ns_inst(name_inst, name_inst_list)
+        db_epg = DBepg(self.config)
+        name_inst_list = db_epg.get_epg_instances()
+        self.update_ns_inst(name_inst, name_inst_list)
+        db_sched = DBScheduler(self.config)
+        name_inst_list = db_sched.get_task_instances()
+        self.update_ns_inst(name_inst, name_inst_list)
+
+        html_option = ''.join([
+            '<td nowrap>Instance: <select id="name" name="name"</select>',
+            '<option value="">None</option>',
+            ])
+        for name in name_inst:
+            html_option = ''.join([html_option,
+                '<option value="', name, '">', name, '</option>',
+                ])
+        return ''.join([html_option, '</select></td></tr>' ])
+
+    def update_ns_inst(self, _name_inst, _name_inst_list):
+        for name_inst_dict in _name_inst_list:
+            if name_inst_dict['instance'] is not None:
+                ns_in = ''.join([
+                    name_inst_dict['namespace'],
+                    ':',
+                    name_inst_dict['instance'],
+                    ])
+                if ns_in not in _name_inst:
+                    _name_inst.append(ns_in)
+    

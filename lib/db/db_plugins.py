@@ -84,7 +84,7 @@ sqlcmds = {
         """,
     'instance_del':
         """
-        DELETE FROM instance WHERE namespace=?
+        DELETE FROM instance WHERE namespace LIKE ? AND instance LIKE ?
         """
 }
 
@@ -122,8 +122,12 @@ class DBPlugins(DB):
         Deletes the instance rows first due to constaints, then
         deletes the plugin
         """
-        self.delete(DB_INSTANCE_TABLE, (_namespace,))
+
+        self.delete(DB_INSTANCE_TABLE, (_namespace, '%', ))
         self.delete(DB_PLUGINS_TABLE, (_namespace,))
+
+    def del_instance(self, _namespace, _instance):
+        return self.delete(DB_INSTANCE_TABLE, (_namespace, _instance))
 
     def get_instances(self):
         """
