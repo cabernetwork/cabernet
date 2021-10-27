@@ -117,11 +117,11 @@ class ScheduleHTML:
                 html = ''.join([html,
                     '<tr><td colspan=3>',
                     '<div>',
-                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox" checked>',
+                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox">',
                     '<label for="schedcoll',str(i),'" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton schedSection">',
-                    current_area, '</label>',
-                    '<div title="', task_dict['title'], 
-                    '" class="collapsible-content">',
+                    current_area, '<span id="', current_area,
+                    '_sect" style="max-width: 20%; margin-left: 1em;" class=""></span></label>',
+                    '<div class="collapsible-content">',
                     '<div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">'
                 ])
 
@@ -155,7 +155,7 @@ class ScheduleHTML:
                 else:
                     dur_delta = str(task_dict['duration']) + ' seconds'
             html = ''.join([html,
-                '<div style="display: flex;">',
+                '<div style="display: flex;" title="', task_dict['title'], '">',
                 '<div class="schedIcon">',
                 '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', 
                 task_dict['taskid'], '")\'>',
