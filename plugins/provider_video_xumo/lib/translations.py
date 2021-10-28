@@ -37,6 +37,7 @@ xumo_groups = {
     'Latinx':               groups['SPANISH'],
     'Latinx Heritage Month': groups['SPANISH'],
     'Lifestyle':            groups['LIFESTYLE'],
+    'Local News':           groups['LOCAL'],
     'Music':                groups['MUSIC'],
     'News':                 groups['NEWS'],
     'Pop Culture':          groups['ENTERTAINMENT'],

@@ -45,6 +45,7 @@ groups = {
     'HOLIDAY': 'Holiday',
     'KIDS': 'Kids',
     'LIFESTYLE': 'Lifestyle',
+    'LOCAL': 'Local',
     'MOVIES': 'Movies',
     'MUSIC': 'Music',
     'MYSTERY': 'Mystery',
@@ -56,8 +57,6 @@ groups = {
     'SPORTS': 'Sports',
     'TRAVEL': 'Travel'
     }
-    
-
 
 # TVHEADEND CATEGORIES
 tvh_genres = {
