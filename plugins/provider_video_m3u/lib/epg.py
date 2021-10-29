@@ -21,6 +21,7 @@ import datetime
 from xml.etree import ElementTree
 import json
 import pathlib
+import re
 import time
 import urllib.request
 
@@ -40,6 +41,7 @@ class EPG(PluginEPG):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
+        self.url_chars = re.compile('[^\-\.\_\~0-9a-zA-z]')
 
     def dates_to_pull(self):
         """
@@ -67,7 +69,8 @@ class EPG(PluginEPG):
                 if prog_one is None:
                     break
                 program_list.append(prog_one)
-                epg_ch_list[prog_one['channel']] = None
+                ch_id = re.sub(self.url_chars, '_', prog_one['channel'])
+                epg_ch_list[ch_id] = None
             ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
             for ch in ch_list.keys():
                 if not ch_list[ch][0]['enabled']:
@@ -88,7 +91,7 @@ class EPG(PluginEPG):
                     end = round(dt_start_time.timestamp()+3600)
                     ch_data = ch_list[str(ch)][0]
                     prog_one = self.get_blank_program(start, end, 
-                        ch_data['uid'], ch_data['display_name'], ch_data['json']['groups_other'])
+                        ch_data['uid'], ch_data['display_name'], [ ch_data['json']['groups_other'] ])
                     program_list.append(prog_one)
             if len(program_list) == 0:
                 if xmltv.has_future_dates:
