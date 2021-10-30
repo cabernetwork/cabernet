@@ -93,6 +93,7 @@ class PluginChannels:
             headers={'User-agent': utils.DEFAULT_USER_AGENT})
     
     def refresh_channels(self, force=False):
+        self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
         last_update = self.db.get_status(self.plugin_obj.name, self.instance_key)
         update_needed = False
         if not last_update:
