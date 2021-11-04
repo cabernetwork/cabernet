@@ -77,7 +77,7 @@ class Channels(PluginChannels):
                     groups_other = plutotv_groups[channel_dict['category']]
                 else:
                     # Need to replace spaces with "_" and remove special characters.
-                    self.logger.warning('Missing PlutoTV category translation for: {}' \
+                    self.logger.warning('Missing PlutoTV group translation for: {}' \
                         .format(channel_dict['category']))
                     groups_other = re.sub('[ +&*%$#@!:;,<>?]', '', channel_dict['category'])
                 

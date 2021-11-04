@@ -33,6 +33,7 @@ xumo_groups = {
     'Kids & Family':        groups['KIDS'],
     'Halloween HQ':         groups['HOLIDAY'],
     'Holiday':              groups['HOLIDAY'],
+    'Holiday Hub':          groups['HOLIDAY'],
     'Latino':               groups['SPANISH'],
     'Latinx':               groups['SPANISH'],
     'Latinx Heritage Month': groups['SPANISH'],
