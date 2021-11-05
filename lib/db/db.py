@@ -102,17 +102,17 @@ class DB:
             i -= 1
             try:
                 cur = self.sql_exec(sqlcmd, _values)
+                num_deleted = cur.rowcount
                 DB.conn[self.db_name][threading.get_ident()].commit()
-                lastrow = cur.lastrowid
                 cur.close()
-                return lastrow
+                return num_deleted
             except sqlite3.OperationalError as e:
                 self.logger.warning('Delete request ignored, retrying {}, {}'.format(i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
                 self.rnd_sleep(0.3)
-        return None
+        return 0
 
     def update(self, _table, _values=None):
         cur = None

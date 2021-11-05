@@ -187,7 +187,13 @@
             <div
                 class="scrollSlider flex-grow flex-direction-column padded-left padded-left-page padded-right padded-top-page padded-bottom-page dashboardContainer scrollSliderY">
                 <div class="dashboardSections" style="padding-top:.5em;">
-                    <div><script id="contentState"></script></div>
+                    <div><script id="contentState">
+                        let schedState = {
+                            "Applications": false,
+                            "Channels": false,
+                            "EPG": false
+                        };
+                    </script></div>
                     <div id="content"></div>
                     <div id="status"></div>
                     <div class="dashboardFooter">

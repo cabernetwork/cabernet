@@ -17,6 +17,7 @@ substantial portions of the Software.
 """
 
 import json
+import pathlib
 import re
 import time
 import urllib.request
@@ -90,5 +91,12 @@ class Channels(PluginChannels):
         return self.get_uri_data(self.plugin_obj.unc_ustvgo_stream, _data=data).decode('utf-8')
 
     def load_channel_lookup(self):
-        json_file = resources.read_text(self.plugin_obj.plugin.plugin_path + '.resources', 'channels.json')
+        override_file = pathlib.Path(self.config_obj.data['paths']['data_dir'], 'channels.json')
+        if override_file.is_file():
+            with override_file.open() as f:
+                json_file = f.read()
+                self.logger.debug('{}:{} Using override channels.json file' \
+                    .format(self.plugin_obj.name, self.instance_key))
+        else:
+            json_file = resources.read_text(self.plugin_obj.plugin.plugin_path + '.resources', 'channels.json')
         return json.loads(json_file)

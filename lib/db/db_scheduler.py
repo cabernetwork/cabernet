@@ -110,6 +110,10 @@ sqlcmds = {
         """
         SELECT DISTINCT namespace FROM task
         """,
+    'task_instance_get':
+        """
+        SELECT DISTINCT namespace, instance FROM task
+        """,
     'task_by_id_get':
         """
         SELECT *
@@ -238,7 +242,7 @@ class DBScheduler(DB):
         if not _title:
             _title = '%'
         self.delete(DB_TRIGGER_TABLE, (_area, _title,))
-        self.delete(DB_TASK_TABLE, (_area, _title,))
+        return self.delete(DB_TASK_TABLE, (_area, _title,))
 
     def get_tasks(self, _area=None, _title=None):
         if not _area:
@@ -280,6 +284,9 @@ class DBScheduler(DB):
 
     def get_task_names(self):
         return self.get_dict(DB_TASK_TABLE + '_name')
+
+    def get_task_instances(self):
+        return self.get_dict(DB_TASK_TABLE + '_instance')
 
     def start_task(self, _area, _title):
         self.update(DB_TASK_TABLE + '_active', (

@@ -109,9 +109,9 @@ class EPG(PluginEPG):
             program = self.db_programs.get_program(self.plugin_obj.name, prog)
             if len(program) == 0:
                 self.update_program_info(prog)
-            else:
-                self.logger.debug('{}:{} Processing Program {} from cache' \
-                    .format(self.plugin_obj.name, self.instance_key, prog))
+            #else:
+            #    self.logger.debug('{}:{} Processing Program {} from cache' \
+            #        .format(self.plugin_obj.name, self.instance_key, prog))
         program = None
 
         self.logger.debug('{}:{} Finalizing EPG updates' \
@@ -212,12 +212,14 @@ class EPG(PluginEPG):
         icon = self.plugin_obj.unc_xumo_icons \
             .format(sid)
 
-        if _ch_data['json']['groups_other'] in xumo_tv_genres:
+        if _ch_data['json']['groups_other'] is None:
+                genres = None
+        elif _ch_data['json']['groups_other'] in xumo_tv_genres:
             genres = xumo_tv_genres[_ch_data['json']['groups_other']]
         else:
             self.logger.info('Missing XUMO genre translation for: {}' \
                     .format(_ch_data['json']['groups_other']))
-            genres = _ch_data['json']['groups_other']
+            genres = [_ch_data['json']['groups_other']]
 
         directors = None
         actors = None

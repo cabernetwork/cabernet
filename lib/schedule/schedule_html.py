@@ -32,11 +32,11 @@ def get_schedule_html(_webserver):
     if 'run' in _webserver.query_data:
         schedule_html.run_task(_webserver.query_data['task'])
         time.sleep(0.05)
-        html = schedule_html.get()
+        html = schedule_html.get(_webserver.query_data)
     elif 'deltask' in _webserver.query_data:
         schedule_html.del_task(_webserver.query_data['task'])
         time.sleep(0.05)
-        html = schedule_html.get()        
+        html = schedule_html.get(_webserver.query_data)        
     elif 'delete' in _webserver.query_data:
         schedule_html.del_trigger(_webserver.query_data['trigger'])
         time.sleep(0.05)
@@ -46,7 +46,7 @@ def get_schedule_html(_webserver):
     elif 'task' in _webserver.query_data:
         html = schedule_html.get_task(_webserver.query_data['task'])
     else:
-        html = schedule_html.get()
+        html = schedule_html.get(_webserver.query_data)
     _webserver.do_mime_response(200, 'text/html', html)
 
 
@@ -63,9 +63,11 @@ class ScheduleHTML:
         self.logger = logging.getLogger(__name__)
         self.config = _config
         self.queue = _queue
+        self.query_data = None
         self.scheduler_db = DBScheduler(self.config)
 
-    def get(self):
+    def get(self, _query_data):
+        self.query_data = _query_data
         return ''.join([self.header, self.body])
 
     @property
@@ -104,7 +106,6 @@ class ScheduleHTML:
             '<div id="schedtasks" class="schedShow">',
             '<table class="schedTable" width=95%>'
         ])
-        
         i = 0
         for task_dict in tasks:
             i +=1
@@ -114,14 +115,18 @@ class ScheduleHTML:
                         '</div></div></div></td></tr>'
                         ])
                 current_area = task_dict['area']
+                if current_area in self.query_data:
+                    checked = "checked"
+                else:
+                    checked = ""
                 html = ''.join([html,
                     '<tr><td colspan=3>',
                     '<div>',
-                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox" checked>',
+                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox" ', checked ,'>',
                     '<label for="schedcoll',str(i),'" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton schedSection">',
-                    current_area, '</label>',
-                    '<div title="', task_dict['title'], 
-                    '" class="collapsible-content">',
+                    current_area, '<span id="', current_area,
+                    '_sect" style="max-width: 20%; margin-left: 1em;" class=""></span></label>',
+                    '<div class="collapsible-content">',
                     '<div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">'
                 ])
 
@@ -155,7 +160,7 @@ class ScheduleHTML:
                 else:
                     dur_delta = str(task_dict['duration']) + ' seconds'
             html = ''.join([html,
-                '<div style="display: flex;">',
+                '<div style="display: flex;" title="', task_dict['title'], '">',
                 '<div class="schedIcon">',
                 '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', 
                 task_dict['taskid'], '")\'>',

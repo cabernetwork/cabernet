@@ -49,6 +49,7 @@ plutotv_groups = {
     'Pluto TV':       groups['CLASSICS'],
     'Reality':        groups['REALITY'],
     'Samsung':        groups['SPORTS'],
+    "Season's Greetings": groups['HOLIDAY'],
     'Sports':         groups['SPORTS'],
     'Sports & Gaming': groups['SPORTS'],
     'Vizio':          groups['MOVIES']

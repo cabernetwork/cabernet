@@ -140,7 +140,8 @@ class M3U8Queue(Thread):
             if key_data is not None:
                 self.key_list[_data['key']['uri']] = key_data
                 if _data['key']['iv'] is None:
-                    iv = None
+                    # if iv is none, use a random value
+                    iv = bytearray.fromhex('000000000000000000000000000000F6')
                 elif _data['key']['iv'].startswith('0x'):
                     iv = bytearray.fromhex(_data['key']['iv'][2:])
                 else:
@@ -554,7 +555,7 @@ def clear_q(q):
     try:
         while True:
             q.get_nowait()
-    except (Empty, ValueError):
+    except (Empty, ValueError, EOFError):
         pass
 
 def clear_queues():

@@ -44,7 +44,7 @@ class Channels(PluginChannels):
         self.tmp_mgmt = TMPMgmt(self.config_obj.data)
         self.filter_dict = self.compile_m3u_filter(
             self.config_obj.data[self.config_section]['channel-m3u_filter'])
-        
+        self.url_chars = re.compile('[^\-\.\_\~0-9a-zA-z]')
         
     def compile_m3u_filter(self, _str):
         """
@@ -91,13 +91,16 @@ class Channels(PluginChannels):
                     ch_number = seg.additional_props['tvg-chno']
                 else:
                     ch_number = self.set_channel_num(ch_number)
-                    
-                if 'channelID' in seg.additional_props:
+
+                if 'channelID' in seg.additional_props and \
+                        len(seg.additional_props['channelID']) != 0:
                     ch_id = seg.additional_props['channelID']
-                elif 'tvg-id' in seg.additional_props:
+                elif 'tvg-id' in seg.additional_props and \
+                        len(seg.additional_props['tvg-id']) != 0:
                     ch_id = seg.additional_props['tvg-id']
                 elif ch_number is not None:
-                    ch_id = ch_number
+                    ch_id = str(ch_number)
+                ch_id = re.sub(self.url_chars, '_', ch_id)
 
                 if 'tvg-logo' in seg.additional_props and seg.additional_props['tvg-logo'] != '':
                     thumbnail = seg.additional_props['tvg-logo']

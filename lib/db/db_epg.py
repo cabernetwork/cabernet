@@ -88,6 +88,10 @@ sqlcmds = {
     'epg_name_get':
         """
         SELECT DISTINCT namespace FROM epg
+        """,
+    'epg_instance_get':
+        """
+        SELECT DISTINCT namespace, instance FROM epg
         """
 }
 
@@ -119,7 +123,7 @@ class DBepg(DB):
         """
         Removes all records for this namespace/instance
         """
-        self.delete(DB_EPG_TABLE, (_namespace, _instance,))
+        return self.delete(DB_EPG_TABLE, (_namespace, _instance,))
 
     def set_last_update(self, _namespace=None, _instance=None, _day=None):
         if not _namespace:
@@ -147,6 +151,9 @@ class DBepg(DB):
 
     def get_epg_names(self):
         return self.get_dict(DB_EPG_TABLE + '_name')
+
+    def get_epg_instances(self):
+        return self.get_dict(DB_EPG_TABLE + '_instance')
 
     def get_epg_one(self, _namespace, _instance, _day):
         return self.get_dict(DB_EPG_TABLE + '_one', (_namespace, _instance, _day))

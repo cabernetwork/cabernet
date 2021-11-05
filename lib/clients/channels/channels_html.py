@@ -41,11 +41,6 @@ class ChannelsHTML:
 
     @property
     def header(self):
-        if bool(self.tab_names):
-            tabform = ''.join(['<script>load_form_url("/api/channels_form?name=',
-            list(self.tab_names.keys())[0], '")</script>' ])
-        else:
-            tabform = ''
         return ''.join([
             '<!DOCTYPE html><html><head>',
             '<meta charset="utf-8"/><meta name="author" content="rocky4546">',
@@ -57,8 +52,8 @@ class ChannelsHTML:
             '<link rel="stylesheet" type="text/css" href="/modules/tabs/tabs.css">',
             '<link rel="stylesheet" type="text/css" href="/modules/table/table.css">',
             '<script src="/modules/tabs/tabs.js"></script>',
-            '<script src="/modules/channels/channels.js"></script></head>',
-            tabform])
+            '<script src="/modules/channels/channels.js"></script></head>'
+            ])
 
     @property
     def title(self):
@@ -70,11 +65,17 @@ class ChannelsHTML:
     @property
     def tabs(self):
         active_tab = ' activeTab'
-        tabs_html = ''.join(['<ul class="tabs">'])
+        tabs_html = ''.join(['<ul class="tabs">',
+                '<li><a id="none" class="',
+                ' configTab activeTab', 
+                '" href="#" ',
+                '>',
+                '</a></li>'
+            ])
         for name in self.tab_names.keys():
             tabs_html = ''.join([tabs_html,
                 '<li><a id="tab', name, '" class="form',
-                name, ' configTab', active_tab, 
+                name, ' configTab',
                 '" href="#" onclick=\'load_form_url("/api/channels_form?name=',
                 name, '")\'>',
                 '<i class="md-icon tabIcon">view_list',
@@ -91,7 +92,7 @@ class ChannelsHTML:
         return ''.join([
             self.title,
             self.tabs,
-            '<div id="tablecontent">NO CHANNEL DATA FOUND</div>'
+            '<div id="tablecontent">Select Tab to Edit</div>'
             ])
 
     def get_channels_tabs(self):
