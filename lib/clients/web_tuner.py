@@ -50,9 +50,9 @@ def watch(_webserver):
 
 @gettunerrequest.route('/logreset')
 def logreset(_webserver):
-    logging.config.fileConfig(fname=self.config['paths']['config_file'], 
+    logging.config.fileConfig(fname=_webserver.config['paths']['config_file'], 
         disable_existing_loggers=False)
-    self.do_mime_response(200, 'text/html')
+    _webserver.do_mime_response(200, 'text/html')
 
 
 @gettunerrequest.route('RE:/auto/v.+')

@@ -109,9 +109,9 @@ class EPG(PluginEPG):
             program = self.db_programs.get_program(self.plugin_obj.name, prog)
             if len(program) == 0:
                 self.update_program_info(prog)
-            else:
-                self.logger.debug('{}:{} Processing Program {} from cache' \
-                    .format(self.plugin_obj.name, self.instance_key, prog))
+            #else:
+            #    self.logger.debug('{}:{} Processing Program {} from cache' \
+            #        .format(self.plugin_obj.name, self.instance_key, prog))
         program = None
 
         self.logger.debug('{}:{} Finalizing EPG updates' \
