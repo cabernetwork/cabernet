@@ -201,7 +201,8 @@ class CabernetUpgrade:
             'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
             'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
             'TVHEADEND.md', 'docker-compose.yml', 'requirements.txt', 'tvh_main.py',
-            'data', 'config.ini', 'is_container', '.git']
+            'data', 'config.ini', 'is_container', '.git', 'cabernet.url', 'ffmpeg', 
+            'README.txt', 'uninst.exe' ]
 
         filelist = [os.path.basename(x) for x in 
             glob.glob(os.path.join(self.config['paths']['main_dir'], '*'))]

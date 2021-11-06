@@ -25,6 +25,19 @@ import sys
 import time
 from multiprocessing import Queue, Process
 
+
+try:
+    from pip._internal import main as pip
+    try:
+        import cryptography
+    except ImportError:
+        pip(['install', 'cryptography'])
+    except ModuleNotFoundError:
+        print('Unable to install required cryptography module')
+except (ImportError, ModuleNotFoundError):
+    print('Unable to load pip module to install cryptography module')
+
+
 import lib.clients.hdhr.hdhr_server as hdhr_server
 import lib.clients.web_tuner as web_tuner
 import lib.clients.web_admin as web_admin
@@ -33,6 +46,7 @@ import lib.plugins.plugin_handler as plugin_handler
 import lib.clients.ssdp.ssdp_server as ssdp_server
 import lib.db.datamgmt.backups as backups
 import lib.updater.updater as updater
+import lib.config.user_config as user_config
 from lib.db.db_scheduler import DBScheduler
 from lib.common.utils import clean_exit
 from lib.common.pickling import Pickling
@@ -42,18 +56,6 @@ from lib.web.pages.templates import web_templates
 import lib.updater.patcher as patcher
 from lib.streams.stream import Stream
 
-try:
-    import pip
-except ModuleNotFoundError:
-    print('Unable to load pip module to install modules')
-
-try:
-    import cryptography
-except ImportError:
-    # pip.main(['install', 'cryptography'])
-    print('Unable to load cryptography module, will not encrypt passwords')
-
-import lib.config.user_config as user_config
 
 RESTART_REQUESTED = None
 LOGGER = None
