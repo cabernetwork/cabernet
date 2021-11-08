@@ -195,8 +195,8 @@ class InternalProxy(Stream):
                         start_ttw = time.time()
                         self.write_buffer(self.video.data)
                         delta_ttw = time.time() - start_ttw
-                        self.logger.info('Serving {} {} ({})s ({}B) ttw:{:.2f}s {}' \
-                            .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw, self.out_queue.qsize()))
+                        self.logger.info('Serving {} {} ({})s ({}B) ttw:{:.2f}s' \
+                            .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw))
                         self.is_starting = False
                         time.sleep(0.1)
                     else:
@@ -204,8 +204,7 @@ class InternalProxy(Stream):
                 else:
                     self.write_atsc_msg()
             self.check_termination()
-            if self.out_queue.qsize() <  2:
-                time.sleep(0.2)
+            time.sleep(0.01)
         time.sleep(1)
         self.video.terminate()
 
