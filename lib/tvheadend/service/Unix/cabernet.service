@@ -10,13 +10,13 @@
 #######################################################################
 
 [Unit]
-Description=Locast Service
+Description=Cabernet Service
 Wants=network-online.target
 After=network.target network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /home/hts/locast/cabernet/tvh_main.py
+ExecStart=/usr/bin/python3 /home/hts/cabernet/tvh_main.py
 
 # Disable Python's buffering of STDOUT and STDERR, so that output from the
 # service shows up immediately in systemd's logs
@@ -27,7 +27,7 @@ RestartSec=54s
 
 StandardOutput=syslog
 StandardError=syslog
-SyslogIdentifier=locast
+SyslogIdentifier=cabernet
 User=hts
 
 [Install]

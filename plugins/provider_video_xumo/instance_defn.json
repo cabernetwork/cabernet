@@ -40,6 +40,13 @@
                         "level": 1,
                         "help": "Imports groups from provider into the group other column"
                     },
+                    "channel-group_name":{
+                        "label": "Group Name",
+                        "type": "string",
+                        "default": null,
+                        "level": 1,
+                        "help": "By default, the m3u file contains the plugin as a group.  This allows an instance name to be added to the group list during the m3u request. Use simple single words, if possible. If empty, will not add group."
+                    },
                     "channel-start_ch_num":{
                         "label": "Starting Ch Number",
                         "type": "integer",

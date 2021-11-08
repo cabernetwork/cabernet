@@ -4,5 +4,7 @@
 #
 (
 sleep 10
-python3 /storage/cabernet/tvh_main.py
+. /opt/etc/profile
+cd /storage/cabernet
+/opt/bin/python3 /storage/cabernet/tvh_main.py
 ) &
