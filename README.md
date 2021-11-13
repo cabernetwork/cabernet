@@ -14,6 +14,7 @@
 [plutotv_default]
 label = PlutoTV Instance
 </pre>
+- OS specific installation help can be found in lib/tvheadend/service (eg CoreELEC, Windows, etc)
 - Launch the app by running the command "python3 tvh_main.py"
 - Bring up browser and go to http://ipaddress:6077/
 - Go to settings and make changes you want.
