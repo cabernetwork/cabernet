@@ -101,6 +101,13 @@
                         "level": 1,
                         "help": "TVHeadend uses specific genre to get colors on tv guide"
                     },
+                    "epg_channel_number":{
+                        "label": "Channel # in Name",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 2,
+                        "help": "When true will include the channel number in the channel name for the channel list and EPG"
+                    },
                     "epg_channel_icon":{
                         "label": "EPG Channel Icon",
                         "type": "boolean",

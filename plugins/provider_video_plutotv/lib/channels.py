@@ -46,8 +46,8 @@ class Channels(PluginChannels):
         for channel_dict in ch_json:
             if (channel_dict["isStitched"]
                    and channel_dict["visibility"] in ["everyone"]
-                   and not channel_dict['onDemand']
-                   and channel_dict["name"] != "Announcement"):
+                   and channel_dict["name"] != "Announcement"
+                   and not channel_dict['onDemand']):
         
                 hd = 0
                 ch_id = str(channel_dict['_id'])

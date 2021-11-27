@@ -261,7 +261,6 @@ class ChannelsURL:
         results += '</ul><hr>'
         return results
 
-
     def translate_main2json(self, _name):
         if _name == 'display_number':
             return 'number'
@@ -290,18 +289,15 @@ class ChannelsURL:
             thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
         return thumbnail_size
 
-
-
     def set_service_name(self, _sid_data):
         """
         Returns the service name used to sync with the EPG channel name
         """
-
         updated_chnum = utils.wrap_chnum(
             str(_sid_data['display_number']), _sid_data['namespace'], 
             _sid_data['instance'], self.config)
-        service_name = updated_chnum + \
-            ' ' + _sid_data['display_name']
-        return service_name
-      
-
+        if self.config['epg']['epg_channel_number']:
+            return updated_chnum + \
+                ' ' + _sid_data['display_name']
+        else:
+            return _sid_data['display_name']

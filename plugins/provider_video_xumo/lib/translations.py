@@ -53,6 +53,7 @@ xumo_tv_genres = {
     "Holiday": [ tvh_genres['SPIRITUAL'] ],
     "Kids": [ tvh_genres['KIDS'] ],
     "Lifestyle": [ tvh_genres['CULTURE'] ],
+    "Local": [ tvh_genres['NEWS'] ],
     "Movies": [ tvh_genres['MOVIE'] ],
     "Music": [ tvh_genres['MUSIC'] ],
     "News": [ tvh_genres['NEWS'] ],

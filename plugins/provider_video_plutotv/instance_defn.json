@@ -67,14 +67,14 @@
                         "type": "boolean",
                         "default": false,
                         "level": 3,
-                        "help": "When starting, will play the last segment.  If VOD type stream, then enable will cause the entire video to be played from the start."
+                        "help": "Plays all starting segments and ignores Non-VOD Segments to Start setting. Helpful when the VOD is not set in the provider stream."
                     },
                     "player-segments_to_play":{
                         "label": "Non-VOD Segments to Start",
                         "type": "integer",
                         "default": 2,
                         "level": 2,
-                        "help": "When starting, will play the last xxx segments. '1' means no buffering. Each increase means about 6 seconds of buffering."
+                        "help": "When starting, will play the last xxx segments. '1' means no buffering. Each increase means about 6 seconds of buffering. If the VOD flag is set in the stream, then setting is ignored."
                     },
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",

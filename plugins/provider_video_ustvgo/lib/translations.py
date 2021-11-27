@@ -32,6 +32,7 @@ ustvgo_groups = {
 
 ustvgo_genres = {
     "Action & Adventure": [ tvh_genres['ADVENTURE'] ],
+    "Arts": [ tvh_genres['CULTURE'] ],
     "Business": [ tvh_genres['NEWS'] ],
     "Comedy": [ tvh_genres['COMEDY'] ],
     "Documentary": [ tvh_genres['DOCUMENTARY'] ],
