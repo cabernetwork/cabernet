@@ -54,7 +54,7 @@ then
 fi;
 if [ "$uflag" ];
 then
-  wget -q -T 60 -O - ${url};
+  wget -q -T 1200 -O - ${url};
 fi;
 
 exit 0;

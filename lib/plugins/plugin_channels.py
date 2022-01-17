@@ -79,9 +79,12 @@ class PluginChannels:
             return json.load(resp)
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _data=None):
-        header = {
-            'User-agent': utils.DEFAULT_USER_AGENT}
+    def get_uri_data(self, _uri, _header=None, _data=None):
+        if _header is None:
+            header = {
+                'User-agent': utils.DEFAULT_USER_AGENT}
+        else:
+            header = _header
         req = urllib.request.Request(_uri, data=_data, headers=header)
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             return resp.read()
@@ -196,4 +199,4 @@ class PluginChannels:
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
             self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER4')
+            self.logger.notice('######## CHECKING AND UPDATING LOGGER 40')

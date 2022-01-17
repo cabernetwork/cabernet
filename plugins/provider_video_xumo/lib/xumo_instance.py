@@ -30,6 +30,8 @@ class XUMOInstance(PluginInstanceObj):
 
     def __init__(self, _xumo, _instance):
         super().__init__(_xumo, _instance)
+        if not self.config_obj.data[_xumo.name.lower()]['enabled']:
+            return
         if not self.config_obj.data[self.config_section]['enabled']:
             return
 

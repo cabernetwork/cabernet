@@ -26,9 +26,11 @@ from lib.plugins.plugin_instance_obj import PluginInstanceObj
 
 class M3UGenericInstance(PluginInstanceObj):
 
-    def __init__(self, _plutotv, _instance):
-        super().__init__(_plutotv, _instance)
-        self.config_obj = _plutotv.config_obj
+    def __init__(self, _plugin, _instance):
+        super().__init__(_plugin, _instance)
+        self.config_obj = _plugin.config_obj
+        if not self.config_obj.data[_plugin.name.lower()]['enabled']:
+            return
         if not self.config_obj.data[self.config_section]['enabled']:
             return
 

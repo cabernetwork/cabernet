@@ -55,8 +55,12 @@ class Stream:
         updated_chnum = utils.wrap_chnum(
             str(_channel_dict['number']), _channel_dict['namespace'], 
             _channel_dict['instance'], self.plugins.config_obj.data)
-        service_name = updated_chnum + \
-            ' ' + _channel_dict['display_name']
+
+        if self.config['epg']['epg_channel_number']:
+            service_name = updated_chnum + \
+                ' ' + _channel_dict['display_name']
+        else:
+            service_name = _channel_dict['display_name']
         return service_name
 
     def get_stream_uri(self, _channel_dict):

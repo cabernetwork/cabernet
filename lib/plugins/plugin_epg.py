@@ -44,8 +44,11 @@ class PluginEPG:
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
-    def get_uri_data(self, _uri):
-        header = {'User-agent': utils.DEFAULT_USER_AGENT}
+    def get_uri_data(self, _uri, _header=None):
+        if _header is None:
+            header = {'User-agent': utils.DEFAULT_USER_AGENT}
+        else:
+            header = _header
         req = urllib.request.Request(_uri, headers=header)
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             x = json.load(resp)

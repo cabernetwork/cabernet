@@ -52,7 +52,7 @@ class EPG(PluginEPG):
         ch_db = DBChannels(self.config_obj.data)
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
 
-        prog_json = self.get_uri_data(self.plugin_obj.unc_ustvgo_channels)
+        prog_json = self.get_uri_data_ustvgo(self.plugin_obj.unc_ustvgo_channels)
         
         epg_date = datetime.datetime.utcnow().date()
         date_list = []
@@ -135,7 +135,7 @@ class EPG(PluginEPG):
             if not _ch_list[ch_id][0]['enabled']:
                 continue
 
-            prog_json = self.get_uri_data(self.plugin_obj.unc_ustvgo_epg % (ch_id, ''))
+            prog_json = self.get_uri_data_ustvgo(self.plugin_obj.unc_ustvgo_epg % (ch_id, ''))
             if prog_json is None:
                 continue
             prog_json = prog_json['items'][list(prog_json['items'].keys())[0]]
@@ -226,7 +226,7 @@ class EPG(PluginEPG):
         if len(prog_details) != 0:
             return json.loads(prog_details[0]['json'])
 
-        prog_details = self.get_uri_data(_prog['details'])
+        prog_details = self.get_uri_data_ustvgo(_prog['details'])
         if prog_details is None:
             return None
 
@@ -254,3 +254,9 @@ class EPG(PluginEPG):
         self.db_programs.save_program(self.plugin_obj.name, _prog['progid'], program)
         return program
 
+    def get_uri_data_ustvgo(self, _uri):
+        header = {
+            'User-agent': utils.DEFAULT_USER_AGENT,
+            'Referer': 'https://ustvgo.tv/'
+        }
+        return self.get_uri_data(_uri, _header=header)

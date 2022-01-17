@@ -26,6 +26,8 @@ class PlutoTVInstance(PluginInstanceObj):
     def __init__(self, _plutotv, _instance):
         super().__init__(_plutotv, _instance)
         self.config_obj = _plutotv.config_obj
+        if not self.config_obj.data[_plutotv.name.lower()]['enabled']:
+            return
         if not self.config_obj.data[self.config_section]['enabled']:
             return
         self.channels = Channels(self)

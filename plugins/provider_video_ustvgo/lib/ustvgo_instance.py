@@ -26,6 +26,8 @@ class USTVGOInstance(PluginInstanceObj):
     def __init__(self, _ustvgo, _instance):
         super().__init__(_ustvgo, _instance)
         self.config_obj = _ustvgo.config_obj
+        if not self.config_obj.data[_ustvgo.name.lower()]['enabled']:
+            return
         if not self.config_obj.data[self.config_section]['enabled']:
             return
         self.channels = Channels(self)

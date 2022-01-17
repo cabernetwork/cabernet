@@ -55,6 +55,9 @@ class Channels(PluginChannels):
             hd = 0
             ch_id = channel_dict['ChannelId']
             ch_callsign = channel_dict['CallSign']
+            if self.get_ustvgo_stream(ch_callsign) is None:
+                self.logger.info('VPN, ignoring channel {}:{}'.format(ch_callsign, channel_dict['GuideName']))
+                continue
             thumbnail = None
             thumbnail_size = None
             if 'Thumbnail' in channel_dict:
@@ -62,7 +65,7 @@ class Channels(PluginChannels):
                 thumbnail_size = self.get_thumbnail_size(thumbnail, ch_id)
             ch_number = self.set_channel_num(None)
             friendly_name = channel_dict['GuideName']
-            groups_other = None            
+            groups_other = None
             channel = {
                 'id': ch_id,
                 'enabled': True,
@@ -84,11 +87,23 @@ class Channels(PluginChannels):
         ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
         callsign = ch_dict['json']['callsign']
         stream_url = self.get_ustvgo_stream(callsign)
-        return self.get_best_stream(stream_url, _channel_id)
+        if stream_url is None:
+            return None
+        else:
+            return self.get_best_stream(stream_url, _channel_id)
 
     def get_ustvgo_stream(self, _callsign):
-        data = urllib.parse.urlencode({'stream': _callsign}).encode()    
-        return self.get_uri_data(self.plugin_obj.unc_ustvgo_stream, _data=data).decode('utf-8')
+        header = {
+            'User-agent': utils.DEFAULT_USER_AGENT,
+            'Referer': 'https://ustvgo.tv/'
+        }
+        uri = self.plugin_obj.unc_ustvgo_stream % (_callsign)
+        html = self.get_uri_data(uri, _header=header).decode('utf-8')
+        if 'hls_src=' in html:        
+            novpn_url = html.split("hls_src='")[1].split("'")[0]
+            return novpn_url
+        else:
+            return None
 
     def load_channel_lookup(self):
         override_file = pathlib.Path(self.config_obj.data['paths']['data_dir'], 'channels.json')
