@@ -6,7 +6,7 @@
 },{
     "ChannelId": "9200017734",
     "CallSign": "ACCN",
-    "GuideName": "ACC",
+    "GuideName": "ACC Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/acc-network-us.png"
 },{
     "ChannelId": "9200004889",
@@ -31,7 +31,7 @@
 },{
     "ChannelId": "9200004533",
     "CallSign": "BTN",
-    "GuideName": "Big Ten",
+    "GuideName": "Big Ten Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/btn-us.png"
 },{
     "ChannelId": "9233005931",
@@ -61,7 +61,7 @@
 },{
     "ChannelId": "9233015468",
     "CallSign": "CBSSN",
-    "GuideName": "CBS Sports",
+    "GuideName": "CBS Sports Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/cbs-sports-network-us.png"
 },{
     "ChannelId": "9233009829",
@@ -126,8 +126,8 @@
 },{
     "ChannelId": "9200012415",
     "CallSign": "DIY",
-    "GuideName": "DIY",
-    "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/diy-network-us.png"
+    "GuideName": "Magnolia Network",
+    "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/magnolia-network-us.png"
 },{
     "ChannelId": "9200012343",
     "CallSign": "E",
@@ -196,7 +196,7 @@
 },{
     "ChannelId": "9233013967",
     "CallSign": "FXMovie",
-    "GuideName": "FX Movie",
+    "GuideName": "FX Movie Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/fxm-movie-channel-us.png"
 },{
     "ChannelId": "9200018644",
@@ -211,12 +211,12 @@
 },{
     "ChannelId": "9200019858",
     "CallSign": "GSN",
-    "GuideName": "Game Show",
+    "GuideName": "Game Show Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/game-show-network-us.png"
 },{
     "ChannelId": "9200016034",
     "CallSign": "Hallmark",
-    "GuideName": "Hallmark",
+    "GuideName": "Hallmark Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/hallmark-us.png"
 },{
     "ChannelId": "9233004104",
@@ -251,7 +251,7 @@
 },{
     "ChannelId": "9233009825",
     "CallSign": "LifetimeM",
-    "GuideName": "Lifetime Movies",
+    "GuideName": "Lifetime Movie Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/lifetime-movie-network-us.png"
 },{
     "ChannelId": "9200009223",
@@ -286,7 +286,7 @@
 },{
     "ChannelId": "9200000070",
     "CallSign": "NBA",
-    "GuideName": "NBA Network",
+    "GuideName": "NBA TV",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/nba-tv-us.png"
 },{
     "ChannelId": "9233009876",
@@ -331,7 +331,7 @@
 },{
     "ChannelId": "9233008939",
     "CallSign": "OLY",
-    "GuideName": "Olympics",
+    "GuideName": "Olympic Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/olympics.png"
 },{
     "ChannelId": "9200004949",
@@ -391,7 +391,7 @@
 },{
     "ChannelId": "9200017917",
     "CallSign": "Tennis",
-    "GuideName": "Tennis Network",
+    "GuideName": "Tennis Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/tennis-channel-us.png"
 },{
     "ChannelId": "9233004112",
@@ -406,12 +406,12 @@
 },{
     "ChannelId": "9233000035",
     "CallSign": "Travel",
-    "GuideName": "Travel",
+    "GuideName": "Travel Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/travel-channel-us.png"
 },{
     "ChannelId": "9200009547",
     "CallSign": "TruTV",
-    "GuideName": "truTV (East)",
+    "GuideName": "truTV",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/tru-tv-us.png"
 },{
     "ChannelId": "9233005468",
