@@ -162,8 +162,10 @@ class ATSCMsg:
             packet = _video.data[i:i+ATSC_MSG_LEN]
             program_fields = self.decode_ts_packet(packet)
             if program_fields is None:
+                i += ATSC_MSG_LEN
                 continue
             if program_fields['transport_error_indicator']:
+                i += ATSC_MSG_LEN
                 continue
             if program_fields['pid'] == 0x0011:
                 descr = b'\x01' \

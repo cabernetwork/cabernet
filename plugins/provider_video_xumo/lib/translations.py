@@ -27,6 +27,7 @@ xumo_channels = 'kN33yZS7yf5Qyx7KzwUT1qSAXNUFuNz7yM7ousPU'
 xumo_program = 'kslKtspKjNdKXNrMjRPUjZ/KyNJVt6CMgspEtqtZusaIyRt/txrIXItZubp7XNlIgsaMgbUFXItZusiCy8p/ybhZt6C3zZd/yxdYyxr4gbS6tn=='
 
 xumo_groups = {
+    'Black History Month':  groups['DOCUMENTARIES'],
     'Comedy':               groups['COMEDY'],
     'Entertainment':        groups['ENTERTAINMENT'],
     'Food, Drink & Travel': groups['TRAVEL'],
