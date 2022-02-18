@@ -29,6 +29,7 @@ xumo_program = 'kslKtspKjNdKXNrMjRPUjZ/KyNJVt6CMgspEtqtZusaIyRt/txrIXItZubp7XNlI
 xumo_groups = {
     'Black History Month':  groups['DOCUMENTARIES'],
     'Comedy':               groups['COMEDY'],
+    'Documentaries':        groups['DOCUMENTARIES'],
     'Entertainment':        groups['ENTERTAINMENT'],
     'Food, Drink & Travel': groups['TRAVEL'],
     'Kids & Family':        groups['KIDS'],

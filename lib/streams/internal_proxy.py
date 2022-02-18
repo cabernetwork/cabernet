@@ -157,12 +157,10 @@ class InternalProxy(Stream):
         elif self.idle_counter % 6 == 0 and self.is_starting:
             self.write_atsc_msg()
         while not self.out_queue.empty():
-            self.idle_counter = 0
             out_queue_item = self.out_queue.get()
             if out_queue_item['atsc'] is not None:
                 self.channel_dict['atsc'] = out_queue_item['atsc']
-                #self.logger.debug('###### SAVING TO DB {}'.format(len(out_queue_item['atsc'])))
-
+                #self.logger.debug('SAVING TO DB {}'.format(len(out_queue_item['atsc'])))
                 self.db_channels.update_channel_atsc(
                     self.channel_dict)
             uri = out_queue_item['uri']
@@ -179,10 +177,14 @@ class InternalProxy(Stream):
                 self.cue = True
                 self.logger.debug('Turning M3U8 cue to True')
             if data['filtered']:
-                self.logger.debug('Filtered, Sending ATSC Msg {}'.format(self.t_m3u8.pid))
-                self.write_buffer(out_queue_item['stream'])
+                self.logger.info('Filtered Msg {} {}'.format(self.t_m3u8.pid, urllib.parse.unquote(uri)))
+                #self.write_buffer(out_queue_item['stream'])
+                if self.is_starting:
+                    self.is_starting = False
+                    self.write_atsc_msg()
                 time.sleep(0.5)
             else:
+                self.idle_counter = 0
                 self.video.data = out_queue_item['stream']
                 if self.video.data is not None:
                     if self.config['stream']['update_sdt']:
@@ -199,10 +201,6 @@ class InternalProxy(Stream):
                             .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw))
                         self.is_starting = False
                         time.sleep(0.1)
-                    else:
-                        self.write_atsc_msg()
-                else:
-                    self.write_atsc_msg()
             self.check_termination()
             time.sleep(0.01)
         time.sleep(1)
@@ -211,9 +209,10 @@ class InternalProxy(Stream):
     def write_buffer(self, _data):
         try:
             self.wfile.flush()
-            x = self.wfile.write('{}\r\n'.format(len(_data)).encode())
+            # Do not use chunk writes! Just send data.
+            #x = self.wfile.write('{}\r\n'.format(len(_data)).encode())
             x = self.wfile.write(_data)
-            x = self.wfile.write('\r\n'.encode())
+            #x = self.wfile.write('\r\n'.encode())
             self.wfile.flush()
         except socket.timeout as ex:
             raise

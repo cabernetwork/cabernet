@@ -56,7 +56,8 @@ class Channels(PluginChannels):
             ch_id = channel_dict['ChannelId']
             ch_callsign = channel_dict['CallSign']
             if self.get_ustvgo_stream(ch_callsign) is None:
-                self.logger.info('VPN, ignoring channel {}:{}'.format(ch_callsign, channel_dict['GuideName']))
+                self.logger.info('{} VPN, ignoring channel {}:{}'.format(
+                    self.plugin_obj.name, ch_callsign, channel_dict['GuideName']))
                 continue
             thumbnail = None
             thumbnail_size = None
