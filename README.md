@@ -23,10 +23,10 @@ label = PlutoTV Instance
         - PTS/DTS Resync
 - From XML/JSON Links try some of the links
 
-### 2. Docker
+### 3. Docker
 See http://ghcr.io/cabernetwork/cabernet:latest
 
-### 3. Notes
+### 4. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
     - http://ipaddress:6077/channels.m3u
     - http://ipaddress:6077/pLuToTv/channels.m3u
