@@ -79,7 +79,7 @@
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
                         "type": "boolean",
-                        "default": false,
+                        "default": true,
                         "level": 3,
                         "help": "Only works with internalproxy. Filters out streams from URL addresses based on regular expression"
                     },
@@ -114,7 +114,7 @@
                     "player-enable_pts_resync":{
                         "label": "Enable PTS/DTS Resync",
                         "type": "boolean",
-                        "default": false,
+                        "default": true,
                         "level": 2,
                         "help": "Works with internalproxy and ffmpegproxy. Corrects timing issues with the video and audio streams and makes them contiguous"
                     },

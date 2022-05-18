@@ -93,7 +93,7 @@
                     "player-enable_pts_resync":{
                         "label": "Enable PTS/DTS Resync",
                         "type": "boolean",
-                        "default": false,
+                        "default": true,
                         "level": 2,
                         "help": "Works with internalproxy and ffmpegproxy. Corrects timing issues with the video and audio streams and makes them contiguous"
                     },
@@ -129,7 +129,7 @@
                     "epg-enabled":{
                         "label": "XMLTV Enabled",
                         "type": "boolean",
-                        "default": false,
+                        "default": true,
                         "level": 1,
                         "help": "If disabled, will not ingest or populate the XMLTV output with this instance"
                     },

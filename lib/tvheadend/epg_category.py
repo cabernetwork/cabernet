@@ -37,12 +37,14 @@ substantial portions of the Software.
 
 groups = {
     'COMEDY': 'Comedy',
+    'CRIME': 'Crime',
     'CLASSICS': 'Classics',
     'DIY': 'DIY',
     'DOCUMENTARIES': 'Documentaries',
     'ENTERTAINMENT': 'Entertainment',
     'GAMING': 'Gaming',
     'HOLIDAY': 'Holiday',
+    'INTERNATIONAL': 'International',
     'KIDS': 'Kids',
     'LIFESTYLE': 'Lifestyle',
     'LOCAL': 'Local',
@@ -52,7 +54,9 @@ groups = {
     'NEW': 'New',
     'NEWS': 'News',
     'REALITY': 'Reality',
+    'RELIGION': 'Religion',
     'SCIENCE': 'Science',
+    'SCIFI': 'Sci-Fi',
     'SPANISH': 'Spanish',
     'SPORTS': 'Sports',
     'TRAVEL': 'Travel'

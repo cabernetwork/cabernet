@@ -47,7 +47,7 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 6
-IDLE_COUNTER_MAX = 480
+IDLE_COUNTER_MAX = 60
 
 
 class InternalProxy(Stream):
@@ -176,6 +176,7 @@ class InternalProxy(Stream):
             elif data['cue'] == 'out':
                 self.cue = True
                 self.logger.debug('Turning M3U8 cue to True')
+            self.idle_counter = 0
             if data['filtered']:
                 self.logger.info('Filtered Msg {} {}'.format(self.t_m3u8.pid, urllib.parse.unquote(uri)))
                 #self.write_buffer(out_queue_item['stream'])
@@ -184,7 +185,6 @@ class InternalProxy(Stream):
                     self.write_atsc_msg()
                 time.sleep(0.5)
             else:
-                self.idle_counter = 0
                 self.video.data = out_queue_item['stream']
                 if self.video.data is not None:
                     if self.config['stream']['update_sdt']:

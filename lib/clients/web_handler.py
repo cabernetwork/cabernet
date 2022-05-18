@@ -205,9 +205,9 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         cls.init_class_var(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
         if cls.total_instances == 0:
             _plugins.config_obj.data['web']['concurrent_listeners']
-        logger.debug(
-            'Now listening for requests. Number of listeners={}'
-                .format(cls.total_instances))
+        logger.info(
+            '{} Now listening for requests. Number of listeners={}'
+                .format(cls.__name__, cls.total_instances))
         for i in range(cls.total_instances):
             _http_server_class(server_socket, _plugins)
         try:
