@@ -40,7 +40,6 @@ class USTVGO(PluginObj):
         self.unc_ustvgo_epg = self.uncompress(translations.ustvgo_epg)
         self.unc_ustvgo_program = self.uncompress(translations.ustvgo_program)
 
-
     def scheduler_tasks(self):
         sched_ch_hours = random.randint(3,5)
         sched_epg_hours = sched_ch_hours + 1

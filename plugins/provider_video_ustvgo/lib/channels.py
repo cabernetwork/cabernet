@@ -45,6 +45,8 @@ class Channels(PluginChannels):
         This will need to be periodically updated.  Currently, a manual process.
         See https://github.com/benmoose39/ustvgo_to_m3u
         Currently, the channel id must correlate to the national.json file, if present.
+        https://ustvgo.tv/tvguide/national.json
+        The callsign does not seem to be used in ustvgo queries, only the id.
         """
         ch_real_callsigns = self.load_channel_lookup()
         ch_list = []

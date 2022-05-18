@@ -219,6 +219,11 @@
     "GuideName": "Hallmark Channel",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/hallmark-us.png"
 },{
+    "ChannelId": "9200004886",
+    "CallSign": "HBO",
+    "GuideName": "HBO",
+    "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/US/hbo-us.png"
+},{
     "ChannelId": "9233004104",
     "CallSign": "HGTV",
     "GuideName": "HGTV",
@@ -243,6 +248,11 @@
     "CallSign": "ID",
     "GuideName": "Investigation Discovery",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/investigation-discovery-us.png"
+},{
+    "ChannelId": "9233011910",
+    "CallSign": "ION",
+    "GuideName": "ION WPXN",
+    "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/ion-television-us.png"
 },{
     "ChannelId": "9200020452",
     "CallSign": "Lifetime",
@@ -363,6 +373,16 @@
     "CallSign": "SECN",
     "GuideName": "SEC Network",
     "Thumbnail": "https://raw.githubusercontent.com/Theitfixer85/myepg/master/Logos/sec-network-us.png"
+},{
+    "ChannelId": "9200016599",
+    "CallSign": "Showtime",
+    "GuideName": "Showtime",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/Showtime-269x151.png"
+},{
+    "ChannelId": "9233013809",
+    "CallSign": "StarZ",
+    "GuideName": "Starz",
+    "Thumbnail": "https://ustvgo.tv/wp-content/uploads/2019/01/StarZ-269x151.png"
 },{
     "ChannelId": "9233001687",
     "CallSign": "SundanceTV",
