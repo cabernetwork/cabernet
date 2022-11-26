@@ -36,8 +36,8 @@ substantial portions of the Software.
 # 240 Other/Unknown Grey
 
 groups = {
+    'DRAMA': 'Drama',
     'COMEDY': 'Comedy',
-    'CRIME': 'Crime',
     'CLASSICS': 'Classics',
     'DIY': 'DIY',
     'DOCUMENTARIES': 'Documentaries',
@@ -54,12 +54,12 @@ groups = {
     'NEW': 'New',
     'NEWS': 'News',
     'REALITY': 'Reality',
-    'RELIGION': 'Religion',
+    'RELIGION': 'Religion,
     'SCIENCE': 'Science',
-    'SCIFI': 'Sci-Fi',
     'SPANISH': 'Spanish',
     'SPORTS': 'Sports',
-    'TRAVEL': 'Travel'
+    'TRAVEL': 'Travel',
+    'WESTERNS': 'Westerns'
     }
 
 # TVHEADEND CATEGORIES
