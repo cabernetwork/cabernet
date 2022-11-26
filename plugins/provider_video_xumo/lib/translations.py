@@ -60,9 +60,9 @@ xumo_groups = {
     'Pop Culture':          groups['ENTERTAINMENT'],
     'Science & Tech':       groups['SCIENCE'],
     'Sports':               groups['SPORTS'],
-    'Travel & Lifestyle':   groups['TRAVEL']
-    'TV & Movies':          groups['MOVIES']
-    'Weather':              groups['NEWS']
+    'Travel & Lifestyle':   groups['TRAVEL'],
+    'TV & Movies':          groups['MOVIES'],
+    'Weather':              groups['NEWS'],
     'Westerns & Country':   groups['WESTERNS']
     }
 
