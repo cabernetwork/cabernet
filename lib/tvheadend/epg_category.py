@@ -54,7 +54,7 @@ groups = {
     'NEW': 'New',
     'NEWS': 'News',
     'REALITY': 'Reality',
-    'RELIGION': 'Religion,
+    'RELIGION': 'Religion',
     'SCIENCE': 'Science',
     'SPANISH': 'Spanish',
     'SPORTS': 'Sports',
