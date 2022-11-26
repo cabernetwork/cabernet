@@ -35,6 +35,8 @@ plutotv_groups = {
     'En Español':     groups['SPANISH'],
     'Entertainment':  groups['ENTERTAINMENT'],
     'Explore':        groups['DOCUMENTARIES'],
+    'Food':           groups['LIFESTYLE'],
+    'Game Shows':     groups['GAMING'],
     'Gaming + Anime': groups['GAMING'],
     'Home + DIY':     groups['DIY'],
     'Home':           groups['DIY'],
