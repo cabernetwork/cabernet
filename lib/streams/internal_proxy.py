@@ -201,6 +201,10 @@ class InternalProxy(Stream):
                             .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw))
                         self.is_starting = False
                         time.sleep(0.1)
+                else:
+                    uri_decoded = urllib.parse.unquote(uri)
+                    self.logger.debug('No Video Stream from Provider {} {}' \
+                        .format(self.t_m3u8.pid, uri_decoded))
             self.check_termination()
             time.sleep(0.01)
         time.sleep(1)

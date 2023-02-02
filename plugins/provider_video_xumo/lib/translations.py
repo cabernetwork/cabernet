@@ -23,7 +23,7 @@ from lib.tvheadend.epg_category import tvh_genres
 xumo_base = 'gfpMXf5BjIUNkbL7yZl/kqC3XfWPybpKj83CybHFkNUPjRkIjG=='
 xumo_icons = 'gfpMXf5BjIU/ybd8tqSJzbCQjZlQyqUN5qU6gxdFyZrEXIU6gxdFyZrEjRPUjKhL58eC542FXxS8uRpSXxhUkNUEyRi1yNSwyxd6gG=='
 xumo_channel = 'kN33yZS7yf5QkN33yZS7ywUT1qUYXZU3txl3XRnFg8lQy6U+yRrIusPU'
-xumo_channels = 'kN33yZS7yf5Qyx7KzwUT1qSAXNUFuNz7yM7ousPU'
+xumo_channels = 'kN33yZS7yf5Qyx7KzwUT1qSAXNUF'
 xumo_program = 'kslKtspKjNdKXNrMjRPUjZ/KyNJVt6CMgspEtqtZusaIyRt/txrIXItZubp7XNlIgsaMgbUFXItZusiCy8p/ybhZt6C3zZd/yxdYyxr4gbS6tn=='
 
 xumo_groups = {

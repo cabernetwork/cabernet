@@ -38,7 +38,7 @@ class Channels(PluginChannels):
     def get_channels(self):
         channels_url = ''.join([self.plugin_obj.unc_xumo_base,
             self.plugin_obj.unc_xumo_channels
-            .format(self.plugin_obj.geo.channelListId, self.plugin_obj.geo.geoId)])
+            .format(self.plugin_obj.geo.channelListId)])
         ch_json = self.get_uri_json_data(channels_url)
         ch_list = []
         if ch_json is None or len(ch_json) == 0:

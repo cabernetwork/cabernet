@@ -45,20 +45,17 @@ class Geo:
         """
         Geo info comes from json object on the home page
         If the request fails, we will use the last data available in config
+        default geoid:924baa2b channellistid:10006
         """
-        if self.config_obj.data[self.section]['geoid'] is not None and \
-                self.config_obj.data[self.section]['channellistid'] is not None:
-            self.geoId = self.config_obj.data[self.section]['geoid']
+        if self.config_obj.data[self.section]['channellistid'] is not None:
             self.channelListId = self.config_obj.data[self.section]['channellistid']
-            self.logger.debug('Reusing XUMO geoId and channelListId from provider')
+            self.logger.debug('Reusing XUMO channelListId from provider')
         else:
             geo_url = 'https://www.xumo.tv'
             login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
             req = urllib.request.Request(geo_url, headers=login_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 results = json.loads(
-                    re.findall(b'__JOBS_REHYDRATE_STATE__=(.+?);</script>', (resp.read()), flags=re.DOTALL)[0])
-            self.geoId, self.channelListId = results["jobs"]["1"]["data"]["geoId"], results["jobs"]["1"]["data"]["channelListId"]
-            self.config_obj.write(self.section, 'geoid', self.geoId)
+                    re.findall(b'"CHANNEL_LIST_ID":"(.+?)"\,', (resp.read()), flags=re.DOTALL)[0])
+            self.channelListId = results
             self.config_obj.write(self.section, 'channellistid', self.channelListId)
-        
