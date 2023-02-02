@@ -20,6 +20,7 @@
 !define MULTIUSER_INSTALLMODE_FUNCTION onMultiUserModeChanged
 
 ; MUI 1.67 compatible ------
+!addplugindir '.\Plugins\inetc\Plugins'
 !include "MUI.nsh"
 !include "MultiUser.nsh"
 !include "MUI2.nsh"
@@ -67,6 +68,7 @@ var ICONS_GROUP
 
 ; Language files
 !insertmacro MUI_LANGUAGE "English"
+
 
 ; MUI end ------
 
