@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "plutotv":{
-                "label": "PlutoTV",
-                "sort": "PlutoTV2",
+            "123tv":{
+                "label": "123TV",
+                "sort": "123TV2",
                 "icon": "cast_connected",
-                "description": "Settings for PlutoTV Instances",
+                "description": "Settings for 123TV Instances",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -31,14 +31,14 @@
                         "type": "integer",
                         "default": 23,
                         "level": 3,
-                        "help": "Channel list must be this old for update to occur when requested"
+                        "help": "Channel list must be this old in hours for update to occur when requested"
                     },
                     "channel-import_groups":{
                         "label": "Import Channel Groups",
                         "type": "boolean",
                         "default": false,
                         "level": 1,
-                        "help": "Imports groups from PlutoTV into the group other column"
+                        "help": "Imports groups from 123TV into the group other column"
                     },
                     "channel-group_name":{
                         "label": "Group Name",
@@ -79,14 +79,14 @@
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 3,
                         "help": "Only works with internalproxy. Filters out streams from URL addresses based on regular expression"
                     },
                     "player-url_filter":{
                         "label": "URL Filter",
                         "type": "string",
-                        "default": "^.*(_ad/|google.com|plutotv_filler|Well_be_right|_AdPod|_Promo).*$",
+                        "default": null,
                         "level": 3,
                         "help": "Only used with stream_type=internalproxy"
                     },
@@ -153,7 +153,7 @@
                         "default": 0,
                         "values": [1000, 2000, 3000, 4000, 5000],
                         "level": 1,
-                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and PlutoTV at the same time."
+                        "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and 123TV at the same time."
                     },
                     "epg-start_adjustment":{
                         "label": "Start Time Adjustment",
@@ -174,7 +174,7 @@
                         "type": "integer",
                         "default": 3600,
                         "level": 2,
-                        "help": "Default=3600 seconds (1 hours). When a HTTP request for epg data is received, will refresh the data if older than this value."
+                        "help": "Default=3600 seconds (1 hour). When a HTTP request for epg data is received, will refresh the data if older than this value."
                     }
                 }
             }

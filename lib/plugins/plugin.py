@@ -53,7 +53,6 @@ class Plugin:
         self.plugin_path = _plugin_path
         self.config_obj = _config_obj
 
-
         self.db_configdefn = DBConfigDefn(_config_obj.data)
         self.load_config_defn()
 

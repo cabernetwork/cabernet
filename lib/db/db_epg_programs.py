@@ -85,11 +85,11 @@ class DBEpgPrograms(DB):
             datetime.datetime.utcnow(),
             json.dumps(_prog_dict),))
 
-    def del_old_programs(self, _namespace, _instance):
+    def del_old_programs(self, _namespace, _instance, _days='-30 day'):
         """
         Removes all records for this namespace/instance that are over xx days old
         """
-        self.delete(DB_PROGRAMS_TABLE +'_by_day', (_namespace, '-30 day'))
+        self.delete(DB_PROGRAMS_TABLE +'_by_day', (_namespace, _days))
 
     def del_namespace(self, _namespace):
         """

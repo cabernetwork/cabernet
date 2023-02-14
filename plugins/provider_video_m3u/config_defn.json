@@ -21,7 +21,7 @@
                     "player-tuner_count":{
                         "label": "tuner_count",
                         "type": "integer",
-                        "default": 3,
+                        "default": 10,
                         "level": 2,
                         "help": "Number of streams active at one time"
                     }

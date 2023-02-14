@@ -185,10 +185,11 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.channels_db = DBChannels(_plugins.config_obj.data)
         tmp_rmg_scans = {}
         for plugin_name in _plugins.plugins.keys():
-            if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
-                tmp_rmg_scans[plugin_name] = []
-                for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
-                    tmp_rmg_scans[plugin_name].append('Idle')
+            if _plugins.config_obj.data.get(plugin_name.lower()):
+                if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
+                    tmp_rmg_scans[plugin_name] = []
+                    for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
+                        tmp_rmg_scans[plugin_name].append('Idle')
         WebHTTPHandler.rmg_station_scans = tmp_rmg_scans
         if WebHTTPHandler.total_instances == 0:
             WebHTTPHandler.total_instances = _plugins.config_obj.data['web']['concurrent_listeners']
@@ -198,7 +199,18 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
     def start_httpserver(cls, _plugins, _hdhr_queue, _terminate_queue, _port, _http_server_class, _sched_queue=None):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server_socket.bind((_plugins.config_obj.data['web']['bind_ip'], _port))
+        
+        i = 3
+        while True:
+            try:
+                server_socket.bind((_plugins.config_obj.data['web']['bind_ip'], _port))
+                break
+            except OSError:
+                time.sleep(3)
+                i -= 1
+                if i < 1:
+                    raise
+            
         server_socket.listen(int(_plugins.config_obj.data['web']['concurrent_listeners']))
         utils.logging_setup(_plugins.config_obj.data)
         logger = logging.getLogger(__name__)

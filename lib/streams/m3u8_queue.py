@@ -74,14 +74,18 @@ class M3U8Queue(Thread):
             self.pts_validation = PTSValidation(_config, _channel_dict)
         self.video = Video(self.config)
         self.atsc = _channel_dict['atsc']
+        if _channel_dict['json'].get('Header') is None:
+            self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
+        else:
+            self.header = _channel_dict['json']['Header']
+        
         self.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
         self.key_list = {}
         self.start()
 
     @handle_url_except()
     def get_uri_data(self, _uri):
-        header = {'User-agent': utils.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(_uri, headers=header)
+        req = urllib.request.Request(_uri, headers=self.header)
         with urllib.request.urlopen(req, timeout=5.0) as resp:
             x = resp.read()
         return x
@@ -160,9 +164,6 @@ class M3U8Queue(Thread):
                 self.atsc = p_list
                 self.channel_dict['atsc'] = p_list
                 self.initialized_psi = True
-                #self.logger.debug('###### SENDING PACKETS TO INTERNAL_PROXY {}'.format(len(p_list)))
-                #self.logger.debug('{}'.format(p_list))
-                
                 return p_list
 
         elif not self.initialized_psi:
@@ -297,6 +298,10 @@ class M3U8Process(Thread):
         global TERMINATE_REQUESTED
         self.config = _config
         self.channel_dict = _channel_dict
+        if _channel_dict['json'].get('Header') is None:
+            self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
+        else:
+            self.header = _channel_dict['json']['Header']
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
@@ -402,8 +407,8 @@ class M3U8Process(Thread):
     @handle_json_except
     def get_m3u8_data(self, _uri):
         # it sticks here.  Need to find a work around for the socket.timeout per process
-        return m3u8.load(_uri,
-            headers={'User-agent': utils.DEFAULT_USER_AGENT})
+        return m3u8.load(_uri, headers=self.header)
+
 
     def add_to_stream_queue(self, _playlist):
         global PLAY_LIST

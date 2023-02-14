@@ -1,0 +1,15 @@
+{
+    "id": "provider_video_123tv",
+    "name": "123TV",
+    "version": "0.9.7",
+    "provider-name": "rocky4546",
+    "summary": "Watch TV channels from 123tv.live website.",
+    "description": "Watch Free TV! Stream 123TV TV's channels of news, sports, and the Internet's best, completely free.",
+    "category": ["video"],
+    "license": "MIT License, Copyright (C) 2023 ROCKY4546",
+    "source": "https://github.com/cabernetwork/cabernet",
+    "forum": "https://tvheadend.org/boards/5/topics/43052",
+    "website": "https://123tv.live/",
+    "icon": "resources/images/icon.jpg",
+    "fanart": "resources/images/fanart.png"
+}

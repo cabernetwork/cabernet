@@ -109,6 +109,12 @@ sqlcmds = {
         UPDATE channels SET 
             atsc=?
             WHERE namespace=? AND instance=? AND uid=?
+        """,
+    'channels_json_update':
+        """
+        UPDATE channels SET 
+            json=?
+            WHERE namespace=? AND instance=? AND uid=?
         """,        
     'channels_del':
         """
@@ -289,7 +295,7 @@ class DBChannels(DB):
 
     def update_channel_atsc(self, _ch):
         """
-        Updates the editable fields for one channel
+        Updates the atsc field for one channel
         """
         atsc_str = str(_ch['atsc'])
         self.update(DB_CHANNELS_TABLE+'_atsc', (
@@ -297,6 +303,18 @@ class DBChannels(DB):
             _ch['namespace'],
             _ch['instance'],
             _ch['uid']
+        ))
+
+    def update_channel_json(self, _ch, _namespace, _instance):
+        """
+        Updates the json field for one channel
+        """
+        json_str = json.dumps(_ch)
+        self.update(DB_CHANNELS_TABLE+'_json', (
+            json_str,
+            _namespace,
+            _instance,
+            _ch['id']
         ))
 
     def get_sorted_channels(self, _namespace, _instance, _first_sort_key=[None, True], _second_sort_key=[None, True]):

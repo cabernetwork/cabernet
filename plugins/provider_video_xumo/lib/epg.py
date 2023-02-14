@@ -75,12 +75,12 @@ class EPG(PluginEPG):
         start_hour = datetime.datetime.utcnow().hour - 2
         if start_hour < 0:
             start_hour = 0
-        self.logger.info('{}:{} Processing {} Channels from hour {}:00 to hour 23:00 UTC' \
+        self.logger.info('{}:{} Processing {} EPG Channels from hour {}:00 to hour 23:00 UTC' \
                 .format(self.plugin_obj.name, self.instance_key, len(ch_list.keys()), start_hour))
         for ch in ch_list.keys():
             if not ch_list[ch][0]['enabled']:
                 continue
-            self.logger.debug('{}:{} Processing Channel {} ' \
+            self.logger.debug('{}:{} Processing EPG Channel {} ' \
                 .format(self.plugin_obj.name, self.instance_key, ch, ch_list[ch][0]['display_name']))
             for hr in range(start_hour,24):
                 url = ''.join([self.plugin_obj.unc_xumo_base,

@@ -5,11 +5,11 @@
         "label": "Providers",
         "description": "Streaming Services",
         "sections":{
-            "xumo":{
-                "label": "XUMO",
-                "sort": "XUMO1",
+            "123tv":{
+                "label": "123TV",
+                "sort": "123TV1",
                 "icon": "cast",
-                "description": "Settings for XUMO",
+                "description": "Settings for 123TV",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -17,22 +17,6 @@
                         "default": true,
                         "level": 1,
                         "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
-                    },
-                    "geoid": {
-                        "label": "geoId",
-                        "type": "string",
-                        "default": null,
-                        "level": 4,
-                        "writable": false,
-                        "help": "Set by XUMO"
-                    },
-                    "channelListId": {
-                        "label": "channelListId",
-                        "type": "string",
-                        "default": null,
-                        "level": 4,
-                        "writable": false,
-                        "help": "Set by XUMO"
                     },
                     "player-tuner_count":{
                         "label": "tuner_count",

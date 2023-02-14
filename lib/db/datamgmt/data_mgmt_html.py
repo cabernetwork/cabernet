@@ -30,6 +30,7 @@ from lib.common.decorators import postrequest
 import lib.db.datamgmt.backups as backups
 from lib.db.db_channels import DBChannels
 from lib.db.db_epg import DBepg
+from lib.db.db_epg_programs import DBEpgPrograms
 from lib.db.db_scheduler import DBScheduler
 from lib.db.db_plugins import DBPlugins
 
@@ -95,6 +96,9 @@ def reset_epg(_config, _name):
     db_epg = DBepg(_config)
     db_epg.del_old_programs(_name, None, '0 day')
     db_epg.set_last_update(_name)
+    db_epg_programs = DBEpgPrograms(_config)
+    db_epg_programs.del_namespace(_name)
+
     if _name is None:
         return 'EPG updated and will refresh all days on next request'
     else:
@@ -144,6 +148,14 @@ def del_instance(_config, _name):
         html = ''.join([html, 
             '<b>', _name, '</b> deleted from EPG<br>'
             ])
+
+    db_programs = DBEpgPrograms(_config)
+    db_programs.del_namespace(name_inst[0])
+    if num_del > 0:
+        html = ''.join([html, 
+            '<b>', name_inst[0], '</b> deleted from EPG Programs<br>'
+            ])
+
 
     db_sched = DBScheduler(_config)
     task_list = db_sched.get_tasks_by_name(name_inst[0], name_inst[1])
@@ -416,14 +428,21 @@ class DataMgmtHTML:
     @property
     def select_reset_epg(self):
         db_epg = DBepg(self.config)
-        plugins_epg = db_epg.get_epg_names()
+        db_epg_programs = DBEpgPrograms(self.config)
+
+        plugin_epg = db_epg.get_epg_names()
+        plugin_programs = db_epg_programs.get_program_names()
+        plugin_epg_names = [ s['namespace'] for s in plugin_epg ]
+        plugin_programs_names = [ s['namespace'] for s in plugin_programs ]
+        plugin_list = list(set(plugin_epg_names+plugin_programs_names))
+                
         html_option = ''.join([
             '<td nowrap>Plugin: <select id="name" name="name"</select>',
             '<option value="">ALL</option>',
             ])
-        for name in plugins_epg:
+        for name in plugin_list:
             html_option = ''.join([html_option,
-                '<option value="', name['namespace'], '">', name['namespace'], '</option>',
+                '<option value="', name, '">', name, '</option>',
                 ])
         return ''.join([html_option, '</select></td></tr>' ])
 

@@ -28,6 +28,7 @@ xumo_program = 'kslKtspKjNdKXNrMjRPUjZ/KyNJVt6CMgspEtqtZusaIyRt/txrIXItZubp7XNlI
 
 xumo_groups = {
     'Action & Drama':       groups['DRAMA'],
+    'Black Voices. Black Stories.': groups['ENTERTAINMENT'],
     'Classic TV':           groups['CLASSICS'],
     'Combat Sports':        groups['SPORTS'],
     'Comedy':               groups['COMEDY'],
@@ -67,16 +68,27 @@ xumo_groups = {
     }
 
 xumo_tv_genres = {
-    "Comedy": [ tvh_genres['COMEDY'] ],
+    "Classics":   [ tvh_genres['MOVIE'] ],
+    "Comedy":   [ tvh_genres['COMEDY'] ],
+    "DIY":      [ tvh_genres['HANDICRAFT'] ],
+    "Documentaries": [ tvh_genres['DOCUMENTARY'] ],
+    "Drama":    [ tvh_genres['MOVIE'] ],
     "Entertainment": [ tvh_genres['GAME'] ],
-    "Holiday": [ tvh_genres['SPIRITUAL'] ],
-    "Kids": [ tvh_genres['KIDS'] ],
+    "Gaming":   [ tvh_genres['SPORT'] ],
+    "Holiday":  [ tvh_genres['SPIRITUAL'] ],
+    "International": [ tvh_genres['FOREIGN'] ],
+    "Kids":     [ tvh_genres['KIDS'] ],
     "Lifestyle": [ tvh_genres['CULTURE'] ],
-    "Movies": [ tvh_genres['MOVIE'] ],
-    "Music": [ tvh_genres['MUSIC'] ],
-    "News": [ tvh_genres['NEWS'] ],
-    "Science": [ tvh_genres['SCIENCE'] ],
-    "Spanish": [ tvh_genres['LANGUAGES'] ],
-    "Sports": [ tvh_genres['SPORT'] ],
-    "Travel": [ tvh_genres['TRAVEL'] ],
+    "Local":    [ tvh_genres['NEWS'] ],
+    "Movies":   [ tvh_genres['MOVIE'] ],
+    "Music":    [ tvh_genres['MUSIC'] ],
+    "Mystery":  [ tvh_genres['MOVIE'] ],
+    "News":     [ tvh_genres['NEWS'] ],
+    "Reality":  [ tvh_genres['GAME'] ],
+    "Religion": [ tvh_genres['RELIGION'] ],
+    "Science":  [ tvh_genres['SCIENCE'] ],
+    "Spanish":  [ tvh_genres['LANGUAGES'] ],
+    "Sports":   [ tvh_genres['SPORT'] ],
+    "Travel":   [ tvh_genres['TRAVEL'] ],
+    "Westerns": [ tvh_genres['ADVENTURE'] ]    
     }

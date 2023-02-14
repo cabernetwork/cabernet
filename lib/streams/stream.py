@@ -82,8 +82,8 @@ class Stream:
                 'headers': {'Content-type': 'video/MP2T;'},
                 'text': None}
         else:
-            self.logger.warning('All tuners already in use [{}][{}]' \
-                .format(_namespace, _instance))
+            self.logger.warning('All tuners already in use [{}][{}] max tuners: {}' \
+                .format(_namespace, _instance, len(WebHTTPHandler.rmg_station_scans[_namespace])))
             return {
                 'tuner': i,
                 'code': 400,

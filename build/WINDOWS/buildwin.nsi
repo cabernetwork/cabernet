@@ -20,7 +20,9 @@
 !define MULTIUSER_INSTALLMODE_FUNCTION onMultiUserModeChanged
 
 ; MUI 1.67 compatible ------
-!addplugindir '.\Plugins\inetc\Plugins'
+!addplugindir '.\Plugins\inetc\Plugins\x86-unicode'
+!addplugindir '.\Plugins\ZipDLL'
+
 !include "MUI.nsh"
 !include "MultiUser.nsh"
 !include "MUI2.nsh"

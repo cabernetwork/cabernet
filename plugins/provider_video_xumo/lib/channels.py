@@ -73,7 +73,8 @@ class Channels(PluginChannels):
             vod = False
             if 'properties' in channel_dict and 'has_vod' in channel_dict['properties']:
                 vod = channel_dict['properties']['has_vod'] == 'true'
-            
+            self.logger.debug("{}: Adding Channel {}"
+                .format(self.plugin_obj.name, friendly_name))
             channel = {
                 'id': ch_id,
                 'enabled': True,
@@ -108,11 +109,24 @@ class Channels(PluginChannels):
                 break
 
         if prog_id is None:
-            prog_id = listing['assets'][len(listing['assets'])-1]['id']
-            self.logger.debug('XUMO current list of current topics are outside of current time {} using {}' \
-                .format(listing['assets'], prog_id))
+            if len(listing['assets']) > 0:
+                prog_id = listing['assets'][len(listing['assets'])-1]['id']
+                self.logger.debug('XUMO current list of current topics are outside of current time {} using {}' \
+                    .format(listing['assets'], prog_id))
+            else:
+                self.logger.debug('XUMO program id not provided, unable to obtain URL, aborting')
+                return None
+
         prog_dict = self.db_programs.get_program(self.plugin_obj.name, prog_id)
+        update_prog_data = False
         if len(prog_dict) == 0:
+            update_prog_data = True
+        else:
+            json_list = json.loads(prog_dict[0]['json'])
+            if json_list['stream_url'] is None:
+                update_prog_data = True
+
+        if update_prog_data:
             self.logger.info('XUMO program not in database so EPG is not upto date. Try refreshing EPG. prog:{} ch:{}' \
                 .format(prog_id, _channel_id))
             json_list = self.epg.update_program_info(prog_id)
@@ -123,11 +137,14 @@ class Channels(PluginChannels):
         else:
             json_list = json.loads(prog_dict[0]['json'])
 
-        stream_url = json_list['stream_url']
+        stream_url = json_list.get('stream_url')
+        if stream_url is None:
+            self.logger.info('XUMO: Unable to find stream URL for program, aborting')
+            return None
         self.logger.debug('Determining best video stream for {}...' \
             .format(_channel_id))
         bestStream = None
-
+        
         # find the heighest stream url bandwidth and save it to the list
         videoUrlM3u = self.get_m3u8_data(stream_url)
         self.logger.debug('Found {} Playlists'.format(str(len(videoUrlM3u.playlists))))

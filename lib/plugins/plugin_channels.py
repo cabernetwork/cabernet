@@ -91,10 +91,15 @@ class PluginChannels:
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
-    def get_m3u8_data(self, _uri):
-        return m3u8.load(_uri,
-            headers={'User-agent': utils.DEFAULT_USER_AGENT})
-    
+    def get_m3u8_data(self, _uri, _header=None):
+        if _header is None:
+            return m3u8.load(_uri,
+                headers={'User-agent': utils.DEFAULT_USER_AGENT})
+        else:
+            return m3u8.load(_uri,
+                headers=_header)
+
+        
     def refresh_channels(self, force=False):
         self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
         last_update = self.db.get_status(self.plugin_obj.name, self.instance_key)

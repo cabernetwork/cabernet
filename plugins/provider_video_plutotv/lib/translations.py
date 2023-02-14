@@ -26,6 +26,7 @@ from lib.tvheadend.epg_category import tvh_genres
 pluto_base = 'gfpMXf5BjIU3XxoFXxLCzxHFzfkQz62QkN33yZS7yf5='
 
 plutotv_groups = {
+    'Black Voices. Black Stories.': groups['ENTERTAINMENT'],
     'Classic TV':     groups['CLASSICS'],
     'Comedy':         groups['COMEDY'],
     'Crime':          groups['MYSTERY'],
@@ -69,6 +70,7 @@ plutotv_tv_genres = {
     "Comedy": [ tvh_genres['COMEDY'] ],
     "Documentaries": [ tvh_genres['DOCUMENTARY'] ],
     "Drama": [ tvh_genres['MOVIE'] ],
+    "Entertainment": [ tvh_genres['GAME'] ],
     "Faith and Spirituality": [ tvh_genres['RELIGION'] ],
     "Horror": [ tvh_genres['SF'] ],
     "Independent": [ tvh_genres['NEWS_MAGAZINE'] ],
@@ -79,6 +81,7 @@ plutotv_tv_genres = {
     "Reality": [ tvh_genres['GAME'] ],
     "Romance": [ tvh_genres['ROMANCE'] ],
     "Sci-Fi & Fantasy": [ tvh_genres['SF'] ],
+    "Sports": [ tvh_genres['SPORT'] ],
     "Thrillers": [ tvh_genres['THRILLER'] ],
     "No information available": None,
     "Other": None,
