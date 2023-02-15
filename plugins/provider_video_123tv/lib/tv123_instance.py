@@ -37,3 +37,15 @@ class TV123Instance(PluginInstanceObj):
 
         self.channels = Channels(self)
         self.epg = EPG(self)
+
+    def scan_channels(self):
+        """
+        Scans the channels that are disabled or untested to see if they should be disabled
+        """
+        self.config_obj.refresh_config_data()
+        if self.channels is not None and \
+                self.config_obj.data[self.config_section]['enabled']:
+            self.channels.scan_channels()
+        else:
+            self.logger.debug('{}:{} Plugin instance disabled, not scanning Channels' \
+                .format(self.plugin_obj.name, self.instance_key))

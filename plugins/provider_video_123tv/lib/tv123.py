@@ -21,6 +21,7 @@ import random
 import time
 import urllib.request
 
+import lib.common.exceptions as exceptions
 from lib.plugins.plugin_obj import PluginObj
 
 from .tv123_instance import TV123Instance
@@ -43,6 +44,28 @@ class TV123(PluginObj):
         self.unc_tv123_prog_details = self.uncompress(translations.tv123_prog_details)
         self.unc_tv123_image = self.uncompress(translations.tv123_image)
 
+    def scan_channels(self, _instance=None):
+        """
+        Called from the scheduler
+        Requests a stream for each of the disabled channels to see if they
+        are up
+        """
+        try:
+            if not self.enabled:
+                self.logger.debug('{} Plugin disabled, not scanning channels' \
+                    .format(self.plugin.name))
+                return
+            if _instance is None:
+                for key, instance in self.instances.items():
+                    instance.scan_channels()
+            else:
+                self.instances[_instance].scan_channels()
+        except exceptions.CabernetException:
+            self.logger.debug('CabernetException channel scan task: Setting plugin {} to disabled'
+                .format(self.plugin.name))
+            self.enabled = False
+            self.plugin.enabled = False
+
     def scheduler_tasks(self):
         self.logger.warning("scheduler task running")
         sched_epg_local1_hours = 1
@@ -55,6 +78,10 @@ class TV123(PluginObj):
         sched_ch_hours = self.utc_to_local_time(23)
         sched_ch_mins = random.randint(1,55)
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
+        sched_scan_local_hours = 1
+        sched_scan_mins = random.randint(1,55)
+        sched_scan = '{:0>2d}:{:0>2d}'.format(sched_scan_local_hours, sched_scan_mins)
+        
         if self.scheduler_db.save_task(
                 'Channels',
                 'Refresh {} Channels'.format(self.namespace),
@@ -109,4 +136,21 @@ class TV123(PluginObj):
                 'Refresh {} EPG'.format(self.namespace),
                 'daily',
                 timeofday=sched_epg_local2
+                )
+        if self.scheduler_db.save_task(
+                'Unique',
+                'Scan {} Disabled Channels'.format(self.namespace),
+                self.name,
+                None,
+                'scan_channels',
+                5,
+                'thread',
+                'Scans disabled channels to see if they are up'
+                ):
+            self.scheduler_db.save_trigger(
+                'Unique',
+                'Scan {} Disabled Channels'.format(self.namespace),
+                'weekly',
+                dayofweek='Sunday',
+                timeofday=sched_scan
                 )

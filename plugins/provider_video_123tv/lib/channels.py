@@ -19,25 +19,25 @@ substantial portions of the Software.
 import base64
 import datetime
 import hashlib
+import html
 import json
+import re
+import sys
+import threading
 import time
 import urllib
-import re
-import html
-
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.primitives import padding
 from cryptography.hazmat.backends import default_backend
-
-
-import lib.common.exceptions as exceptions
-import lib.common.utils as utils
+from multiprocessing import Queue, Process
 
 import lib.clients.channels.channels as channels
 from lib.plugins.plugin_channels import PluginChannels
 from lib.db.db_epg_programs import DBEpgPrograms
 from lib.common.decorators import handle_json_except
 from lib.common.decorators import handle_url_except
+import lib.common.exceptions as exceptions
+import lib.common.utils as utils
 
 
 class Channels(PluginChannels):
@@ -52,6 +52,7 @@ class Channels(PluginChannels):
         self.search_key = re.compile(r'(?<=\[)[\d+\,]+(?=\])')
         self.search_query = re.compile(r'(?<=\')\S+(?=\';}$)')
         self.search_epg_id = re.compile(r'<iframe.+\/123tv\.live\/epg\/.+html#(\d+)')
+        self.ch_db_list = None
 
     def get_channels(self):
         is_ch_list_done = False
@@ -59,6 +60,10 @@ class Channels(PluginChannels):
         ch_list = []
 
         self.ch_db_list = self.db.get_channels(self.plugin_obj.name, self.instance_key)
+        if self.ch_db_list:
+            is_run_scans = False
+        else:
+            is_run_scans = True
         
         page = 0
         while not is_ch_list_done:
@@ -79,7 +84,40 @@ class Channels(PluginChannels):
         for ch in channels:
             ch['number'] = ch_num
             ch_num += 1
+
+        # run channel scans if first time
+        if is_run_scans:
+            # this will run the scan parallel and after this method completes
+            scan = threading.Thread(target=self.scan_channels)
+            scan.start()
         return channels
+
+
+    def scan_channels(self):
+        self.ch_db_list = {}
+        count = 5
+        while not self.ch_db_list:
+            time.sleep(1)
+            self.ch_db_list = self.db.get_channels(self.plugin_obj.name, self.instance_key)
+            count -= 1
+            if count < 0:
+                self.logger.warning('{}: Channel DB empty, aborting scan'.format(self.plugin_obj.name))
+                break
+            
+        for ch_id in self.ch_db_list:
+            ch_enabled = self.ch_db_list[ch_id][0]['enabled']
+            ch_status = self.ch_db_list[ch_id][0]['json']['status']
+            
+            # scan channels where status is down
+            # status of down means the channel has never worked
+            if ch_status == 'down':
+                # standard case, rescan
+                url = self.get_channel_uri(ch_id)
+                self.logger.debug('{}: Completed scan for channel {}'.format(self.plugin_obj.name, ch_id))
+        self.logger.notice('{}: Disabled Channel Scan Completed'.format(self.plugin_obj.name))
+        time.sleep(1)
+        # sleep required to print out last log entry
+
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -94,19 +132,24 @@ class Channels(PluginChannels):
         # Check if this is a normal m3u8 url in player
         uri = self.get_m3u8_uri(text, uri)
         if uri is not None:
-            self.logger.debug('{} : Regular M3U8 URL found'.format(self.plugin_obj.name))
+            self.logger.debug('{} : Regular M3U8 URL found {}'.format(self.plugin_obj.name, _channel_id))
+            ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
+            ch_json = ch_dict['json']
+            if ch_json['status'] == 'down' and ch_dict['enabled']:
+                ch_json['status'] = 'up'
+                self.db.update_channel_json(ch_json, self.plugin_obj.name, self.instance_key)
             return uri
 
         # Check if this url is hidden and encrypted
-        uri = self.get_enc_uri(text)
+        uri = self.get_enc_uri(text, _channel_id)
         if uri is None:
-            self.logger.warning('{} : Unable to find encrypted URL stream, aborting'.format(self.plugin_obj.name))
+            self.logger.info('{} : Unable to find encrypted URL stream, aborting {}'.format(self.plugin_obj.name, _channel_id))
             return
 
         # it takes 2 http pulls to obtain the m3u8 url
         stream_url = self.get_enc_uri2(uri)
         if stream_url is None:
-            self.logger.warning('{} : Unable to find m3u8 URL from encrypted URL, aborting'.format(self.plugin_obj.name))
+            self.logger.info('{} : Unable to find m3u8 URL from encrypted URL, aborting'.format(self.plugin_obj.name))
             return
 
         header = {
@@ -124,8 +167,8 @@ class Channels(PluginChannels):
                 ch_json['enabled'] = False
                 self.db.update_channel(ch_dict)
                 self.db.update_channel_json(ch_json, self.plugin_obj.name, self.instance_key)
-            self.logger.warning('{}: Unable to open m3u8 enc stream URL, possible P2P issue, aborting'
-                .format(self.plugin_obj.name))
+            self.logger.info('{}: Unable to open m3u8 enc stream URL, possible P2P issue, aborting {}'
+                .format(self.plugin_obj.name, ch_dict['uid']))
             return
         if not (ch_json['status'] == 'up' and ch_dict['enabled']):
             if ch_json['status'] == 'down':
@@ -136,7 +179,7 @@ class Channels(PluginChannels):
                 ch_json['enabled'] = True
                 json_needs_updating = True
                 self.db.update_channel(ch_dict)
-                self.logger.info('{} Enabling channel {}'.format(self.plugin_obj.name, ch_dict['name']))
+                self.logger.info('{} Enabling channel {}'.format(self.plugin_obj.name, ch_dict['uid']))
         
         videoUrlM3u = self.get_m3u8_data(stream_url, _header=header)
         self.logger.debug('Found {} Playlist(s)'.format(str(len(videoUrlM3u.playlists))))
@@ -235,6 +278,7 @@ class Channels(PluginChannels):
                 'epg_id': epg_id
             }
             ch_list.append(channel)
+            self.logger.debug('{} Added Channel {}:{}'.format(self.plugin_obj.name, m[0], name))
         return ch_list
 
     @handle_url_except(timeout=10.0)
@@ -274,9 +318,10 @@ class Channels(PluginChannels):
                     return m3u8_url2
             else:
                 self.logger.warning('{} : Unable to find m3u8 url. This should not happen...'.format(self.plugin_obj.name))
+        return
 
     @handle_json_except
-    def get_enc_uri(self, text):
+    def get_enc_uri(self, text, _channel_id):
         """
         Used when 123tv uses encryption strings within javascript.
         resulting in a m3u8 url that produces json data
@@ -285,14 +330,12 @@ class Channels(PluginChannels):
         try:
             enc_text, enc_key, enc_query_str = m.group(1).split('};')
         except ValueError:
-            self.logger.warning('{} : VALUE ERROR first match does not have enough values, aborting'.format(self.plugin_obj.name))
-            self.logger.debug(m.group())
+            self.logger.debug('{} : VALUE ERROR no encryption keys were found, aborting {}'.format(self.plugin_obj.name, _channel_id))
             return
 
         m2 = re.search(self.search_split, enc_text)
         if not m2:
-            self.logger.warning('{} : Unable to split the encrypted text string, aborting'.format(self.plugin_obj.name))
-            self.logger.debug(m2.group())
+            self.logger.debug('{} : Unable to split the encrypted text string, aborting {}'.format(self.plugin_obj.name, _channel_id))
             return
             
         b64_str = ''.join(m2.group().replace("'",'').split(','))
