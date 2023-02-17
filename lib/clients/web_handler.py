@@ -56,7 +56,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
             if int(args[1]) > 399:
                 self.logger.warning('[%s] %s' % (self.address_string(), _format % args))
             else:
-                self.logger.info('[%s] %s' % (self.address_string(), _format % args))
+                self.logger.debug('[%s] %s' % (self.address_string(), _format % args))
         except (IndexError, ValueError):
             self.logger.error('[%s] %s' % (self.address_string(), _format % args))
 
