@@ -1,0 +1,33 @@
+{
+    "providers":{
+        "id": null,
+        "icon": "cast",
+        "label": "Providers",
+        "description": "Streaming Services",
+        "sections":{
+            "daddylive":{
+                "label": "DaddyLive",
+                "sort": "DaddyLive1",
+                "icon": "cast",
+                "description": "Settings for DaddyLive",
+                "settings":{
+                    "enabled":{
+                        "label": "Enabled",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
+                    },
+                    "player-tuner_count":{
+                        "label": "tuner_count",
+                        "type": "integer",
+                        "default": 10,
+                        "level": 2,
+                        "help": "Number of streams active at one time"
+                    }
+                }
+            }
+        }
+    }
+}
+

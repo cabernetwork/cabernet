@@ -432,7 +432,6 @@ class ChannelsFormHTML:
         elif size_text == 'Full-Size':
             return None
         else:
-            self.logger.warning('UNKNOWN [channels][thumbnail_size] = {}'.format(size_text))
             return None
 
 

@@ -15,11 +15,14 @@ get_image_size.py
     :Copyright:   (c) Paulo Scardine 2013
     :Licence:     MIT
 
+    rocky4546: added webp format
+
 """
 import collections
 import json
 import os
 import io
+import re
 import struct
 
 FILE_UNKNOWN = "Sorry, don't know how to get size for this file."
@@ -36,6 +39,7 @@ ICO = types['ICO'] = 'ICO'
 JPEG = types['JPEG'] = 'JPEG'
 PNG = types['PNG'] = 'PNG'
 TIFF = types['TIFF'] = 'TIFF'
+WEBP = types['WEBP'] = 'WEBP'
 
 image_fields = ['path', 'type', 'file_size', 'width', 'height']
 
@@ -119,7 +123,7 @@ def get_image_metadata_from_bytesio(input, size, file_path=None):
     """
     height = -1
     width = -1
-    data = input.read(26)
+    data = input.read(40)
     msg = " raised while trying to decode as JPEG."
 
     if (size >= 10) and data[:6] in (b'GIF87a', b'GIF89a'):
@@ -186,6 +190,28 @@ def get_image_metadata_from_bytesio(input, size, file_path=None):
             raise UnknownImageFormat(
                 "Unkown DIB header size:" +
                 str(headersize))
+
+    elif (size >= 30) and \
+        data.startswith(b'RIFF') and \
+        data[8:15] == b'WEBPVP8':
+        imgtype = WEBP
+        format = data[15:16]
+        if format == b' ':
+            s = data[26:30]
+            w, h = struct.unpack("<HH", data[26:30])
+            width = int(w)
+            height = int(h)
+        elif format == b'L':
+            raise UnknownImageFormat('WEBP lossless not processed')
+        elif format == b'X':
+            w = ord(data[24:25]) + (ord(data[25:26]) << 8) + (ord(data[26:27]) << 16) + 1
+            h = ord(data[27:28]) + (ord(data[28:29]) << 8) + (ord(data[29:30]) << 16) + 1
+            width = int(w)
+            height = int(h)
+        else:
+            raise UnknownImageFormat('WEBP unknown format')
+
+
     elif (size >= 8) and data[:4] in (b"II\052\000", b"MM\000\052"):
         # Standard TIFF, big- or little-endian
         # BigTIFF and other different but TIFF-like formats are not

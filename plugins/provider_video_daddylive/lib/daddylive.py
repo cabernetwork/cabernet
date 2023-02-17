@@ -24,25 +24,19 @@ import urllib.request
 import lib.common.exceptions as exceptions
 from lib.plugins.plugin_obj import PluginObj
 
-from .tv123_instance import TV123Instance
+from .daddylive_instance import DaddyLiveInstance
 from ..lib import translations
 
 
-class TV123(PluginObj):
+class DaddyLive(PluginObj):
 
     def __init__(self, _plugin):
         super().__init__(_plugin)
         for inst in _plugin.instances:
-            self.instances[inst] = TV123Instance(self, inst)
-        self.unc_tv123_base = self.uncompress(translations.tv123_base)
-        self.unc_tv123_additional_channels = self.uncompress(translations.tv123_additional_channels)
-        self.unc_tv123_wp_more_ch_cmd = self.uncompress(translations.tv123_wp_more_ch_cmd)
-        self.unc_tv123_stream_channel = self.uncompress(translations.tv123_stream_channel)
-        self.unc_tv123_referer = self.uncompress(translations.tv123_referer)
-        self.unc_tv123_ch_epg = self.uncompress(translations.tv123_ch_epg)
-        self.unc_tv123_agpigee_referer = self.uncompress(translations.tv123_agpigee_referer)
-        self.unc_tv123_prog_details = self.uncompress(translations.tv123_prog_details)
-        self.unc_tv123_image = self.uncompress(translations.tv123_image)
+            self.instances[inst] = DaddyLiveInstance(self, inst)
+        self.unc_daddylive_base = self.uncompress(translations.daddylive_base)
+        self.unc_daddylive_channels = self.uncompress(translations.daddylive_channels)
+        self.unc_daddylive_stream = self.uncompress(translations.daddylive_stream)
 
 
     def scan_channels(self, _instance=None):
@@ -68,12 +62,8 @@ class TV123(PluginObj):
             self.plugin.enabled = False
 
     def scheduler_tasks(self):
-        sched_epg_local1_hours = 1
-        sched_epg_local2_hours = 12
-        sched_epg_hours = self.utc_to_local_time(0)
+        sched_epg_hours = 0
         sched_epg_mins = random.randint(1,55)
-        sched_epg_local1 = '{:0>2d}:{:0>2d}'.format(sched_epg_local1_hours, sched_epg_mins)
-        sched_epg_local2 = '{:0>2d}:{:0>2d}'.format(sched_epg_local2_hours, sched_epg_mins)
         sched_epg = '{:0>2d}:{:0>2d}'.format(sched_epg_hours, sched_epg_mins)
         sched_ch_hours = self.utc_to_local_time(23)
         sched_ch_mins = random.randint(1,55)
@@ -122,35 +112,4 @@ class TV123(PluginObj):
                 'Refresh {} EPG'.format(self.namespace),
                 'daily',
                 timeofday=sched_epg
-                )
-            # update after midnight gmt time
-            self.scheduler_db.save_trigger(
-                'EPG',
-                'Refresh {} EPG'.format(self.namespace),
-                'daily',
-                timeofday=sched_epg_local1
-                )
-            # update after noon gmt time
-            self.scheduler_db.save_trigger(
-                'EPG',
-                'Refresh {} EPG'.format(self.namespace),
-                'daily',
-                timeofday=sched_epg_local2
-                )
-        if self.scheduler_db.save_task(
-                'Unique',
-                'Scan {} Disabled Channels'.format(self.namespace),
-                self.name,
-                None,
-                'scan_channels',
-                5,
-                'thread',
-                'Scans disabled channels to see if they are up'
-                ):
-            self.scheduler_db.save_trigger(
-                'Unique',
-                'Scan {} Disabled Channels'.format(self.namespace),
-                'weekly',
-                dayofweek='Sunday',
-                timeofday=sched_scan
                 )

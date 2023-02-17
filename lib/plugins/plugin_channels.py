@@ -148,6 +148,7 @@ class PluginChannels:
                 ch_dict = ch_row['json']
                 if ch_row['json']['thumbnail'] == _thumbnail:
                     return ch_row['json']['thumbnail_size']
+
         h = {'User-Agent': utils.DEFAULT_USER_AGENT,
             'Accept': '*/*',
             'Accept-Encoding': 'identity',
@@ -160,13 +161,15 @@ class PluginChannels:
             sz = len(img_blob)
             try:
                 thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
-            except get_image_size.UnknownImageFormat:
+            except get_image_size.UnknownImageFormat as e:
+                self.logger.warning('{}: Thumbnail unknown format. {}'
+                    .format(self.plugin_obj.name, str(e)))
                 pass
         return thumbnail_size
 
     @handle_url_except
     def get_best_stream(self, _url, _channel_id):
-        self.logger.notice('{}: Getting best video stream info for {} {}' \
+        self.logger.debug('{}: Getting best video stream info for {} {}' \
             .format(self.plugin_obj.name, _channel_id, _url))
         bestStream = None
         videoUrlM3u = m3u8.load(_url,
@@ -192,13 +195,14 @@ class PluginChannels:
                     self.logger.debug('{} will use bandwidth at {} bps' \
                         .format(_channel_id, str(bestStream.stream_info.bandwidth)))
                 else:
-                    self.logger.debug(_channel_id + " will use " +
+                    self.logger.notice(self.plugin_obj.name + ': ' + _channel_id + " will use " +
                         str(bestStream.stream_info.resolution[0]) + "x" +
                         str(bestStream.stream_info.resolution[1]) +
                         " resolution at " + str(bestStream.stream_info.bandwidth) + "bps")
                 return bestStream.absolute_uri
         else:
-            self.logger.debug("No variant streams found for this station.  Assuming single stream only.")
+            self.logger.debug('{}: {} No variant streams found for this station.  Assuming single stream only.'
+                .format(self.plugin_obj.name, _channel_id))
             return _url
 
     def check_logger_refresh(self):

@@ -78,6 +78,10 @@ class M3U8Queue(Thread):
             self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             self.header = _channel_dict['json']['Header']
+        if _channel_dict['json'].get('use_date_on_m3u8_key') is None:
+            self.use_date_on_key = True
+        else:
+            self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
         
         self.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
         self.key_list = {}
@@ -86,7 +90,7 @@ class M3U8Queue(Thread):
     @handle_url_except()
     def get_uri_data(self, _uri):
         req = urllib.request.Request(_uri, headers=self.header)
-        with urllib.request.urlopen(req, timeout=5.0) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:
             x = resp.read()
         return x
     
@@ -195,7 +199,24 @@ class M3U8Queue(Thread):
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
         else:
-            self.video.data = self.get_uri_data(uri_dt[0])
+            count = 1
+            while True:
+                try:
+                    self.video.data = self.get_uri_data(uri_dt[0])
+                    break
+                except socket.timeout:
+                    if count < 1:
+                        self.logger.debug('Giving up on timeout issue. {} {}'
+                            .format(os.getpid(), uri_dt[0]))
+                        break
+                    count -= 1
+                    if self.first_segment:
+                        break
+                    # if it has been playing wait and try again...
+                    self.logger.debug('Socket Timeouts occurring from provider,' + \
+                        'waiting and trying again {} {}'.format(os.getpid(), uri_dt[0]))
+                    time.sleep(6)
+
             if uri_dt not in PLAY_LIST.keys():
                 return
             if self.video.data is None:
@@ -302,6 +323,11 @@ class M3U8Process(Thread):
             self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             self.header = _channel_dict['json']['Header']
+        if _channel_dict['json'].get('use_date_on_m3u8_key') is None:
+            self.use_date_on_key = True
+        else:
+            self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
+        
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
@@ -409,6 +435,9 @@ class M3U8Process(Thread):
         # it sticks here.  Need to find a work around for the socket.timeout per process
         return m3u8.load(_uri, headers=self.header)
 
+    def segment_date_time(self, _segment):
+        return _segment.current_program_date_time.replace(microsecond=0)
+
 
     def add_to_stream_queue(self, _playlist):
         global PLAY_LIST
@@ -423,7 +452,6 @@ class M3U8Process(Thread):
                     for i in range(0, len(_playlist.segments))]
         else:
             keys = [None for i in range(0, len(_playlist.segments))]
-            
         num_segments = len(_playlist.segments)
         if self.is_starting and not self.config[self.config_section]['player-play_all_segments']:
             seg_to_play = self.config[self.config_section]['player-segments_to_play']
@@ -450,8 +478,11 @@ class M3U8Process(Thread):
                 i = 0
                 for index, segment in enumerate(reversed(_playlist.segments)):
                     uri = segment.absolute_uri
-                    dt = segment.current_program_date_time
-                    uri_dt = (uri, dt)
+                    dt = self.segment_date_time(segment)
+                    if self.use_date_on_key:
+                        uri_dt = (uri, dt)
+                    else:
+                        uri_dt = (uri, 0)
                     if last_key == uri_dt:
                         i = num_segments - index
             for m3u8_segment, key in zip(_playlist \
@@ -467,8 +498,11 @@ class M3U8Process(Thread):
         global TERMINATE_REQUESTED
         self.set_cue_status(_segment)
         uri = _segment.absolute_uri
-        dt = _segment.current_program_date_time
-        uri_dt = (uri, dt)
+        dt = self.segment_date_time(_segment)
+        if self.use_date_on_key:
+            uri_dt = (uri, dt)
+        else:
+            uri_dt = (uri, 0)
         if uri_dt not in PLAY_LIST.keys():
             played = _default_played
             filtered = False
@@ -516,8 +550,12 @@ class M3U8Process(Thread):
                     break
             for segment in _playlist.segments[disc_index:total_index]:
                 s_uri = segment.absolute_uri
-                s_dt = segment.current_program_date_time
-                s_key = (s_uri, s_dt)
+                s_dt = self.segment_date_time(segment)
+                if self.use_date_on_key:
+                    s_key = (s_uri, s_dt)
+                else:
+                    s_key = (s_uri, 0)
+                
                 if s_key in PLAY_LIST.keys():
                     continue
                 else:
@@ -532,8 +570,11 @@ class M3U8Process(Thread):
             is_found = False
             for segment_m3u8 in _playlist.segments:
                 s_uri = segment_m3u8.absolute_uri
-                s_dt = segment_m3u8.current_program_date_time
-                s_key = (s_uri, s_dt)
+                s_dt = self.segment_date_time(segment_m3u8)
+                if self.use_date_on_key:
+                    s_key = (s_uri, s_dt)
+                else:
+                    s_key = (s_uri, 0)
                 if segment_key == s_key:
                     is_found = True
                     break
@@ -597,7 +638,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     # finally make sure all queues are clear so that this process can be joined
                     clear_queues()
                 else:
-                    logger.debug('UNKNOWN m3u8 queue request')
+                    logger.debug('UNKNOWN m3u8 queue request {}'.format(q_item['uri']))
             except (KeyboardInterrupt, EOFError, TypeError, ValueError):
                 TERMINATE_REQUESTED = True
                 try:
