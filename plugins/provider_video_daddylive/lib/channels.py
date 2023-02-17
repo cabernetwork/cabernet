@@ -130,18 +130,19 @@ class Channels(PluginChannels):
         bestResolution = -1
         if len(videoUrlM3u.playlists) > 0:
             for videoStream in videoUrlM3u.playlists:
-                if bestStream is None:
-                    bestStream = videoStream
-                    bestResolution = videoStream.stream_info.resolution[1]
-                elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
-                      (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
-                    bestResolution = videoStream.stream_info.resolution[1]
-                    bestStream = videoStream
-                elif ((videoStream.stream_info.resolution[0] == bestStream.stream_info.resolution[0]) and
-                      (videoStream.stream_info.resolution[1] == bestStream.stream_info.resolution[1]) and
-                      (videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth)):
-                    bestResolution = videoStream.stream_info.resolution[1]
-                    bestStream = videoStream
+                if videoStream.stream_info.resolution is not None:
+                    if bestStream is None:
+                        bestStream = videoStream
+                        bestResolution = videoStream.stream_info.resolution[1]
+                    elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
+                          (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
+                        bestResolution = videoStream.stream_info.resolution[1]
+                        bestStream = videoStream
+                    elif ((videoStream.stream_info.resolution[0] == bestStream.stream_info.resolution[0]) and
+                          (videoStream.stream_info.resolution[1] == bestStream.stream_info.resolution[1]) and
+                          (videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth)):
+                        bestResolution = videoStream.stream_info.resolution[1]
+                        bestStream = videoStream
 
             if bestStream is not None:
                 if bestResolution >= 720 and ch_json['HD'] == 0:

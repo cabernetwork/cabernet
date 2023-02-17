@@ -169,6 +169,7 @@ class TunerHttpHandler(WebHTTPHandler):
                 .format(_namespace, _instance, sid))
             self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
             return
+        self.logger.notice('{}:{} Tuning to channel {}'.format(self.real_namespace, self.real_instance, sid))
         if self.config[section]['player-stream_type'] == 'm3u8redirect':
             self.do_dict_response(self.m3u8_redirect.gen_m3u8_response(station_data))
             return
