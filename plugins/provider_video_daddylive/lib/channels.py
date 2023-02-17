@@ -132,6 +132,7 @@ class Channels(PluginChannels):
             for videoStream in videoUrlM3u.playlists:
                 if bestStream is None:
                     bestStream = videoStream
+                    bestResolution = videoStream.stream_info.resolution[1]
                 elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
                       (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
                     bestResolution = videoStream.stream_info.resolution[1]
