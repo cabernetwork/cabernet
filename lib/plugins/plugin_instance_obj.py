@@ -53,7 +53,7 @@ class PluginInstanceObj:
                 self.config_obj.data[self.config_section]['enabled']:
             self.channels.refresh_channels()
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not refreshing Channels' \
+            self.logger.notice('{}:{} Plugin instance disabled, not refreshing Channels' \
                 .format(self.plugin_obj.name, self.instance_key))
 
     def get_channel_uri(self, sid):
@@ -70,7 +70,7 @@ class PluginInstanceObj:
                 self.config_obj.data[self.config_section]['enabled']:
             self.epg.refresh_epg()
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not refreshing EPG' \
+            self.logger.info('{}:{} Plugin instance disabled, not refreshing EPG' \
                 .format(self.plugin_obj.name, self.instance_key))
 
     def is_time_to_refresh(self, _last_refresh):

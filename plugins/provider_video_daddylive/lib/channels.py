@@ -206,7 +206,7 @@ class Channels(PluginChannels):
                 header = None
             else:
                 header = { 'User-agent': utils.DEFAULT_USER_AGENT,
-                    'Referer': ch_url },
+                    'Referer': ch_url }
             
             channel = {
                 'id': uid,

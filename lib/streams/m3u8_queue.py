@@ -436,6 +436,10 @@ class M3U8Process(Thread):
         return m3u8.load(_uri, headers=self.header)
 
     def segment_date_time(self, _segment):
+        if _segment:
+            return None
+        if _segment.current_program_date_time:
+            return None
         return _segment.current_program_date_time.replace(microsecond=0)
 
 
