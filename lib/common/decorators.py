@@ -59,17 +59,18 @@ def handle_url_except(f=None, timeout=None):
                 # if we get certain codes, it may mean the server is too busy, so slow it down.
                 if ex.code == 404:
                     time.sleep(6)
-            except urllib.error.URLError as ex:
+            except ConnectionRefusedError as ex:
                 ex_save = ex
-                if ex.code == 111:
-                    self.logger.info('URLERROR Connection Refused, waiting: {}'.format(str(ex_save)))
-                    time.sleep(6)
-                
-                self.logger.info("URLError in function {}, retrying (): {} {} {}" \
+                self.logger.info("ConnectionRefusedError in function {}, retrying (): {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
+                time.sleep(6)
             except ConnectionResetError as ex:
                 ex_save = ex
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}" \
+                    .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
+            except urllib.error.URLError as ex:
+                ex_save = ex
+                self.logger.info("URLError in function {}, retrying (): {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
             except socket.timeout as ex:
                 ex_save = ex
