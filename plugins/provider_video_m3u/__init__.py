@@ -22,5 +22,5 @@ from .lib.m3u_generic import M3UGeneric
 
 # register the init plugin function
 @plugin.register
-def start(plugin):
-    return M3UGeneric(plugin)
+def start(_plugin, _plugins):
+    return M3UGeneric(_plugin)

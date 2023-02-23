@@ -223,11 +223,16 @@ class ConfigFormHTML:
 
     @property
     def body(self):
-        return ''.join([
-            self.title,
-            self.tabs,
-            self.forms,
-            '<section id="status"></section>',
-            '<footer><p>Not all configuration parameters are listed.  ',
-            'Edit the config file directly to change any parameters.</p>',
-            '</footer></div></body></html>'])
+        if self.config_defn is None:
+            return ''.join([
+                '<html><body><div>',
+                '</div></body></html>'])
+        else:
+            return ''.join([
+                self.title,
+                self.tabs,
+                self.forms,
+                '<section id="status"></section>',
+                '<footer><p>Not all configuration parameters are listed.  ',
+                'Edit the config file directly to change any parameters.</p>',
+                '</footer></div></body></html>'])

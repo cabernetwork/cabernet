@@ -66,10 +66,10 @@ class Plugin:
         self.plugin_obj = None
         if not self.config_obj.data[self.namespace.lower()]['enabled']:
             self.enabled = False
-            self.logger.debug('Plugin disabled in config.ini for {}'.format(self.name))
+            self.logger.debug('Plugin disabled in config.ini for {}'.format(self.namespace))
             return
         self.load_instances()
-        self.logger.notice('Plugin created for {}'.format(self.name))
+        self.logger.notice('Plugin created for {}'.format(self.namespace))
 
     def load_config_defn(self):
         try:

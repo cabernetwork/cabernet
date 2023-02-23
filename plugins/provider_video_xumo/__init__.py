@@ -22,5 +22,5 @@ from .lib.xumo import XUMO
 
 # register the init plugin function
 @plugin.register
-def start(plugin):
-    return XUMO(plugin)
+def start(_plugin, _plugins):
+    return XUMO(_plugin)

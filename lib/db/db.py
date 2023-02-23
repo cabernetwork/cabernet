@@ -87,7 +87,8 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('Add request ignored, retrying {}, {}'.format(i, e))
+                self.logger.warning('{} Add request ignored, retrying {}, {}'
+                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -107,7 +108,8 @@ class DB:
                 cur.close()
                 return num_deleted
             except sqlite3.OperationalError as e:
-                self.logger.warning('Delete request ignored, retrying {}, {}'.format(i, e))
+                self.logger.warning('{} Delete request ignored, retrying {}, {}'
+                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -127,7 +129,8 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('Update request ignored, retrying {}, {}'.format(i, e))
+                self.logger.warning('{} Update request ignored, retrying {}, {}'
+                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -149,7 +152,8 @@ class DB:
                 cur.close()
                 return result
             except sqlite3.OperationalError as e:
-                self.logger.warning('GET request ignored retrying {}, {}'.format(i, e))
+                self.logger.warning('{} GET request ignored retrying {}, {}'
+                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -174,7 +178,8 @@ class DB:
                 cur.close()
                 return rows
             except sqlite3.OperationalError as e:
-                self.logger.warning('GET request ignored retrying {}, {}'.format(i, e))
+                self.logger.warning('{} GET request ignored retrying {}, {}'
+                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()

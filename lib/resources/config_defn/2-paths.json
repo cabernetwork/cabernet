@@ -194,6 +194,14 @@
                         "level": 3,
                         "writable": false,
                         "help": "Filename of database containing scheduled tasking"
+                    },
+                    "db_files-temp_db":{
+                        "label": "Temporary Database",
+                        "type": "path",
+                        "default": "temp",
+                        "level": 3,
+                        "writable": false,
+                        "help": "Filename of database containing temporary data storage"
                     }
                     
                 }

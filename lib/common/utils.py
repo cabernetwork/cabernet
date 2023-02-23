@@ -36,7 +36,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.8.5'
+VERSION = '0.9.9.0'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_NAMESPACE = 'Cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0'
@@ -172,6 +172,7 @@ def merge_dict(d1, d2, override=False, ignore_conflicts=False):
                 raise exceptions.CabernetException('Conflict when merging dictionaries {}'.format(str(key)))
         else:
             d1[key] = d2[key]
+            
     return d1
 
 def rename_dict_key(_old_key, _new_key, _dict):

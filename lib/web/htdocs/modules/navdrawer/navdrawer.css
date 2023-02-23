@@ -289,7 +289,7 @@
     transition: max-height 0.60s ease-in-out;
 }
 .toggle:checked + .label-toggle + .collapsible-content {
-    max-height: 600px;
+    max-height: 1200px;
 }
 .toggle:checked + .lbl-toggle {
     border-bottom-right-radius: 0;

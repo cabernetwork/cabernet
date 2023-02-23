@@ -22,5 +22,5 @@ from .lib.daddylive import DaddyLive
 
 # register the init plugin function
 @plugin.register
-def start(plugin):
-    return DaddyLive(plugin)
+def start(_plugin, _plugins):
+    return DaddyLive(_plugin, _plugins)

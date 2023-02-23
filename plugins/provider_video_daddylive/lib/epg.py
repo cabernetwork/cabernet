@@ -2,7 +2,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -30,7 +30,6 @@ from lib.common.decorators import handle_json_except
 from lib.db.db_epg_programs import DBEpgPrograms
 from lib.db.db_channels import DBChannels
 from lib.plugins.plugin_epg import PluginEPG
-from .translations import tv_genres
 
 
 class EPG(PluginEPG):
@@ -41,58 +40,99 @@ class EPG(PluginEPG):
         self.db_channels = DBChannels(self.config_obj.data)
         self.provider_channel_epg_dict = {}
         self.current_time = datetime.datetime.now(datetime.timezone.utc)
+        self.last_day_to_refresh = self.config_obj.data[self.config_section]['epg-days'] - 1
 
     def dates_to_pull(self):
         """
-        123tv provides upto 3 days of EPG.  Each channel is different.
+        daddylive provides upto 3 days of EPG.  Each channel is different.
+        return (forced date, aging dates)
+        For now request all days to be forced
         """
-        return [0,1,2], []
+        return list(range(0, self.config_obj.data[self.config_section]['epg-days'])), []
 
     def refresh_programs(self, _epg_day, use_cache=True):
+        """
+        if use_cache is true, then use cached data in the database for those days
+        EPG plugin should detrmine how to use cache...
+        """
         self.current_time = datetime.datetime.now(datetime.timezone.utc)
         midnight = self.current_time.replace(hour=0, minute=0, second=0, microsecond=0)
         start_time = midnight + datetime.timedelta(days=_epg_day)
         start_seconds = int(start_time.timestamp())
         start_date = start_time.date()
 
-        program_list = []
-        program_list = self.get_fullday_programs(program_list, start_seconds)
+        program_list = self.get_fullday_programs(start_seconds)
         if program_list:
             self.db.save_program_list(self.plugin_obj.name, self.instance_key, start_date, program_list)
             self.logger.debug('Refreshed EPG data for {}:{} day {}'
                 .format(self.plugin_obj.name, self.instance_key, start_date))
         program_list = None
-        return
 
-    def get_fullday_programs(self, _program_list, _start_seconds):
+    def get_fullday_programs(self, _start_seconds):
         """
         Returns a days (from midnight to midnight UTC) of programs for all channels
         enabled.  Also adds epg data for any channel with no epg data.
-        Will return the original _program_list passed in if no epg data was found
         """
         epg_list = {}
         missing_ch_list = []
+        program_list = []
         prog_ids = {}
         is_data_found = False
         current_time_sec = self.current_time.timestamp()
         channel_list = self.db_channels.get_channels(self.plugin_obj.name, self.instance_key)
+        
+        
         for ch in channel_list.values():
-            ch_id = ch[0]['uid']
-            ch_name = ch[0]['display_name']
-            epg_id = ch[0]['json']['epg_id']
-            if not ch[0]['enabled']:
+            ch = ch[0]
+            ch_id = ch['uid']
+            ch_name = ch['display_name']
+            epg_id = ch['json'].get('epg_id')
+            if self.config_obj.data[self.plugin_obj.name.lower()]['epg-plugin'] == 'None':
+                # make sure if the epg plugin is not set, then skip it
+                epg_id = None
+            if not ch['enabled']:
                 # skip if channel is disabled
                 continue
             if epg_id is None:
-                # if no epg is found from 123tv, add to missing epg list
+                # daddylive has no epg, so if epg_id is not listed, then 
+                # add to missing list
                 missing_ch_list.append(ch_id)
                 continue
 
+            # at this point, the epg points to a plugin to obtain the data
+            ch_sched = self.plugin_obj.plugins[ch['json']['plugin']].plugin_obj \
+                    .get_channel_day_ext(epg_id[0], epg_id[1], _start_seconds)
+            if ch_sched is None:
+                # Either no data for the days requested or an error from the provider
+                missing_ch_list.append(ch_id)
+                continue
+
+            for prog in ch_sched:
+                program_json = self.gen_program(ch, prog)
+                if program_json is not None:
+                    program_list.append(program_json)
+
+        # if program_list for the day has data, also fill in for missing channels
+        if program_list:
+            for ch_id in missing_ch_list:
+                ch_data = channel_list[ch_id][0]
+                program_json = self.get_missing_program(ch_data,
+                        ch_id, _start_seconds)
+                if program_json is not None:
+                    program_list.extend(program_json)
+
+
+
+            
+        return program_list
+
+
+        for i in range(0,10):
             # maintain memory cache of channel list for faster processing
             if epg_id not in self.provider_channel_epg_dict:
                 # get provider epg data and cache it.
-                provider_ch_epg = self.get_uri_data(self.plugin_obj.unc_tv123_base 
-                    + self.plugin_obj.unc_tv123_ch_epg.format(epg_id))
+                provider_ch_epg = self.get_uri_data(self.plugin_obj.unc_daddylive_base 
+                    + self.plugin_obj.unc_daddylive_ch_epg.format(epg_id))
                 self.provider_channel_epg_dict[epg_id] = provider_ch_epg
             else:
                 provider_ch_epg = self.provider_channel_epg_dict[epg_id]
@@ -149,18 +189,18 @@ class EPG(PluginEPG):
             program_json = self.get_program(ch_data,
                     listing_data)
             if program_json is not None:
-                _program_list.append(program_json)
+                program_list.append(program_json)
 
         # add default epg for all channels having no epg data
-        if _program_list:
+        if program_list:
             for ch_id in missing_ch_list:
                 ch_data = channel_list[ch_id][0]
                 program_json = self.get_missing_program(ch_data,
                         ch_id, _start_seconds)
                 if program_json is not None:
-                    _program_list.extend(program_json)
+                    program_list.extend(program_json)
 
-        return _program_list
+        return program_list
 
     def get_missing_program(self, _ch_data, _ch_id, _start_seconds):
         """
@@ -193,18 +233,18 @@ class EPG(PluginEPG):
             event_list.append(event)
         return event_list
 
-    def get_program(self, _ch_data, _event_data):
+    def gen_program(self, _ch_data, _event_data):
         """
         Takes a single channel data with the program event and 
         returns a json program event object
-        Assumes the prog_id data is already present in the
-        epg program database
         """
         if not _ch_data['enabled']:
             return None
         prog_id = _event_data['id']
-
-        prog_details = self.db_programs.get_program(self.plugin_obj.name, prog_id)
+        
+        
+        prog_details = self.plugin_obj.plugins[_ch_data['json']['plugin']].plugin_obj \
+                .get_program_info_ext(prog_id)
         if len(prog_details) == 0:
             self.logger.warning('Program error: EPG program details missing {} {}' \
                 .format(self.plugin_obj.name, prog_id))
@@ -294,17 +334,13 @@ class EPG(PluginEPG):
 
         if prog_details['genres'] is None:
                 genres = None
-        elif prog_details['genres'] in tv_genres:
-            genres = tv_genres[prog_details['genres']]
         else:
-            self.logger.info('Missing 123TV genre translation for: {}' \
-                    .format(prog_details['genres']))
-            genres = [prog_details['genres']]
+            genres = prog_details['genres']
 
         directors = None
         actors = None
 
-        json_result = {'channel': sid, 'progid': prog_id, 'start': start_time, 'stop': end_time,
+        json_result = {'channel': _ch_data['uid'], 'progid': prog_id, 'start': start_time, 'stop': end_time,
             'length': dur_min, 'title': title, 'subtitle': subtitle, 'entity_type': entity_type,
             'desc': description, 'short_desc': short_desc,
             'video_quality': video_quality, 'cc': cc, 'live': live, 'finale': finale,
@@ -322,8 +358,8 @@ class EPG(PluginEPG):
         """
         header = {
             'User-agent': utils.DEFAULT_USER_AGENT,
-            'Referer': self.plugin_obj.unc_tv123_agpigee_referer }
-        uri = self.plugin_obj.unc_tv123_prog_details.format(_prog_id)
+            'Referer': self.plugin_obj.unc_daddylive_agpigee_referer }
+        uri = self.plugin_obj.unc_daddylive_prog_details.format(_prog_id)
         prog_details = self.get_uri_data(uri)
 
         prog_details = prog_details['data']['item']
@@ -335,7 +371,7 @@ class EPG(PluginEPG):
 
         if len(prog_details['images']) != 0:
             image_bucket = prog_details['images'][0]['bucketPath']
-            image_url = self.plugin_obj.unc_tv123_image + image_bucket
+            image_url = self.plugin_obj.unc_daddylive_image + image_bucket
         else:
             image_url = None
 

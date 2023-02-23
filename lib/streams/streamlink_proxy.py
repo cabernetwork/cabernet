@@ -20,6 +20,7 @@ import errno
 import subprocess
 import time
 
+from lib.clients.web_handler import WebHTTPHandler
 from lib.streams.video import Video
 from lib.db.db_config_defn import DBConfigDefn
 from .stream import Stream
@@ -49,6 +50,15 @@ class StreamlinkProxy(Stream):
         self.db_configdefn = DBConfigDefn(self.config)
         self.video = Video(self.config)
 
+    def update_tuner_status(self, _status):
+        ch_num = self.channel_dict['number']
+        namespace = self.channel_dict['namespace']
+        scan_list = WebHTTPHandler.rmg_station_scans[namespace]
+        for i, tuner in enumerate(scan_list):
+            if type(tuner) == dict and tuner['ch'] == ch_num:
+                WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
+
+
     def stream(self, _channel_dict, _write_buffer):
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
@@ -72,6 +82,7 @@ class StreamlinkProxy(Stream):
             else:
                 try:
                     self.validate_stream()
+                    self.update_tuner_status('Streaming')
                     self.write_buffer.write(self.video.data)
                 except IOError as e:
                     if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:

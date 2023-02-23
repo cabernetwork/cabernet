@@ -162,8 +162,11 @@ class Scheduler(Thread):
                 'UNEXPECTED EXCEPTION on GET=', ex))
         end = time.time()
         duration = int(end - start)
-        time.sleep(0.2)
-        self.scheduler_db.finish_task(_trigger['area'], _trigger['title'], duration)
+        if duration == 0:
+            self.scheduler_db.reset_activity(False, _trigger['area'], _trigger['title'])
+        else:
+            time.sleep(0.2)
+            self.scheduler_db.finish_task(_trigger['area'], _trigger['title'], duration)
 
     def setup_triggers(self):
         """

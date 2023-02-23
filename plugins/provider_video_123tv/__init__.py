@@ -22,5 +22,5 @@ from .lib.tv123 import TV123
 
 # register the init plugin function
 @plugin.register
-def start(plugin):
-    return TV123(plugin)
+def start(_plugin, _plugins):
+    return TV123(_plugin, _plugins)

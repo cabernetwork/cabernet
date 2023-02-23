@@ -1,8 +1,8 @@
 {
-    "providers":{
+    "streams":{
         "id": null,
         "icon": "cast",
-        "label": "Providers",
+        "label": "Stream Providers",
         "description": "Streaming Services",
         "sections":{
             "daddylive":{
@@ -72,9 +72,9 @@
                     "player-segments_to_play":{
                         "label": "Non-VOD Segments to Start",
                         "type": "integer",
-                        "default": 4,
+                        "default": 8,
                         "level": 2,
-                        "help": "When starting, will play the last xxx segments. '1' means no buffering. Each increase means about 6 seconds of buffering. If the VOD flag is set in the stream, then setting is ignored."
+                        "help": "When starting, will play the last xxx segments. '1' means no buffering. Each increase means about 1-4 seconds of buffering. If the VOD flag is set in the stream, then setting is ignored."
                     },
                     "player-enable_url_filter":{
                         "label": "Enable URL Filtering",
@@ -147,12 +147,20 @@
                         "level": 1,
                         "help": "Will append to the channel number as a string"
                     },
+                    "epg-days":{
+                        "label": "EPG days to load",
+                        "type": "list",
+                        "default": "2",
+                        "values": ["2", "6", "8", "10", "12", "14"],
+                        "level": 1,
+                        "help": "Number of days to retrieve from today"
+                    },
                     "epg-episode_adjustment":{
                         "label": "Adjusts Episode number",
                         "type": "list",
                         "default": 0,
                         "values": [1000, 2000, 3000, 4000, 5000],
-                        "level": 1,
+                        "level": 2,
                         "help": "Used to record the same episode on two different channels at the same time.  EX: Record the same channel from antenna and DaddyLive at the same time."
                     },
                     "epg-start_adjustment":{

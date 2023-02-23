@@ -1,8 +1,8 @@
 {
-    "providers":{
+    "streams":{
         "id": null,
         "icon": "cast",
-        "label": "Providers",
+        "label": "Stream Providers",
         "description": "Streaming Services",
         "sections":{
             "plutotv":{

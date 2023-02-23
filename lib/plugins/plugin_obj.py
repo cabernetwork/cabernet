@@ -51,6 +51,10 @@ class PluginObj:
     # INTERFACE METHODS
     # Plugin may have the following methods
     # used to interface to the app.
+
+    ##############################
+    ### EXTERNAL STREAM METHODS
+    ##############################
     
     def is_time_to_refresh_ext(self, _last_refresh, _instance):
         """
@@ -61,13 +65,42 @@ class PluginObj:
         self.check_logger_refresh()
         return False
 
-    def get_channel_uri_ext(self, sid, _instance=None):
+    def get_channel_uri_ext(self, _sid, _instance=None):
         """
         External request to return the uri for a m3u8 stream.
         Called from stream object.
         """
         self.check_logger_refresh()
-        return self.instances[_instance].get_channel_uri(sid)
+        return self.instances[_instance].get_channel_uri(_sid)
+
+    ##############################
+    ### EXTERNAL EPG METHODS
+    ##############################
+
+    def get_channel_day_ext(self, _zone, _uid, _day, _instance='default'):
+        """
+        External request to return the programs for the day requested 
+        as an offset int from current time
+        """
+        self.check_logger_refresh()
+        return self.instances[_instance].get_channel_day(_zone, _uid, _day)
+
+    def get_program_info_ext(self, _prog_id, _instance='default'):
+        """
+        External request to return the program details
+        either from provider or from database
+        includes updating database if needed.
+        """
+        self.check_logger_refresh()
+        return self.instances[_instance].get_program_info(_prog_id)
+
+    def get_channel_list_ext(self, _zone_id, _ch_ids=None, _instance='default'):
+        """
+        External request to return the channe list based on the zone 
+        and the list of channels requested
+        """
+        self.check_logger_refresh()
+        return self.instances[_instance].get_channel_list(_zone_id, _ch_ids)
 
     # END OF INTERFACE METHODS
 
@@ -77,6 +110,43 @@ class PluginObj:
         dummy routine that will be overridden by subclass
         """
         pass
+
+    def enable_instance(self, _namespace, _instance):
+        """
+        When one plugin is tied to another and requires it to be enabled,
+        this method will enable the other instance and set this plugin to disabled until 
+        everything is up
+        """
+        name_config = _namespace.lower()
+        instance_config = name_config + '_' + _instance
+        if self.config_obj.data.get(name_config):
+            if self.config_obj.data.get(instance_config):
+                if not self.config_obj.data[instance_config]['enabled']:
+                    self.logger.notice('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                        .format(_namespace, _instance, self.namespace))
+                    self.config_obj.write(
+                            instance_config, 'enabled', True)
+                    raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
+                        .format(_namespace, self.namespace))
+            else:
+                self.logger.notice('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                        .format(_namespace, _instance, self.namespace))
+                self.config_obj.write(
+                        instance_config, 'Label', _namespace + ' Instance')
+                self.config_obj.write(
+                        instance_config, 'enabled', True)
+                raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
+                    .format(_namespace, self.namespace))
+        else:
+            self.logger.error('Requested Plugin {} by {} Missing'
+                .format(_namespace, self.namespace))
+            raise exceptions.CabernetException('Requested Plugin {} by {} Missing'
+                .format(_namespace, self.namespace))
+        if not self.plugins[_namespace].enabled:
+            self.logger.notice('{}:{} not enabled and requested by {}. Restart Required'
+                .format(_namespace, _instance, self.namespace))
+            raise exceptions.CabernetException('{}:{} not enabled and requested by {}. Restart Required'
+                .format(_namespace, _instance, self.namespace))
 
     def refresh_obj(self, _topic, _task_name):
         if not self.enabled:
@@ -141,7 +211,7 @@ class PluginObj:
 
     def utc_to_local_time(self, _hours):
         """
-        Used for scheduler on daily events
+        Used for scheduler on events
         """
         tz_delta = datetime.datetime.now() - datetime.datetime.utcnow()
         tz_hours = round(tz_delta.total_seconds()/3610)

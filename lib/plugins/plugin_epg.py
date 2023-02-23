@@ -39,8 +39,13 @@ class PluginEPG:
         self.plugin_obj = _instance_obj.plugin_obj
         self.db = DBepg(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
-        self.episode_adj = int(self.config_obj.data \
-            [self.instance_obj.config_section]['epg-episode_adjustment'])
+        self.episode_adj = self.config_obj.data \
+            [self.instance_obj.config_section].get('epg-episode_adjustment')
+        if self.episode_adj is None:
+            self.episode_adj = 0
+        else:
+            self.episode_adj = int(self.episode_adj)
+            
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -76,6 +81,17 @@ class PluginEPG:
         dummy method to be overridden
         """
         pass
+
+    def get_channel_days(self, _zone, _uid, _days):
+        """
+        For a channel (uid) in a zone (like a zipcode), return
+        a dict listed by day with all programs listed for that day within it.
+        This interface is for the epg plugins
+        """
+        pass
+
+
+
 
     def dates_to_pull(self):
         """

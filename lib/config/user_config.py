@@ -287,6 +287,9 @@ class TVHUserConfig:
         return results
 
     def write(self, _section, _key, _value):
+        if _section not in self.data.keys():
+            self.data.update({_section: {}})
+
         self.data[_section][_key] = _value
         try:
             if _value is None:

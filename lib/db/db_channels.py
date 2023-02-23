@@ -29,6 +29,7 @@ from lib.common.decorators import Restore
 
 DB_CHANNELS_TABLE = 'channels'
 DB_STATUS_TABLE = 'status'
+DB_ZONE_TABLE = 'zones'
 DB_CATEGORIES_TABLE = 'categories'
 DB_CONFIG_NAME = 'db_files-channels_db'
 
@@ -67,7 +68,18 @@ sqlcmds = {
             uid       VARCHAR(255) NOT NULL,
             category  VARCHAR(255) NOT NULL
             )
+        """,
         """
+        CREATE TABLE IF NOT EXISTS zones (
+            namespace VARCHAR(255) NOT NULL,
+            instance  VARCHAR(255),
+            uid       VARCHAR(255) NOT NULL,
+            name      VARCHAR(255) NOT NULL,
+            UNIQUE(namespace, instance, uid)
+            )
+        """
+
+
     ],
     'dt': [
         """
@@ -78,6 +90,9 @@ sqlcmds = {
         """,
         """
         DROP TABLE IF EXISTS categories
+        """
+        """
+        DROP TABLE IF EXISTS zones
         """
         ],
     
@@ -155,7 +170,19 @@ sqlcmds = {
         """
         DELETE FROM status WHERE
             namespace LIKE ? AND instance LIKE ?
+        """,
+    'zones_add':
         """
+        INSERT OR REPLACE INTO zones (
+            namespace, instance, uid, name
+            ) VALUES ( ?, ?, ?, ? )
+        """,
+    'zones_get':
+        """
+        SELECT uid, name FROM zones WHERE
+            namespace=? AND instance=?
+        """
+
 }
 
 
@@ -358,6 +385,14 @@ class DBChannels(DB):
             return ''.join(['CAST(', _column, ' as FLOAT) ', dir, ', '])
         elif _column in json_types:
             return ''.join(['JSON_EXTRACT(json, "$.', _column,  '") ', dir, ', '])    
+
+    def add_zone(self, _namespace, _instance, _uid, _name):
+        self.add(DB_ZONE_TABLE, (_namespace, _instance, _uid, _name))
+
+    def get_zones(self, _namespace, _instance):
+        return self.get_dict(DB_ZONE_TABLE, (_namespace, _instance,))
+
+
 
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):

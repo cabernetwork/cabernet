@@ -47,7 +47,6 @@ tv_genres = {
     "Reality": [ tvh_genres['GAME'] ],
     "Science": [ tvh_genres['SCIENCE'] ],
     "Science Fiction": [ tvh_genres['SF'] ],
-
     "Suspense": [ tvh_genres['THRILLER'] ],
     "Talk & Interview": [ tvh_genres['TALK_SHOW'] ],
     "Travel" : [ tvh_genres['TRAVEL'] ]

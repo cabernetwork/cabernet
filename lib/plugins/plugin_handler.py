@@ -90,7 +90,7 @@ class PluginHandler:
                 plugin.enabled = False
             else:
                 try:
-                    plugin.plugin_obj = plugin.init_func(plugin)
+                    plugin.plugin_obj = plugin.init_func(plugin, self.plugins)
                 except exceptions.CabernetException:
                     self.logger.debug('Setting plugin {} to disabled'.format(plugin.name))
                     self.config_obj.data[plugin.name.lower()]['enabled'] = False

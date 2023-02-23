@@ -64,6 +64,8 @@ class CabernetUpgrade:
             manifest['next_version'] = next_version
             manifest['latest_version'] = last_version
             self.save_manifest(manifest)
+            # need to have the task take at least 1 second to register the time
+            time.sleep(1)
 
     def import_manifest(self):
         """

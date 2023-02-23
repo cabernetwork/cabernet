@@ -36,7 +36,7 @@ class DaddyLiveInstance(PluginInstanceObj):
             return
 
         self.channels = Channels(self)
-        #self.epg = EPG(self)
+        self.epg = EPG(self)
 
     def scan_channels(self):
         """

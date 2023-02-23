@@ -28,7 +28,7 @@ import lib.common.utils as utils
 from lib.db.db_channels import DBChannels
 from lib.db.db_scheduler import DBScheduler
 
-REQUIRED_VERSION = '0.9.4'
+REQUIRED_VERSION = '0.9.9'
 LOGGER = None
 
 def patch_upgrade(_config_obj, _new_version):
@@ -45,19 +45,10 @@ def patch_upgrade(_config_obj, _new_version):
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
-        results = 'Patch updates migrating config settings...'
+        results = 'Patch: Updating Channels database...'
 
-        key = move_key(_config_obj, 'channel-import_groups')
-        key = move_key(_config_obj, 'channel-update_timeout')
-        key = move_key(_config_obj, 'player-stream_type')
-        key = move_key(_config_obj, 'player-enable_url_filter')
-        key = move_key(_config_obj, 'player-url_filter')
-        key = move_key(_config_obj, 'player-enable_pts_filter')
-        key = move_key(_config_obj, 'player-pts_minimum')
-        key = move_key(_config_obj, 'player-pts_max_delta')
-        key = move_key(_config_obj, 'player-enable_pts_resync')
-        key = move_key(_config_obj, 'player-pts_resync_type')
-        key = move_key(_config_obj, 'epg-min_refresh_rate')
+    dbchannels = DBChannels(self.config_obj.data)
+    dbchannels.create_tables()
 
     return results
 

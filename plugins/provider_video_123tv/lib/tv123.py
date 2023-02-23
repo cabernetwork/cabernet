@@ -30,8 +30,13 @@ from ..lib import translations
 
 class TV123(PluginObj):
 
-    def __init__(self, _plugin):
+    def __init__(self, _plugin, _plugins):
         super().__init__(_plugin)
+
+        self.plugins = _plugins
+
+        if self.config_obj.data[self.namespace.lower()]['epg-plugin'] == 'ALL':
+            self.enable_instance('TVGuide', 'default')
         for inst in _plugin.instances:
             self.instances[inst] = TV123Instance(self, inst)
         self.unc_tv123_base = self.uncompress(translations.tv123_base)
@@ -44,7 +49,7 @@ class TV123(PluginObj):
         self.unc_tv123_prog_details = self.uncompress(translations.tv123_prog_details)
         self.unc_tv123_image = self.uncompress(translations.tv123_image)
 
-
+            
     def scan_channels(self, _instance=None):
         """
         Called from the scheduler

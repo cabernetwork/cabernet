@@ -22,5 +22,5 @@ from .lib.plutotv import PlutoTV
 
 # register the init plugin function
 @plugin.register
-def start(plugin):
-    return PlutoTV(plugin)
+def start(_plugin, _plugins):
+    return PlutoTV(_plugin)

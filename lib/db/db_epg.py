@@ -60,7 +60,7 @@ sqlcmds = {
         """,
     'epg_del':
         """
-        DELETE FROM epg WHERE namespace=? AND instance=?
+        DELETE FROM epg WHERE namespace=? AND instance LIKE ?
         """,
 
     'epg_last_update_get':
@@ -123,6 +123,8 @@ class DBepg(DB):
         """
         Removes all records for this namespace/instance
         """
+        if not _instance:
+            _instance = '%'
         return self.delete(DB_EPG_TABLE, (_namespace, _instance,))
 
     def set_last_update(self, _namespace=None, _instance=None, _day=None):

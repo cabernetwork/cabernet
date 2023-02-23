@@ -46,8 +46,10 @@ class PluginChannels:
         self.instance_key = _instance_obj.instance_key
         self.db = DBChannels(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
-        self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
-
+        if self.config_obj.data[self.config_section].get('channel-start_ch_num') is not None:
+            self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
+        else:
+            self.ch_num_enum = 0
 
     def set_channel_num(self, _number):
         """
@@ -101,7 +103,10 @@ class PluginChannels:
 
         
     def refresh_channels(self, force=False):
-        self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
+        if self.config_obj.data[self.config_section].get('channel-start_ch_num') is not None:
+            self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
+        else:
+            self.ch_num_enum = 0
         last_update = self.db.get_status(self.plugin_obj.name, self.instance_key)
         update_needed = False
         if not last_update:

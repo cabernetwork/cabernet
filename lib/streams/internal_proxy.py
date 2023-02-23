@@ -176,9 +176,10 @@ class InternalProxy(Stream):
             elif data['cue'] == 'out':
                 self.cue = True
                 self.logger.debug('Turning M3U8 cue to True')
-            self.idle_counter = 0
             if data['filtered']:
+                self.idle_counter = 0
                 self.logger.info('Filtered Msg {} {}'.format(self.t_m3u8.pid, urllib.parse.unquote(uri)))
+                self.update_tuner_status('Filtered')
                 #self.write_buffer(out_queue_item['stream'])
                 if self.is_starting:
                     self.is_starting = False
@@ -187,6 +188,7 @@ class InternalProxy(Stream):
             else:
                 self.video.data = out_queue_item['stream']
                 if self.video.data is not None:
+                    self.idle_counter = 0
                     if self.config['stream']['update_sdt']:
                         self.atsc.update_sdt_names(self.video,
                             self.channel_dict['namespace'].encode(),
@@ -200,8 +202,11 @@ class InternalProxy(Stream):
                         self.logger.info('Serving {} {} ({})s ({}B) ttw:{:.2f}s' \
                             .format(self.t_m3u8.pid, uri_decoded, self.duration, len(self.video.data), delta_ttw))
                         self.is_starting = False
+                        self.update_tuner_status('Streaming')
                         time.sleep(0.1)
                 else:
+                    if not self.is_starting:
+                        self.update_tuner_status('No Reply')
                     uri_decoded = urllib.parse.unquote(uri)
                     self.logger.debug('No Video Stream from Provider {} {}' \
                         .format(self.t_m3u8.pid, uri_decoded))
@@ -249,6 +254,15 @@ class InternalProxy(Stream):
             else:
                 x_tuple = (_uri, x_tuple)
             return x_tuple
+
+    def update_tuner_status(self, _status):
+        ch_num = self.channel_dict['number']
+        namespace = self.channel_dict['namespace']
+        scan_list = WebHTTPHandler.rmg_station_scans[namespace]
+        for i, tuner in enumerate(scan_list):
+            if type(tuner) == dict and tuner['ch'] == ch_num:
+                WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
+
 
     def check_ts_counter(self, _uri):
         """

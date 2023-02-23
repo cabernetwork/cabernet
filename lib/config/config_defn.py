@@ -81,7 +81,7 @@ class ConfigDefn:
     def merge_defn_obj(self, _defn_obj):
         """ will merge and terminate defn object
         """
-        self.config_defn = utils.merge_dict(self.config_defn, _defn_obj.config_defn)
+        self.config_defn = utils.merge_dict(self.config_defn, _defn_obj.config_defn, ignore_conflicts=True)
         self.update_restricted_items(_defn_obj.config_defn)
 
     def garbage_collect(self):
@@ -123,7 +123,10 @@ class ConfigDefn:
         return config_defaults
 
     def get_defn(self, _area):
-        area_dict = self.db.get_area_dict(_area)[0]
+        area_dict = self.db.get_area_dict(_area)
+        if not area_dict:
+            return
+        area_dict = area_dict[0]
         sections = self.db.get_sections_dict(_area)
         area_dict['sections'] = sections
         return area_dict

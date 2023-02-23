@@ -27,11 +27,15 @@ from lib.plugins.plugin_obj import PluginObj
 from .daddylive_instance import DaddyLiveInstance
 from ..lib import translations
 
+RESOURCE_PATH = 'plugins.provider_video_daddylive.resources'
 
 class DaddyLive(PluginObj):
 
-    def __init__(self, _plugin):
+    def __init__(self, _plugin, _plugins):
         super().__init__(_plugin)
+        self.plugins = _plugins
+        if self.config_obj.data[self.namespace.lower()]['epg-plugin'] == 'ALL':
+            self.enable_instance('TVGuide', 'default')
         for inst in _plugin.instances:
             self.instances[inst] = DaddyLiveInstance(self, inst)
         self.unc_daddylive_base = self.uncompress(translations.daddylive_base)
@@ -62,7 +66,7 @@ class DaddyLive(PluginObj):
             self.plugin.enabled = False
 
     def scheduler_tasks(self):
-        sched_epg_hours = 0
+        sched_epg_hours = 6
         sched_epg_mins = random.randint(1,55)
         sched_epg = '{:0>2d}:{:0>2d}'.format(sched_epg_hours, sched_epg_mins)
         sched_ch_hours = self.utc_to_local_time(23)

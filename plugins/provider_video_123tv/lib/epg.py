@@ -2,7 +2,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -135,14 +135,6 @@ class EPG(PluginEPG):
 
         self.logger.info('{}:{} Processing {} Programs for day' \
                 .format(self.plugin_obj.name, self.instance_key, len(prog_ids.keys())))
-        for prog_id in prog_ids.keys():
-            program = self.db_programs.get_program(self.plugin_obj.name, prog_id)
-            if len(program) == 0:
-                self.update_program_info(prog_id)
-        program = None
-
-        self.logger.debug('{}:{} Finalizing EPG updates for day' \
-            .format(self.plugin_obj.name, self.instance_key))
         for listing_data in epg_list.values():
             program_json = None
             ch_data = channel_list[str(listing_data['channelId'])][0]
@@ -203,8 +195,11 @@ class EPG(PluginEPG):
         if not _ch_data['enabled']:
             return None
         prog_id = _event_data['id']
-
-        prog_details = self.db_programs.get_program(self.plugin_obj.name, prog_id)
+        if self.config_obj.data[self.plugin_obj.namespace.lower()]['epg-plugin'] == 'ALL':
+            prog_details = self.plugin_obj.plugins['TVGuide'].plugin_obj \
+                    .get_program_info_ext(prog_id)
+        else:
+            return None
         if len(prog_details) == 0:
             self.logger.warning('Program error: EPG program details missing {} {}' \
                 .format(self.plugin_obj.name, prog_id))
@@ -221,7 +216,6 @@ class EPG(PluginEPG):
             + self.config_obj.data[self.config_section]['epg-end_adjustment'])
             * 1000)
         dur_min = int((_event_data['end'] - _event_data['start']) / 60)
-
         if not prog_details['date']:
             if prog_details['year']:
                 air_date = str(prog_details['year'])
@@ -291,16 +285,7 @@ class EPG(PluginEPG):
         premiere = None
 
         icon = prog_details['image']
-
-        if prog_details['genres'] is None:
-                genres = None
-        elif prog_details['genres'] in tv_genres:
-            genres = tv_genres[prog_details['genres']]
-        else:
-            self.logger.info('Missing 123TV genre translation for: {}' \
-                    .format(prog_details['genres']))
-            genres = [prog_details['genres']]
-
+        genres = prog_details['genres']
         directors = None
         actors = None
 
@@ -314,70 +299,3 @@ class EPG(PluginEPG):
             'season': season, 'episode': episode, 'se_common': se_common, 'se_xmltv_ns': se_xmltv_ns,
             'se_progid': se_prog_id}
         return json_result
-
-    def update_program_info(self, _prog_id):
-        """
-        Assumes the prog_id is not in the database, obtains the 
-        data from online provider and place info into the epg programs database
-        """
-        header = {
-            'User-agent': utils.DEFAULT_USER_AGENT,
-            'Referer': self.plugin_obj.unc_tv123_agpigee_referer }
-        uri = self.plugin_obj.unc_tv123_prog_details.format(_prog_id)
-        prog_details = self.get_uri_data(uri)
-
-        prog_details = prog_details['data']['item']
-        if prog_details['title'] is None:
-            prog_details['title'] = prog_details['name']
-
-        self.logger.debug('{}:{} Adding Program {} {} to db' \
-            .format(self.plugin_obj.name, self.instance_key, _prog_id, prog_details['title']))
-
-        if len(prog_details['images']) != 0:
-            image_bucket = prog_details['images'][0]['bucketPath']
-            image_url = self.plugin_obj.unc_tv123_image + image_bucket
-        else:
-            image_url = None
-
-        if len(prog_details['genres']) != 0:
-            genres = prog_details['genres'][0]['name']
-        else:
-            genres = None
-        if prog_details['episodeNumber'] == 0:
-            episode = None
-        else:
-            episode = prog_details['episodeNumber']
-
-        if prog_details['episodeAirDate'] is None:
-            pass
-        elif prog_details['episodeAirDate'].startswith('/Date'):
-            m = re.search('Date\((\d*)\)', prog_details['episodeAirDate'])
-            if m is None:
-                prog_details['episodeAirDate'] = None
-            else:
-                prog_details['episodeAirDate'] = m.group(1)
-        else:
-            self.logger.warning('{}:{} Unknown format for episodeAirDate. Program:{}  Date:{}' \
-                .format(self.plugin_obj.name, self.instance_key, _prog_id, prog_details['episodeAirDate']))
-
-        if prog_details['releaseYear']:
-            year = str(prog_details['releaseYear'])
-        else:
-            year = prog_details['releaseYear']
-
-        program = { 
-            'title':      prog_details['title'], 
-            'desc':       prog_details['description'],
-            'short_desc': prog_details['description'],
-            'rating':     prog_details['tvRating'],
-            'year':       prog_details['releaseYear'],
-            'date':       prog_details['episodeAirDate'],
-            'type':       prog_details['type'],
-            'episode':    episode,
-            'season':     prog_details['seasonNumber'],
-            'subtitle':   prog_details['episodeTitle'],
-            'genres':     genres,
-            'image':      image_url}
-
-        self.db_programs.save_program(self.plugin_obj.name, _prog_id, program)
-        return program

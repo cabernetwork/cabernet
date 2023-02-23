@@ -45,11 +45,14 @@ class Stream:
         for index, scan_status in enumerate(scan_list):
             # the first idle tuner gets it
             if scan_status == 'Idle':
-                WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num}
+                WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num, 'status': 'Starting'}
                 self.put_hdhr_queue(_namespace, index, _ch_num, 'Stream')
                 found = index
                 break
         return found
+
+
+
 
     def set_service_name(self, _channel_dict):
         updated_chnum = utils.wrap_chnum(
