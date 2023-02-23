@@ -47,7 +47,7 @@ def patch_upgrade(_config_obj, _new_version):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
         results = 'Patch: Updating Channels database...'
 
-    dbchannels = DBChannels(self.config_obj.data)
+    dbchannels = DBChannels(_config_obj.data)
     dbchannels.create_tables()
 
     return results

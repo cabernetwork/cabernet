@@ -255,7 +255,7 @@ class Channels(PluginChannels):
                 hd = ch_db_data[0]['json']['HD']
                 thumb = ch_db_data[0]['thumbnail']
                 thumb_size = ch_db_data[0]['thumbnail_size']
-                ref_url = ch_db_data[0]['json']['ref_url']
+                ref_url = ch_db_data[0]['json'].get('ref_url')
             else:
                 self.logger.debug('{} 2 Added Channel {}:{}'.format(self.plugin_obj.name, uid, name))
                 enabled = True
@@ -267,7 +267,7 @@ class Channels(PluginChannels):
 
             if not ref_url:
                 self.logger.notice('{} BAD CHANNEL found {}:{}'
-                    .format(self.plugin_obj.name, _channel_id,  name))
+                    .format(self.plugin_obj.name, uid,  name))
                 header = None
             else:
                 header = { 'User-agent': utils.DEFAULT_USER_AGENT,

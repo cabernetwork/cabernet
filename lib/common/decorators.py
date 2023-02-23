@@ -61,6 +61,10 @@ def handle_url_except(f=None, timeout=None):
                     time.sleep(6)
             except urllib.error.URLError as ex:
                 ex_save = ex
+                if ex.code == 111:
+                    self.logger.info('URLERROR Connection Refused, waiting: {}'.format(str(ex_save)))
+                    time.sleep(6)
+                
                 self.logger.info("URLError in function {}, retrying (): {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
             except ConnectionResetError as ex:
