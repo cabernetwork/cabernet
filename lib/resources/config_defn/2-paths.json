@@ -99,6 +99,14 @@
                         "writable": false,
                         "help": "Package location of where the plugins are installed"
                     },
+                    "external_plugins_pkg":{
+                        "label": "External Plugins Package",
+                        "type": "path",
+                        "default": "plugins_ext",
+                        "level": 1,
+                        "writable": false,
+                        "help": "Package location of where the external plugins are installed"
+                    },
                     "ffmpeg_path":{
                         "label": "ffmpeg_path",
                         "type": "path",

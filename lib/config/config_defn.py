@@ -170,9 +170,14 @@ class ConfigDefn:
         """
         mod_name, func_name = _func_str.rsplit('.', 1)
         if mod_name.startswith('.'):
-            mod = importlib.import_module(
-                mod_name,
-                package=_config_obj.data['paths']['internal_plugins_pkg'])
+            try:
+                mod = importlib.import_module(
+                    mod_name,
+                    package=_config_obj.data['paths']['internal_plugins_pkg'])
+            except ModuleNotFoundError as e:
+                mod = importlib.import_module(
+                    mod_name,
+                    package=_config_obj.data['paths']['external_plugins_pkg'])
         else:
             mod = importlib.import_module(mod_name)
         func = getattr(mod, func_name)
@@ -184,9 +189,14 @@ class ConfigDefn:
         """
         mod_name, func_name = _func_str.rsplit('.', 1)
         if mod_name.startswith('.'):
-            mod = importlib.import_module(
-                mod_name,
-                package=_config['paths']['internal_plugins_pkg'])
+            try:
+                mod = importlib.import_module(
+                    mod_name,
+                    package=_config['paths']['internal_plugins_pkg'])
+            except ModuleNotFoundError as e:
+                mod = importlib.import_module(
+                    mod_name,
+                    package=_config['paths']['external_plugins_pkg'])
         else:
             mod = importlib.import_module(mod_name)
         func = getattr(mod, func_name)

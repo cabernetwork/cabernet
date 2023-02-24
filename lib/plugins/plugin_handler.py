@@ -42,6 +42,7 @@ class PluginHandler:
             PluginHandler.logger = logging.getLogger(__name__)
         self.plugin_defn = self.load_plugin_defn()
         self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'])
+        self.collect_plugins(self.config_obj.data['paths']['external_plugins_pkg'])
         if PluginHandler.cls_plugins is not None:
             del PluginHandler.cls_plugins
         PluginHandler.cls_plugins = self.plugins
@@ -54,7 +55,7 @@ class PluginHandler:
                 continue
             try:
                 importlib.resources.read_text(_plugins_pkg, folder)
-            except (IsADirectoryError, PermissionError):
+            except (IsADirectoryError, PermissionError) as e:
                 try:
                     plugin = Plugin(self.config_obj, self.plugin_defn, '.'.join([_plugins_pkg, folder]))
                     self.plugins[plugin.name] = plugin

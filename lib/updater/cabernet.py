@@ -198,7 +198,7 @@ class CabernetUpgrade:
         """
         Check the base directory files to see if all are expected.
         """
-        files_present = ['build', 'lib', 'misc', 'plugins',
+        files_present = ['build', 'lib', 'misc', 'plugins', 'plugins_ext',
             '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
             'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
             'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
