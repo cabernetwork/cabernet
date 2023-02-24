@@ -48,7 +48,7 @@ IN_QUEUE = None
 STREAM_QUEUE = None
 OUT_QUEUE = None
 TERMINATE_REQUESTED = False
-MAX_STREAM_QUEUE_SIZE = 10
+MAX_STREAM_QUEUE_SIZE = 100
 
 
 class M3U8Queue(Thread):
@@ -201,21 +201,8 @@ class M3U8Queue(Thread):
         else:
             count = 1
             while True:
-                try:
-                    self.video.data = self.get_uri_data(uri_dt[0])
-                    break
-                except socket.timeout:
-                    if count < 1:
-                        self.logger.debug('Giving up on timeout issue. {} {}'
-                            .format(os.getpid(), uri_dt[0]))
-                        break
-                    count -= 1
-                    if self.first_segment:
-                        break
-                    # if it has been playing wait and try again...
-                    self.logger.debug('Socket Timeouts occurring from provider,' + \
-                        'waiting and trying again {} {}'.format(os.getpid(), uri_dt[0]))
-                    time.sleep(6)
+                self.video.data = self.get_uri_data(uri_dt[0])
+                break
 
             if uri_dt not in PLAY_LIST.keys():
                 return
