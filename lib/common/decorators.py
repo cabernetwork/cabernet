@@ -56,14 +56,11 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0]), ))
-                # if we get certain codes, it may mean the server is too busy, so slow it down.
-                if ex.code == 404:
-                    time.sleep(9)
             except ConnectionRefusedError as ex:
                 ex_save = ex
                 self.logger.info("ConnectionRefusedError in function {}, retrying (): {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
-                time.sleep(6)
+                time.sleep(9)
             except ConnectionResetError as ex:
                 ex_save = ex
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}" \
@@ -72,7 +69,7 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 if isinstance(ex.reason, ConnectionRefusedError):
                     # This occurs during busy times, expect slowing down may help
-                    self.logger.info("ConnectionRefusedError in function {}, slowing down: {} {} {}" \
+                    self.logger.info("URLError:ConnectionRefusedError in function {}, slowing down: {} {} {}" \
                         .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
                     time.sleep(9)
                 else:

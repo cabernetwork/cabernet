@@ -41,6 +41,12 @@ class XUMO(PluginObj):
         self.unc_xumo_channels = self.uncompress(translations.xumo_channels)
         self.unc_xumo_program = self.uncompress(translations.xumo_program)
 
+
+        self.logger.warning(self.unc_xumo_base)
+        self.logger.warning(self.unc_xumo_icons)
+        self.logger.warning(self.unc_xumo_channel)
+        self.logger.warning(self.unc_xumo_channels)
+        self.logger.warning(self.unc_xumo_program)
         
     def scheduler_tasks(self):
         sched_epg_hours = self.utc_to_local_time(0)

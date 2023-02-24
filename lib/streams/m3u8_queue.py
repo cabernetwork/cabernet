@@ -489,8 +489,13 @@ class M3U8Process(Thread):
                         uri_dt = (uri, 0)
                     if last_key == uri_dt:
                         i = num_segments - index
+            remaining_segs = num_segments - i
             for m3u8_segment, key in zip(_playlist \
                     .segments[i:num_segments], keys[i:num_segments]):
+                remaining_segs -= 1
+                if remaining_segs < 1:
+                    # delay is this is the last segment to add from the provider
+                    time.sleep(2)
                 added = self.add_segment(m3u8_segment, key)
                 total_added += added
                 if added == 0 or TERMINATE_REQUESTED:

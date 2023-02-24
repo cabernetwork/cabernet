@@ -6,6 +6,8 @@ COPY *.py /app/
 COPY cache/ /app/cache/
 COPY data/ /app/data/
 COPY lib/ /app/lib/
+COPY plugins /app/plugins
+COPY plugins_ext /app/plugins_ext
 COPY known_stations.json /app/
 RUN touch /app/is_container
 
