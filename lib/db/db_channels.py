@@ -130,7 +130,13 @@ sqlcmds = {
         UPDATE channels SET 
             json=?
             WHERE namespace=? AND instance=? AND uid=?
-        """,        
+        """,
+    'channels_chnum_update':
+        """
+        UPDATE channels SET 
+            display_number=?
+            WHERE namespace=? AND instance=? AND uid=?
+        """,
     'channels_del':
         """
         DELETE FROM channels WHERE updated LIKE ?
@@ -343,6 +349,19 @@ class DBChannels(DB):
             _instance,
             _ch['id']
         ))
+
+    def update_channel_number(self, _ch):
+        """
+        Updates the display_number field for one channel
+        """
+        display_number = str(_ch['display_number'])
+        self.update(DB_CHANNELS_TABLE+'_chnum', (
+            display_number,
+            _ch['namespace'],
+            _ch['instance'],
+            _ch['uid']
+        ))
+
 
     def get_sorted_channels(self, _namespace, _instance, _first_sort_key=[None, True], _second_sort_key=[None, True]):
         """

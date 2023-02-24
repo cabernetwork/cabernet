@@ -52,6 +52,7 @@
                         "type": "integer",
                         "default": 1,
                         "level": 1,
+                        "onChange": "lib.config.config_callbacks.update_channel_num",
                         "help": "When channel number is not provided, will use this incrementally."
                     },
                     "player-stream_type":{

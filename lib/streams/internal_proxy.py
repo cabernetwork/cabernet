@@ -47,7 +47,7 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 6
-IDLE_COUNTER_MAX = 60
+IDLE_COUNTER_MAX = 120
 
 
 class InternalProxy(Stream):
@@ -152,6 +152,8 @@ class InternalProxy(Stream):
             self.idle_counter += 1
         if self.idle_counter > IDLE_COUNTER_MAX:
             self.idle_counter = 0
+            self.logger.info('Provider has stop playing the stream. Terminating the connection {}' \
+                .format(self.t_m3u8.pid))
             raise exceptions.CabernetException('Provider has stop playing the stream. Terminating the connection {}' \
                 .format(self.t_m3u8.pid))
         elif self.idle_counter % 6 == 0 and self.is_starting:

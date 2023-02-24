@@ -33,6 +33,7 @@ import lib.config.config_defn as config_defn
 import lib.clients.hdhr.hdhr_server as hdhr_server
 from lib.db.db_config_defn import DBConfigDefn
 from lib.db.db_scheduler import DBScheduler
+from lib.db.db_channels import DBChannels
 from lib.clients.web_handler import WebHTTPHandler
 
 try:
@@ -282,6 +283,24 @@ def update_instance_label(_config_obj, _section, _key):
     tasks = db_scheduler.get_tasks_by_name(namespace, instance)
     for task in tasks:
         WebHTTPHandler.sched_queue.put({'cmd': 'deltask', 'taskid': task['taskid'] })
+
+
+def update_channel_num(_config_obj, _section, _key):
+    starting_num = _config_obj.data[_section][_key]
+    namespace_l, instance = _section.split('_', 1)
+    db_channels = DBChannels(_config_obj.data)
+    namespaces = db_channels.get_channel_names()
+    namespace = {n['namespace']: n for n in namespaces if namespace_l == n['namespace'].lower()}.keys()
+    if len(namespace) == 0:
+        return 'ERROR: Bad namespace'
+    namespace = list(namespace)[0]
+    ch_list = db_channels.get_channels(namespace, instance)
+    for ch in ch_list.values():
+        ch[0]['display_number'] = str(int(ch[0]['number'])+starting_num)
+        db_channels.update_channel_number(ch[0])
+
+    return '{} {} {}'.format(_section, _key, starting_num, namespace)
+
 
 
 def set_theme_folders(_defn, _config, _section, _key):

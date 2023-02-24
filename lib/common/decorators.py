@@ -70,8 +70,14 @@ def handle_url_except(f=None, timeout=None):
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
             except urllib.error.URLError as ex:
                 ex_save = ex
-                self.logger.info("URLError in function {}, retrying (): {} {} {}" \
-                    .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
+                if isinstance(ex.reason, ConnectionRefusedError):
+                    # This occurs during busy times, expect slowing down may help
+                    self.logger.info("ConnectionRefusedError in function {}, slowing down: {} {} {}" \
+                        .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
+                    time.sleep(9)
+                else:
+                    self.logger.info("URLError in function {}, retrying (): {} {} {}" \
+                        .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
             except socket.timeout as ex:
                 ex_save = ex
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}" \
