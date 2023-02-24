@@ -77,6 +77,7 @@ def restart_cabernet(_plugins):
     RESTART_REQUESTED = True
     while RESTART_REQUESTED:
         time.sleep(0.10)
+    return True
 
 
 @getrequest.route('/api/restart')

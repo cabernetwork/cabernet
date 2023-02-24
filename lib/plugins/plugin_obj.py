@@ -176,13 +176,14 @@ class PluginObj:
         """
         Called from the scheduler
         """
-        self.refresh_it('Channels', _instance)
+        return self.refresh_it('Channels', _instance)
+        
 
     def refresh_epg(self, _instance=None):
         """
         Called from the scheduler
         """
-        self.refresh_it('EPG', _instance)
+        return self.refresh_it('EPG', _instance)
 
     def refresh_it(self, _what_to_refresh, _instance=None):
         """
@@ -192,22 +193,23 @@ class PluginObj:
             if not self.enabled:
                 self.logger.debug('{} Plugin disabled, not refreshing {}' \
                     .format(self.plugin.name, _what_to_refresh))
-                return
+                return False
             if _instance is None:
                 for key, instance in self.instances.items():
                     if _what_to_refresh == 'EPG':
-                        instance.refresh_epg()
+                        return instance.refresh_epg()
                     elif _what_to_refresh == 'Channels':
-                        instance.refresh_channels()
+                        return instance.refresh_channels()
             else:
                 if _what_to_refresh == 'EPG':
-                    self.instances[_instance].refresh_epg()
+                    return self.instances[_instance].refresh_epg()
                 elif _what_to_refresh == 'Channels':
-                    self.instances[_instance].refresh_channels()
+                    return self.instances[_instance].refresh_channels()
         except exceptions.CabernetException:
             self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
             self.enabled = False
             self.plugin.enabled = False
+            return False
 
     def utc_to_local_time(self, _hours):
         """

@@ -132,6 +132,7 @@ class Scheduler(Thread):
         """
         Calls the trigger function and times the result
         """
+        results = None
         start = time.time()
         try:
             if _trigger['namespace'] == 'internal':
@@ -150,19 +151,23 @@ class Scheduler(Thread):
                             .format(_trigger['namespace']))
                     elif _trigger['instance'] is None:
                         call_f = getattr(plugin_obj, _trigger['funccall'])
-                        call_f()
+                        results = call_f()
                     else:
                         call_f = getattr(plugin_obj.instances[_trigger['instance']], 
                             _trigger['funccall'])
-                        call_f()
+                        results = call_f()
         except exceptions.CabernetException as ex:
             self.logger.warning('{}'.format(str(ex)))
+            results = False
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION on GET=', ex))
+            results = False
+        if results is None:
+            results == True
         end = time.time()
         duration = int(end - start)
-        if duration == 0:
+        if duration == 0 or not results:
             self.scheduler_db.reset_activity(False, _trigger['area'], _trigger['title'])
         else:
             time.sleep(0.2)

@@ -47,11 +47,11 @@ class Geo:
         If the request fails, we will use the last data available in config
         default geoid:924baa2b channellistid:10006
         """
-        if self.config_obj.data[self.section]['channellistid'] is not None:
+        if self.config_obj.data[self.section].get('channellistid') is not None:
             self.channelListId = self.config_obj.data[self.section]['channellistid']
             self.logger.debug('Reusing XUMO channelListId from provider')
         else:
-            geo_url = 'https://www.xumo.tv'
+            geo_url = 'https://play.xumo.com'
             login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
             req = urllib.request.Request(geo_url, headers=login_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:

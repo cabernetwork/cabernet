@@ -68,6 +68,7 @@ def upgrade(_webserver):
 def check_for_updates(plugins):
     v = Updater(plugins)
     v.update_version_info()
+    return True
 
 
 class Updater:

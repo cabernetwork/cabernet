@@ -126,10 +126,11 @@ class PluginInstanceObj:
         self.config_obj.refresh_config_data()
         if self.channels is not None and \
                 self.config_obj.data[self.config_section]['enabled']:
-            self.channels.refresh_channels()
+            return self.channels.refresh_channels()
         else:
             self.logger.notice('{}:{} Plugin instance disabled, not refreshing Channels' \
                 .format(self.plugin_obj.name, self.instance_key))
+            return False
 
 
     def refresh_epg(self):
@@ -139,10 +140,11 @@ class PluginInstanceObj:
         self.config_obj.refresh_config_data()
         if self.epg is not None and \
                 self.config_obj.data[self.config_section]['enabled']:
-            self.epg.refresh_epg()
+            return self.epg.refresh_epg()
         else:
             self.logger.info('{}:{} Plugin instance disabled, not refreshing EPG' \
                 .format(self.plugin_obj.name, self.instance_key))
+            return False
                 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):

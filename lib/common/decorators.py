@@ -58,7 +58,7 @@ def handle_url_except(f=None, timeout=None):
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0]), ))
                 # if we get certain codes, it may mean the server is too busy, so slow it down.
                 if ex.code == 404:
-                    time.sleep(6)
+                    time.sleep(9)
             except ConnectionRefusedError as ex:
                 ex_save = ex
                 self.logger.info("ConnectionRefusedError in function {}, retrying (): {} {} {}" \

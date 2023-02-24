@@ -62,11 +62,11 @@ class PluginEPG:
     def refresh_epg(self):
         if not self.is_refresh_expired():
             self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.plugin_obj.name, self.instance_key))
-            return
+            return False
         if not self.config_obj.data[self.instance_obj.config_section]['epg-enabled']:
             self.logger.info('EPG Collection not enabled for {} {}'
                 .format(self.plugin_obj.name, self.instance_key))
-            return
+            return False
         forced_dates, aging_dates = self.dates_to_pull()
         self.db.del_old_programs(self.plugin_obj.name, self.instance_key)
 
@@ -75,6 +75,7 @@ class PluginEPG:
         for epg_day in aging_dates:
             self.refresh_programs(epg_day, True)
         self.logger.info('{}:{} EPG update completed'.format(self.plugin_obj.name, self.instance_key))
+        return True
 
     def refresh_programs(self, _epg_day, use_cache=True):
         """

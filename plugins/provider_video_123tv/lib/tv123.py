@@ -60,17 +60,19 @@ class TV123(PluginObj):
             if not self.enabled:
                 self.logger.debug('{} Plugin disabled, not scanning channels' \
                     .format(self.plugin.name))
-                return
+                return False
             if _instance is None:
                 for key, instance in self.instances.items():
                     instance.scan_channels()
             else:
                 self.instances[_instance].scan_channels()
+            return True
         except exceptions.CabernetException:
             self.logger.debug('CabernetException channel scan task: Setting plugin {} to disabled'
                 .format(self.plugin.name))
             self.enabled = False
             self.plugin.enabled = False
+            return False
 
     def scheduler_tasks(self):
         sched_epg_local1_hours = 1

@@ -126,7 +126,7 @@ class PluginChannels:
             if ch_dict == None:
                 self.logger.warning('Unable to retrieve channel data from {}:{}, aborting refresh' \
                     .format(self.plugin_obj.name, self.instance_key))
-                return
+                return False
             if 'channel-import_groups' in self.config_obj.data[self.config_section]:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
                     self.config_obj.data[self.config_section]['channel-import_groups'])
@@ -137,6 +137,9 @@ class PluginChannels:
         else:
             self.logger.debug('Channel data still new for {} {}, not refreshing' \
                 .format(self.plugin_obj.name, self.instance_key))
+            return False
+
+        return True
 
     def clean_group_name(self, group_name):
         return re.sub('[ +&*%$#@!:;,<>?]', '', group_name)

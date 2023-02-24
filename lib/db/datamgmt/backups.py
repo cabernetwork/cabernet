@@ -60,6 +60,7 @@ def scheduler_tasks(config):
 def backup_data(_plugins):
     b = Backups(_plugins)
     b.backup_data()
+    return True
 
 class Backups:
     def __init__(self, _plugins):
