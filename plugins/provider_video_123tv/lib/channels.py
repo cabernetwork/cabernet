@@ -94,6 +94,7 @@ class Channels(PluginChannels):
 
 
     def scan_channels(self):
+        results = True
         self.ch_db_list = {}
         count = 5
         while not self.ch_db_list:
@@ -102,6 +103,7 @@ class Channels(PluginChannels):
             count -= 1
             if count < 0:
                 self.logger.warning('{}: Channel DB empty, aborting scan'.format(self.plugin_obj.name))
+                results = False
                 break
             
         for ch_id in self.ch_db_list:
@@ -117,7 +119,7 @@ class Channels(PluginChannels):
         self.logger.notice('{}: Disabled Channel Scan Completed'.format(self.plugin_obj.name))
         time.sleep(1)
         # sleep required to print out last log entry
-
+        return results
 
     @handle_url_except(timeout=10.0)
     @handle_json_except

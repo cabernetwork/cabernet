@@ -56,19 +56,19 @@ class EPG(PluginEPG):
         EPG plugin should detrmine how to use cache...
         """
         self.current_time = datetime.datetime.now(datetime.timezone.utc)
-        midnight = self.current_time.replace(hour=0, minute=0, second=0, microsecond=0)
-        start_time = midnight + datetime.timedelta(days=_epg_day)
+        self.midnight = self.current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_time = self.midnight + datetime.timedelta(days=_epg_day)
         start_seconds = int(start_time.timestamp())
         start_date = start_time.date()
 
-        program_list = self.get_fullday_programs(start_seconds)
+        program_list = self.get_fullday_programs(_epg_day)
         if program_list:
             self.db.save_program_list(self.plugin_obj.name, self.instance_key, start_date, program_list)
             self.logger.debug('Refreshed EPG data for {}:{} day {}'
                 .format(self.plugin_obj.name, self.instance_key, start_date))
         program_list = None
 
-    def get_fullday_programs(self, _start_seconds):
+    def get_fullday_programs(self, _epg_day):
         """
         Returns a days (from midnight to midnight UTC) of programs for all channels
         enabled.  Also adds epg data for any channel with no epg data.
@@ -78,10 +78,14 @@ class EPG(PluginEPG):
         program_list = []
         prog_ids = {}
         is_data_found = False
+
+        start_time = self.midnight + datetime.timedelta(days=_epg_day)
+        start_seconds = int(start_time.timestamp())
+        start_date = start_time.date()
+
         current_time_sec = self.current_time.timestamp()
         channel_list = self.db_channels.get_channels(self.plugin_obj.name, self.instance_key)
-        
-        
+
         for ch in channel_list.values():
             ch = ch[0]
             ch_id = ch['uid']
@@ -101,7 +105,7 @@ class EPG(PluginEPG):
 
             # at this point, the epg points to a plugin to obtain the data
             ch_sched = self.plugin_obj.plugins[ch['json']['plugin']].plugin_obj \
-                    .get_channel_day_ext(epg_id[0], epg_id[1], _start_seconds)
+                    .get_channel_day_ext(epg_id[0], epg_id[1], start_seconds)
             if ch_sched is None:
                 # Either no data for the days requested or an error from the provider
                 missing_ch_list.append(ch_id)
@@ -117,13 +121,9 @@ class EPG(PluginEPG):
             for ch_id in missing_ch_list:
                 ch_data = channel_list[ch_id][0]
                 program_json = self.get_missing_program(ch_data,
-                        ch_id, _start_seconds)
+                        ch_id, start_seconds)
                 if program_json is not None:
                     program_list.extend(program_json)
-
-
-
-            
         return program_list
 
 

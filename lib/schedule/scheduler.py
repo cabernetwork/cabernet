@@ -139,16 +139,18 @@ class Scheduler(Thread):
                 mod_name, func_name = _trigger['funccall'].rsplit('.', 1)
                 mod = importlib.import_module(mod_name)
                 call_f = getattr(mod, func_name)
-                call_f(self.plugins)
+                results = call_f(self.plugins)
             else:
                 if _trigger['namespace'] not in self.plugins.plugins:
                     self.logger.debug('{} scheduled tasks ignored. plugin missing' \
                         .format(_trigger['namespace']))
+                    results = False
                 else:
                     plugin_obj = self.plugins.plugins[_trigger['namespace']].plugin_obj
                     if plugin_obj is None:
                         self.logger.debug('{} scheduled tasks ignored. plugin disabled' \
                             .format(_trigger['namespace']))
+                        results = False
                     elif _trigger['instance'] is None:
                         call_f = getattr(plugin_obj, _trigger['funccall'])
                         results = call_f()
@@ -167,11 +169,11 @@ class Scheduler(Thread):
             results == True
         end = time.time()
         duration = int(end - start)
-        if duration == 0 or not results:
-            self.scheduler_db.reset_activity(False, _trigger['area'], _trigger['title'])
-        else:
+        if results:
             time.sleep(0.2)
             self.scheduler_db.finish_task(_trigger['area'], _trigger['title'], duration)
+        else:
+            self.scheduler_db.reset_activity(False, _trigger['area'], _trigger['title'])
 
     def setup_triggers(self):
         """

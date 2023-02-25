@@ -60,7 +60,6 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("ConnectionRefusedError in function {}, retrying (): {} {} {}" \
                     .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
-                time.sleep(9)
             except ConnectionResetError as ex:
                 ex_save = ex
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}" \
@@ -68,10 +67,8 @@ def handle_url_except(f=None, timeout=None):
             except urllib.error.URLError as ex:
                 ex_save = ex
                 if isinstance(ex.reason, ConnectionRefusedError):
-                    # This occurs during busy times, expect slowing down may help
                     self.logger.info("URLError:ConnectionRefusedError in function {}, slowing down: {} {} {}" \
                         .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
-                    time.sleep(9)
                 else:
                     self.logger.info("URLError in function {}, retrying (): {} {} {}" \
                         .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
@@ -105,8 +102,6 @@ def handle_url_except(f=None, timeout=None):
             time.sleep(1.0)
         self.logger.notice('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}' \
             .format(f.__qualname__, os.getpid(), str(ex_save), str(args[0])))
-        if type(ex_save) == socket.timeout:
-            raise ex_save
         
         return None
     return update_wrapper(wrapper_func, f)
