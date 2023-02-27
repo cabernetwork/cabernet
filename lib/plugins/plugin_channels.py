@@ -16,6 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import collections
 import datetime
 import json
 import logging
@@ -184,12 +185,28 @@ class PluginChannels:
             headers={'User-agent': utils.DEFAULT_USER_AGENT})
         self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
 
+        max_bitrate = 570000
+
+        # obtain lowest value that exceeds max_bitrate
         if len(videoUrlM3u.playlists) > 0:
+            bandwidth_list = {}
+            for videoStream in videoUrlM3u.playlists:
+                bandwidth_list[videoStream.stream_info.bandwidth] = videoStream
+            bandwidth_list = collections.OrderedDict(sorted(bandwidth_list.items(), reverse=True))
+            self.logger.warning(bandwidth_list.keys())
+            
             for videoStream in videoUrlM3u.playlists:
                 if bestStream is None:
                     bestStream = videoStream
                 elif videoStream.stream_info.resolution is None:
+                    for bps, seg in bandwidth_list.items():
+                        if bps < max_bitrate:
+                            bestStream = seg
+                            break
+                    self.logger.warning('Using bandwidth {} for {}'.format(seg.stream_info.bandwidth, _channel_id))
+                    break
                     if videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth:
+                        # current is higher bandwidth
                         bestStream = videoStream
                 elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
                       (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
