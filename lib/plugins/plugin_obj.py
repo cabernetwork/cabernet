@@ -249,7 +249,6 @@ class PluginObj:
         if not self.logger.isEnabledFor(40):
             self.logger = logging.getLogger(__name__+str(threading.get_ident()))
             for inst, inst_obj in self.instances.items():
-                self.logger.notice('######## CHECKING AND UPDATING LOGGER')
                 inst_obj.check_logger_refresh()
 
     @property

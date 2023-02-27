@@ -237,4 +237,3 @@ class PluginChannels:
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
             self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER 40')
