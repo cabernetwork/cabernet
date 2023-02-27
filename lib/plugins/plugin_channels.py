@@ -202,8 +202,6 @@ class PluginChannels:
                     for bps, seg in bandwidth_list.items():
                         if bps < max_bitrate:
                             bestStream = seg
-                            self.logger.warning('2 {}'.format(bestStream.stream_info.bandwidth))
-                            self.logger.warning('3 {}'.format(seg.stream_info.bandwidth))
                             break
                         else:
                             bestStream = seg
