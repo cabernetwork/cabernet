@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -27,6 +27,7 @@ from lib.db.db_config_defn import DBConfigDefn
 
 CONFIG_DEFN_PATH = 'lib.resources.config_defn'
 PLUGIN_DATA = 'AOEPFQGLIKMCNRJSBTHUDV'
+
 
 def load_default_config_defns():
     """ loads all definition files from the default
@@ -227,8 +228,6 @@ class ConfigDefn:
             for section, section_data in area_data['sections'].items():
                 self.db.add_instance(area, section, section_data)
 
-
-
     def get_type(self, _section, _key, _value):
         """ Returns the expected type of the setting
         """
@@ -249,7 +248,8 @@ class ConfigDefn:
                 if section == _section:
                     for setting in list(self.config_defn[module]['sections'][section]['settings'].keys()):
                         if setting == _key:
-                            if _value in str(self.config_defn[module]['sections'][section]['settings'][setting]['values']):
+                            if _value in str(
+                                    self.config_defn[module]['sections'][section]['settings'][setting]['values']):
                                 return True
                             else:
                                 return False

@@ -15,11 +15,13 @@ is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or
 substantial portions of the Software.
 """
-from lib.plugins.plugin_handler import PluginHandler
+
 
 def license_confirmation(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] == 'ALL':
-        return 'Make sure the EPG default instances used by DaddyLive are enabled<script>confirm_r = confirm("Licensing for these EPG plugins are for personal use only.  Change to None if Cabernet is being used for non-personal use");</script>'
+        return ''.join([
+            'Make sure the EPG default instances used by DaddyLive are enabled<script>',
+            'confirm_r = confirm("Licensing for these EPG plugins are for personal use only.  ',
+            'Change to None if Cabernet is being used for non-personal use");</script>'])
     else:
         return 'EPG plugin usage has been disabled'
-

@@ -144,7 +144,7 @@ class ATSCMsg:
         # Video Stream Element = Base_PID + 1 with the 12th bit set
         # Audio Stream Elements = Vide Stream PID + 4 with the 12th bit set, then +1 for each additional lang
         pid_lookup = [0x00, 0x30, 0x40, 0x50, 0x60, 0x70, 0x80, 0x90,
-            0x130, 0x140, 0x150, 0x160, 0x170, 0x180, 0x190, 0x230, 0x240]
+                      0x130, 0x140, 0x150, 0x160, 0x170, 0x180, 0x190, 0x230, 0x240]
         return pid_lookup[_prog_number]
 
     def gen_lang(self, _name):
@@ -157,9 +157,9 @@ class ATSCMsg:
         video_len = len(_video.data)
         msg = None
         while True:
-            if i+ATSC_MSG_LEN > video_len: 
+            if i + ATSC_MSG_LEN > video_len:
                 break
-            packet = _video.data[i:i+ATSC_MSG_LEN]
+            packet = _video.data[i:i + ATSC_MSG_LEN]
             program_fields = self.decode_ts_packet(packet)
             if program_fields is None:
                 i += ATSC_MSG_LEN
@@ -181,14 +181,14 @@ class ATSCMsg:
                 _video.data = b''.join([
                     _video.data[:i],
                     msg,
-                    _video.data[i+ATSC_MSG_LEN:]
-                    ])
+                    _video.data[i + ATSC_MSG_LEN:]
+                ])
             i += ATSC_MSG_LEN
         if msg is None:
             self.logger.debug('Missing ATSC SDT Msg in stream, unable to update provider and service name')
         else:
             self.logger.debug('Updating ATSC SDT with service info {} {}' \
-                .format(_service_provider, _service_name))
+                              .format(_service_provider, _service_name))
 
     def gen_sld(self, _base_pid, _elements):
         # Table 6.29 Service Location Descriptor
@@ -222,7 +222,7 @@ class ATSCMsg:
             audio_pid_int += 1
             audio_pid = utils.set_u16(audio_pid_int)
             lang_msg = struct.pack('%ds' % (len(lang)),
-                lang.encode())
+                                   lang.encode())
             msg += stream_type + audio_pid + lang_msg
         msg = video_pid + elem_len + msg
         length = utils.set_u8(len(msg))
@@ -380,14 +380,14 @@ class ATSCMsg:
         ver_sect_proto = b'\xc1\x00\x00\x00'
 
         time_gps = datetime.datetime.utcnow() - datetime.datetime(1980, 1, 6) \
-            - datetime.timedelta(seconds=LEAP_SECONDS_2021 - LEAP_SECONDS_1980)
+                   - datetime.timedelta(seconds=LEAP_SECONDS_2021 - LEAP_SECONDS_1980)
         time_gps_sec = int(time_gps.total_seconds())
         system_time = utils.set_u32(time_gps_sec)
         delta_time = utils.set_u8(LEAP_SECONDS_2021 - LEAP_SECONDS_1980)
         daylight_savings = b'\x60'
 
         msg = table_id_ext + ver_sect_proto + system_time + \
-            delta_time + daylight_savings + b'\x00'
+              delta_time + daylight_savings + b'\x00'
         length = utils.set_u16(len(msg) + 4 + 0xF000)
         msg = MPEG2_PROGRAM_SYSTEM_TIME_TABLE_TAG + length + msg
         crc = self.gen_crc_mpeg(msg)
@@ -508,7 +508,7 @@ class ATSCMsg:
 
         if _msgs is None:
             return b''.join(sections)
-        
+
         # for now assume the msgs are less than 1316
         if len(_msgs) > 7:
             self.logger.error('ATSC: TOO MANY MESSAGES={}'.format(len(_msgs)))
@@ -534,22 +534,22 @@ class ATSCMsg:
         pat_found = False
         pmt_found = False
         seg_counter = 0
-        
-        #print('writing out segment')
-        #f = open('/tmp/data/segment.ts', 'wb')
-        #f.write(_video_data)
-        #f.close()
-        
+
+        # print('writing out segment')
+        # f = open('/tmp/data/segment.ts', 'wb')
+        # f.write(_video_data)
+        # f.close()
+
         while True:
-            if i+ATSC_MSG_LEN > video_len: 
+            if i + ATSC_MSG_LEN > video_len:
                 break
-            packet = _video_data[i:i+ATSC_MSG_LEN]
+            packet = _video_data[i:i + ATSC_MSG_LEN]
             i += ATSC_MSG_LEN
             program_fields = self.decode_ts_packet(packet)
 
             seg_counter += 1
             if seg_counter > 7:
-                #self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
+                # self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
                 break
             else:
                 packet_list.append(packet)
@@ -562,7 +562,7 @@ class ATSCMsg:
 
             if program_fields['pid'] == 0x0000:
                 pmt_pids = self.decode_pat(program_fields['payload'])
-                #self.logger.debug('###### EXPECTED PMT PIDS: {}'.format(pmt_pids))
+                # self.logger.debug('###### EXPECTED PMT PIDS: {}'.format(pmt_pids))
                 if not pat_found:
                     packet_list.append(packet)
                     pat_found = True
@@ -570,21 +570,21 @@ class ATSCMsg:
                 program = pmt_pids[program_fields['pid']]
                 self.decode_pmt(program_fields['pid'], program, program_fields['payload'])
                 if not pmt_found:
-                    #self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
+                    # self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
                     packet_list.append(packet)
                     pmt_found = True
                 continue
             elif program_fields['pid'] == 0x1ffb:
                 self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
                 continue
-            #elif program_fields['pid'] == 0x0011:
+            # elif program_fields['pid'] == 0x0011:
             #    self.logger.info('Service Description Table (SDT) 0x0011, not implemented {}'.format(i))
             #    continue
-            #elif program_fields['pid'] == 0x0000 or \
+            # elif program_fields['pid'] == 0x0000 or \
             #        program_fields['pid'] == 0x0100 or \
             #        program_fields['pid'] == 0x0101:
             #    continue
-            #else:
+            # else:
             #    self.logger.info('Unknown PID {}'.format(program_fields['pid']))                
             prev_pid = program_fields['pid']
         return packet_list
@@ -604,22 +604,22 @@ class ATSCMsg:
         pat_found = False
         pmt_found = False
         seg_counter = 0
-        
-        #print('writing out segment')
-        #f = open('/tmp/data/segment.ts', 'wb')
-        #f.write(_video_data)
-        #f.close()
-        
+
+        # print('writing out segment')
+        # f = open('/tmp/data/segment.ts', 'wb')
+        # f.write(_video_data)
+        # f.close()
+
         while True:
-            if i+ATSC_MSG_LEN > video_len: 
+            if i + ATSC_MSG_LEN > video_len:
                 break
-            packet = _video_data[i:i+ATSC_MSG_LEN]
+            packet = _video_data[i:i + ATSC_MSG_LEN]
             i += ATSC_MSG_LEN
             program_fields = self.decode_ts_packet(packet)
 
             seg_counter += 1
             if seg_counter > 7:
-                #self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
+                # self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
                 break
             else:
                 packet_list.append(packet)
@@ -632,7 +632,7 @@ class ATSCMsg:
 
             if program_fields['pid'] == 0x0000:
                 pmt_pids = self.decode_pat(program_fields['payload'])
-                #self.logger.debug('###### EXPECTED PMT PIDS: {}'.format(pmt_pids))
+                # self.logger.debug('###### EXPECTED PMT PIDS: {}'.format(pmt_pids))
                 if not pat_found:
                     packet_list.append(packet)
                     pat_found = True
@@ -640,25 +640,25 @@ class ATSCMsg:
                 program = pmt_pids[program_fields['pid']]
                 self.decode_pmt(program_fields['pid'], program, program_fields['payload'])
                 if not pmt_found:
-                    #self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
+                    # self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
                     packet_list.append(packet)
                     pmt_found = True
                 continue
             elif program_fields['pid'] == 0x1ffb:
                 self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
                 continue
-            #elif program_fields['pid'] == 0x0011:
+            # elif program_fields['pid'] == 0x0011:
             #    self.logger.info('Service Description Table (SDT) 0x0011, not implemented {}'.format(i))
             #    continue
-            #elif program_fields['pid'] == 0x0000 or \
+            # elif program_fields['pid'] == 0x0000 or \
             #        program_fields['pid'] == 0x0100 or \
             #        program_fields['pid'] == 0x0101:
             #    continue
-            #else:
+            # else:
             #    self.logger.info('Unknown PID {}'.format(program_fields['pid']))                
             prev_pid = program_fields['pid']
         return packet_list
-        
+
     def decode_ts_packet(self, _packet_188):
         fields = {}
         word = struct.unpack('!I', _packet_188[0:4])[0]
@@ -741,9 +741,8 @@ class ATSCMsg:
         reserved = (pcr_pid & 0xe000) >> 13
         pcr_pid &= 0x1fff
         desc1 = payload[12:]
-        #self.logger.debug('###### PMT DESCR {} {}'.format(pcr_pid, desc1))
-        #descriptors = decode_descriptors(desc1)
-
+        # self.logger.debug('###### PMT DESCR {} {}'.format(pcr_pid, desc1))
+        # descriptors = decode_descriptors(desc1)
 
     def decode_pat(self, payload):
         t = binascii.b2a_hex(payload)
@@ -759,18 +758,17 @@ class ATSCMsg:
         program_count = (section_length - 5) / 4 - 1
 
         if section_length > 20:
-            #print(section_length, program_count, len(payload))
-            #self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
+            # print(section_length, program_count, len(payload))
+            # self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
             # log for corrupted atsc msg
             return program_map_pids
-
 
         for i in range(0, int(program_count)):
             at = 8 + (i * 4)  # skip headers, just get to the program numbers table
             program_number = struct.unpack("!H", payload[at:at + 2])[0]
             if at + 2 > len(payload):
                 break
-            #print(len(payload), at)
+            # print(len(payload), at)
             program_map_pid = struct.unpack("!H", payload[at + 2:at + 2 + 2])[0]
 
             # the pid is only 13 bits, upper 3 bits of this field are 'reserved' (I see 0b111)
@@ -780,4 +778,3 @@ class ATSCMsg:
             program_map_pids[program_map_pid] = program_number
             i += 1
         return program_map_pids
-

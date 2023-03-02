@@ -16,10 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import random
-import time
-import urllib.request
 
 import lib.common.exceptions as exceptions
 from lib.plugins.plugin_obj import PluginObj
@@ -28,6 +25,7 @@ from .daddylive_instance import DaddyLiveInstance
 from ..lib import translations
 
 RESOURCE_PATH = 'plugins.provider_video_daddylive.resources'
+
 
 class DaddyLive(PluginObj):
 
@@ -42,7 +40,6 @@ class DaddyLive(PluginObj):
         self.unc_daddylive_channels = self.uncompress(translations.daddylive_channels)
         self.unc_daddylive_stream = self.uncompress(translations.daddylive_stream)
 
-
     def scan_channels(self, _instance=None):
         """
         Called from the scheduler
@@ -51,8 +48,8 @@ class DaddyLive(PluginObj):
         """
         try:
             if not self.enabled:
-                self.logger.debug('{} Plugin disabled, not scanning channels' \
-                    .format(self.plugin.name))
+                self.logger.debug('{} Plugin disabled, not scanning channels'
+                                  .format(self.plugin.name))
                 return
             if _instance is None:
                 for key, instance in self.instances.items():
@@ -61,21 +58,18 @@ class DaddyLive(PluginObj):
                 self.instances[_instance].scan_channels()
         except exceptions.CabernetException:
             self.logger.debug('CabernetException channel scan task: Setting plugin {} to disabled'
-                .format(self.plugin.name))
+                              .format(self.plugin.name))
             self.enabled = False
             self.plugin.enabled = False
 
     def scheduler_tasks(self):
         sched_epg_hours = 6
-        sched_epg_mins = random.randint(1,55)
+        sched_epg_mins = random.randint(1, 55)
         sched_epg = '{:0>2d}:{:0>2d}'.format(sched_epg_hours, sched_epg_mins)
         sched_ch_hours = self.utc_to_local_time(23)
-        sched_ch_mins = random.randint(1,55)
+        sched_ch_mins = random.randint(1, 55)
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
-        sched_scan_local_hours = 1
-        sched_scan_mins = random.randint(1,55)
-        sched_scan = '{:0>2d}:{:0>2d}'.format(sched_scan_local_hours, sched_scan_mins)
-        
+
         if self.scheduler_db.save_task(
                 'Channels',
                 'Refresh {} Channels'.format(self.namespace),
@@ -85,7 +79,7 @@ class DaddyLive(PluginObj):
                 20,
                 'inline',
                 'Pulls channel lineup from {}'.format(self.namespace)
-                ):
+        ):
             self.scheduler_db.save_trigger(
                 'Channels',
                 'Refresh {} Channels'.format(self.namespace),
@@ -95,7 +89,7 @@ class DaddyLive(PluginObj):
                 'Refresh {} Channels'.format(self.namespace),
                 'daily',
                 timeofday=sched_ch
-                )
+            )
         if self.scheduler_db.save_task(
                 'EPG',
                 'Refresh {} EPG'.format(self.namespace),
@@ -105,7 +99,7 @@ class DaddyLive(PluginObj):
                 10,
                 'thread',
                 'Pulls channel program data from {}'.format(self.namespace)
-                ):
+        ):
             self.scheduler_db.save_trigger(
                 'EPG',
                 'Refresh {} EPG'.format(self.namespace),
@@ -116,4 +110,4 @@ class DaddyLive(PluginObj):
                 'Refresh {} EPG'.format(self.namespace),
                 'daily',
                 timeofday=sched_epg
-                )
+            )

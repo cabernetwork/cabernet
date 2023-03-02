@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -36,16 +36,14 @@ def get_configform_html(_webserver):
 def post_configform_html(_webserver):
     if _webserver.config['web']['disable_web_config']:
         _webserver.do_mime_response(501, 'text/html', web_templates['htmlError']
-            .format('501 - Config pages disabled. '
-                    'Set [web][disable_web_config] to False in the config file to enable'))
+                                    .format('501 - Config pages disabled. '
+                                            'Set [web][disable_web_config] to False in the config file to enable'))
     else:
         # Take each key and make a [section][key] to store the value
         config_changes = {}
         area = _webserver.query_data['area'][0]
         del _webserver.query_data['area']
-        namespace = _webserver.query_data['name']
         del _webserver.query_data['name']
-        instance = _webserver.query_data['instance']
         del _webserver.query_data['instance']
         for key in _webserver.query_data:
             key_pair = key.split('-', 1)
@@ -106,7 +104,8 @@ class ConfigFormHTML:
         active_tab = ' activeTab'
         area_html = ''.join(['<ul class="tabs">'])
         for section, section_data in self.config_defn['sections'].items():
-            area_html = ''.join([area_html,
+            area_html = ''.join([
+                area_html,
                 '<li><a id="tab', section_data['name'], '" class="form',
                 section_data['name'], ' configTab', active_tab, '" href="#">',
                 '<i class="md-icon tabIcon">',
@@ -148,7 +147,7 @@ class ConfigFormHTML:
             if new_section != subsection and new_section is not None:
                 is_section_new = True
                 subsection = new_section
-                
+
             background_color = '#F0F0F0'
             if setting_data['help'] is not None:
                 title = ''.join([' title="', setting_data['help'], '"'])
@@ -209,14 +208,15 @@ class ConfigFormHTML:
             if is_section_new:
                 is_section_new = False
                 section_html = ''.join([section_html,
-                '<tr class="hlevel"><td><hr><h3>', subsection.upper(), '</h3></td></tr>'])
+                                        '<tr class="hlevel"><td><hr><h3>', subsection.upper(), '</h3></td></tr>'])
 
             section_html = ''.join([section_html,
-                '<tr class="dlevel', str(setting_data['level']),
-                '"><td><label ', title,
-                '>', setting_data['label'], '</label></td><td>', input_html,
-                '</td></tr>'])
-        return ''.join([form_html, section_html, '</tbody></table>'
+                                    '<tr class="dlevel', str(setting_data['level']),
+                                    '"><td><label ', title,
+                                    '>', setting_data['label'], '</label></td><td>', input_html,
+                                    '</td></tr>'])
+        return ''.join([
+            form_html, section_html, '</tbody></table>',
             '<button id="submit" STYLE="background-color: #E0E0E0; margin-top:1em" ',
             'type="submit"><b>Save changes</b></button>',
             '<input type=hidden name="area" value="', self.area, '"></form>'])

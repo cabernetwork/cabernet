@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -18,12 +18,10 @@ substantial portions of the Software.
 
 import json
 import datetime
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
-
 
 DB_EPG_TABLE = 'epg'
 DB_CONFIG_NAME = 'db_files-epg_db'
@@ -45,7 +43,7 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS epg
         """,
-        ],
+    ],
 
     'epg_add':
         """
@@ -117,7 +115,7 @@ class DBepg(DB):
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.delete(DB_EPG_TABLE +'_by_day', (_namespace, _instance, _days,))
+        self.delete(DB_EPG_TABLE + '_by_day', (_namespace, _instance, _days,))
 
     def del_instance(self, _namespace, _instance):
         """
@@ -132,7 +130,7 @@ class DBepg(DB):
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.update(DB_EPG_TABLE+'_last_update', (
+        self.update(DB_EPG_TABLE + '_last_update', (
             _day,
             _namespace,
             _instance,
@@ -182,7 +180,7 @@ class DBepg(DB):
 
     def close_query(self):
         self.cur.close()
-        
+
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):
         self.export_sql(backup_folder)

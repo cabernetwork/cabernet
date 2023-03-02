@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -19,13 +19,10 @@ substantial portions of the Software.
 import json
 import logging
 import re
-import time
 import urllib.request
-from datetime import datetime
 
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-import lib.common.exceptions as exceptions
 import lib.common.utils as utils
 
 
@@ -37,11 +34,12 @@ class Geo:
         self.section = _section
         self.geoId = None
         self.channelListId = None
-        self.get_geo()
+        geo_url = 'https://play.xumo.com'
+        self.get_geo(geo_url)
 
     @handle_json_except 
     @handle_url_except 
-    def get_geo(self):
+    def get_geo(self, _url):
         """
         Geo info comes from json object on the home page
         If the request fails, we will use the last data available in config
@@ -51,11 +49,10 @@ class Geo:
             self.channelListId = self.config_obj.data[self.section]['channellistid']
             self.logger.debug('Reusing XUMO channelListId from provider')
         else:
-            geo_url = 'https://play.xumo.com'
             login_headers = {'Content-Type': 'application/json', 'User-agent': utils.DEFAULT_USER_AGENT}
-            req = urllib.request.Request(geo_url, headers=login_headers)
+            req = urllib.request.Request(_url, headers=login_headers)
             with urllib.request.urlopen(req, timeout=5) as resp:
                 results = json.loads(
-                    re.findall(b'"CHANNEL_LIST_ID":"(.+?)"\,', (resp.read()), flags=re.DOTALL)[0])
+                    re.findall(b'"CHANNEL_LIST_ID":"(.+?)",', (resp.read()), flags=re.DOTALL)[0])
             self.channelListId = results
             self.config_obj.write(self.section, 'channellistid', self.channelListId)

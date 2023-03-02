@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -17,17 +17,14 @@ substantial portions of the Software.
 """
 
 import json
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
 
-
 DB_PLUGINS_TABLE = 'plugins'
 DB_INSTANCE_TABLE = 'instance'
 DB_CONFIG_NAME = 'db_files-plugins_db'
-
 
 sqlcmds = {
     'ct': [
@@ -55,7 +52,7 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS instance
         """
-        ],
+    ],
 
     'plugins_add':
         """
@@ -106,7 +103,7 @@ class DBPlugins(DB):
             instance,
             descr))
 
-    def get_plugins(self, _namespace = None):
+    def get_plugins(self, _namespace=None):
         if not _namespace:
             _namespace = '%'
         rows = self.get_dict(DB_PLUGINS_TABLE, (_namespace,))
@@ -123,7 +120,7 @@ class DBPlugins(DB):
         deletes the plugin
         """
 
-        self.delete(DB_INSTANCE_TABLE, (_namespace, '%', ))
+        self.delete(DB_INSTANCE_TABLE, (_namespace, '%',))
         self.delete(DB_PLUGINS_TABLE, (_namespace,))
 
     def del_instance(self, _namespace, _instance):

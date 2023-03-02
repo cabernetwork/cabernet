@@ -2,7 +2,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -18,13 +18,8 @@ substantial portions of the Software.
 """
 
 import datetime
-import json
-import urllib.request
 
-import lib.common.exceptions as exceptions
 import lib.common.utils as utils
-from lib.common.decorators import handle_url_except
-from lib.common.decorators import handle_json_except
 from lib.plugins.plugin_epg import PluginEPG
 
 from .translations import plutotv_tv_genres
@@ -41,7 +36,7 @@ class EPG(PluginEPG):
         aging items        
         """
         return [1], []
-    
+
     def get_day_data(self):
         stime = datetime.datetime.utcnow() - datetime.timedelta(hours=2)
         # back up 2 hours
@@ -69,8 +64,9 @@ class EPG(PluginEPG):
             json_data = self.get_day_data()
             for day, day_data in json_data.items():
                 if day_data is None:
-                    self.logger.info('{}:{} Unable to update EPG, no data for day {}' \
-                        .format(self.plugin_obj.name, self.instance_key, day))                
+                    self.logger.info(
+                        '{}:{} Unable to update EPG, no data for day {}'
+                        .format(self.plugin_obj.name, self.instance_key, day))
                     continue
                 program_list = []
                 for ch_data in day_data:
@@ -81,12 +77,13 @@ class EPG(PluginEPG):
                                 program_list.append(program_json)
                 # push the update to the database
                 if len(program_list) == 0:
-                    self.logger.info('{}:{} Unable to update EPG, no timelines for day {}' \
+                    self.logger.info(
+                        '{}:{} Unable to update EPG, no timelines for day {}'
                         .format(self.plugin_obj.name, self.instance_key, day))
                     continue
                 self.db.save_program_list(self.plugin_obj.name, self.instance_key, day, program_list)
                 self.logger.debug('Refreshed EPG data for {}:{} day {}'
-                    .format(self.plugin_obj.name, self.instance_key, day))
+                                  .format(self.plugin_obj.name, self.instance_key, day))
         except KeyError as e:
             self.logger.info('Unable to update PlutoTV EPG, no timelines. Key Error: {}'.format(e))
 
@@ -96,16 +93,16 @@ class EPG(PluginEPG):
         # a duration of 0 means dummy program, so skip
         if _program_data['episode']['duration'] == 0:
             return None
-            
+
         dur_min = int(_program_data['episode']['duration'] / 60 / 1000)
 
         sid = str(_ch_data['_id'])
-        start_time = datetime.datetime.fromisoformat(_program_data['start'] \
-            .replace('Z', '+00:00')).timestamp() \
+        start_time = datetime.datetime.fromisoformat(
+            _program_data['start'].replace('Z', '+00:00')).timestamp() \
             + self.config_obj.data[self.config_section]['epg-start_adjustment']
         start_time = utils.tm_local_parse(start_time * 1000)
-        end_time = datetime.datetime.fromisoformat(_program_data['stop'] \
-            .replace('Z', '+00:00')).timestamp() \
+        end_time = datetime.datetime.fromisoformat(
+            _program_data['stop'].replace('Z', '+00:00')).timestamp() \
             + self.config_obj.data[self.config_section]['epg-end_adjustment']
         end_time = utils.tm_local_parse(end_time * 1000)
         title = _program_data['title']
@@ -133,8 +130,6 @@ class EPG(PluginEPG):
         finale = False
         premiere = False
 
-        air_date = None
-        formatted_date = None
         if 'clip' in _program_data['episode'].keys():
             air_date_msec = datetime.datetime.fromisoformat(
                 _program_data['episode']['clip']['originalReleaseDate']
@@ -148,10 +143,10 @@ class EPG(PluginEPG):
         icon = None
         icon_type = self.config_obj.data[self.plugin_obj.name.lower()]['program_thumbnail']
         if icon_type == 'featuredImage' and \
-            icon_type in _program_data['episode']['series'].keys():
-                icon = _program_data['episode']['series'][icon_type]['path']
+                icon_type in _program_data['episode']['series'].keys():
+            icon = _program_data['episode']['series'][icon_type]['path']
         elif icon_type in _program_data['episode'].keys():
-                icon = _program_data['episode'][icon_type]['path']
+            icon = _program_data['episode'][icon_type]['path']
         elif 'featuredImage' in _program_data['episode']['series'].keys():
             icon = _program_data['episode']['series']['featuredImage']['path']
         elif 'poster' in _program_data['episode'].keys():
@@ -166,19 +161,22 @@ class EPG(PluginEPG):
             if _program_data['episode']['genre'] in plutotv_tv_genres:
                 genres = plutotv_tv_genres[_program_data['episode']['genre']]
             else:
-                self.logger.info('Missing PlutoTV genre translation for: {}' \
-                        .format(_program_data['episode']['genre']))
+                self.logger.info(
+                    'Missing PlutoTV genre translation for: {}'
+                    .format(_program_data['episode']['genre']))
                 genres = [x.strip() for x in _program_data['episode']['genre'].split(' and ')]
         else:
             genres = None
 
         directors = None
         actors = None
+        season = None
+        episode = None
 
         if 'season' in _program_data['episode'].keys():
             if 'number' in _program_data['episode'].keys():
                 if _program_data['episode']['season'] == 1 and \
-                        _program_data['episode']['number'] ==  1:
+                        _program_data['episode']['number'] == 1:
                     season = None
                     episode = None
                 else:
@@ -190,7 +188,6 @@ class EPG(PluginEPG):
         elif 'number' in _program_data['episode'].keys():
             season = None
             episode = None
-        
 
         if (season is None) and (episode is None):
             se_common = None
@@ -213,7 +210,7 @@ class EPG(PluginEPG):
         if season is not None:
             subtitle = 'S%02dE%02d ' % (season, episode)
         elif episode is not None:
-            subtitle = 'E%02d ' % (episode)
+            subtitle = 'E%02d ' % episode
         else:
             subtitle = ''
         if 'name' in _program_data['episode'].keys():
@@ -221,7 +218,8 @@ class EPG(PluginEPG):
         else:
             subtitle = None
 
-        json_result = {'channel': sid, 'progid': prog_id, 'start': start_time, 'stop': end_time,
+        json_result = {
+            'channel': sid, 'progid': prog_id, 'start': start_time, 'stop': end_time,
             'length': dur_min, 'title': title, 'subtitle': subtitle, 'entity_type': entity_type,
             'desc': description, 'short_desc': short_desc,
             'video_quality': video_quality, 'cc': cc, 'live': live, 'finale': finale,
@@ -231,4 +229,3 @@ class EPG(PluginEPG):
             'season': season, 'episode': episode, 'se_common': se_common, 'se_xmltv_ns': se_xmltv_ns,
             'se_progid': se_prog_id}
         return json_result
-

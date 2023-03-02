@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -32,13 +32,13 @@ def background(_webserver):
 
 
 def send_random_image(_webserver):
+    image = None
     if not _webserver.config['display']['backgrounds']:
         background_dir = _webserver.config['paths']['themes_pkg'] + '.' + \
                          _webserver.config['display']['theme']
         image_list = list(importlib.resources.contents(background_dir))
         image_found = False
         count = 10
-        image = None
         while not image_found and count > 0:
             image = random.choice(image_list)
             mime_lookup = mimetypes.guess_type(image)
@@ -50,7 +50,8 @@ def send_random_image(_webserver):
             _webserver.do_file_response(200, background_dir, image)
         else:
             _webserver.logger.warning('No Background Image found: ' + background_dir)
-            _webserver.do_mime_response(404, 'text/html', web_templates['htmlError']
+            _webserver.do_mime_response(
+                404, 'text/html', web_templates['htmlError']
                 .format('404 - Background Image Not Found'))
     else:
         lbackground = _webserver.config['display']['backgrounds']
@@ -67,13 +68,13 @@ def send_random_image(_webserver):
                 count -= 1
             if image_found:
                 _webserver.do_file_response(200, None, full_image_path)
-                _webserver.logger.debug('Background Image: {}'.format(str(image).replace(lbackground,'.')))
+                _webserver.logger.debug('Background Image: {}'.format(str(image).replace(lbackground, '.')))
             else:
                 _webserver.logger.warning('Image not found at {}'.format(lbackground))
                 _webserver.do_mime_response(404, 'text/html',
-                    web_templates['htmlError'].format('404 - Background Image Not Found'))
+                                            web_templates['htmlError'].format('404 - Background Image Not Found'))
 
         except (FileNotFoundError, IndexError):
             _webserver.logger.warning('Background Theme Folder not found: ' + lbackground)
             _webserver.do_mime_response(404, 'text/html', web_templates['htmlError']
-                .format('404 - Background Folder Not Found'))
+                                        .format('404 - Background Folder Not Found'))

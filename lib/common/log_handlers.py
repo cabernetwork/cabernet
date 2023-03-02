@@ -18,6 +18,7 @@ substantial portions of the Software.
 
 from logging.handlers import RotatingFileHandler
 
+
 class MPRotatingFileHandler(RotatingFileHandler):
     """
     Supports multiprocessing logging.  Main issue is when the

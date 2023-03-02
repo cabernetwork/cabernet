@@ -22,21 +22,24 @@ from lib.web.pages.templates import web_templates
 from lib.clients.web_handler import WebHTTPHandler
 import lib.common.utils as utils
 
-class Stream:
 
+class Stream:
     logger = None
 
     def __init__(self, _plugins, _hdhr_queue):
         self.plugins = _plugins
+        self.namespace = ''
+        self.instance = ''
+        self.config = self.plugins.config_obj.data
         self.hdhr_queue = _hdhr_queue
         if Stream.logger is None:
             Stream.logger = logging.getLogger(__name__)
 
     def put_hdhr_queue(self, _namespace, _index, _channel, _status):
-        if not self.plugins.config_obj.data['hdhomerun']['disable_hdhr']:
+        if not self.config['hdhomerun']['disable_hdhr']:
             self.hdhr_queue.put(
-                {'namespace': _namespace, 'tuner': _index, 
-                'channel': _channel, 'status': _status})
+                {'namespace': _namespace, 'tuner': _index,
+                 'channel': _channel, 'status': _status})
 
     def find_tuner(self, _namespace, _instance, _ch_num, _tuner):
         # keep track of how many tuners we can use at a time
@@ -45,23 +48,21 @@ class Stream:
         for index, scan_status in enumerate(scan_list):
             # the first idle tuner gets it
             if scan_status == 'Idle':
-                WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num, 'status': 'Starting'}
+                WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num,
+                                                                       'status': 'Starting'}
                 self.put_hdhr_queue(_namespace, index, _ch_num, 'Stream')
                 found = index
                 break
         return found
 
-
-
-
     def set_service_name(self, _channel_dict):
         updated_chnum = utils.wrap_chnum(
-            str(_channel_dict['number']), _channel_dict['namespace'], 
-            _channel_dict['instance'], self.plugins.config_obj.data)
+            str(_channel_dict['number']), _channel_dict['namespace'],
+            _channel_dict['instance'], self.config)
 
         if self.config['epg']['epg_channel_number']:
             service_name = updated_chnum + \
-                ' ' + _channel_dict['display_name']
+                           ' ' + _channel_dict['display_name']
         else:
             service_name = _channel_dict['display_name']
         return service_name
@@ -77,6 +78,8 @@ class Stream:
         A code other than 200 means do not tune
         dict also include a "tuner_index" that informs caller what tuner is allocated
         """
+        self.namespace = _namespace
+        self.instance = _instance
         i = self.find_tuner(_namespace, _instance, _ch_num, _tuner)
         if i >= 0:
             return {
@@ -85,10 +88,15 @@ class Stream:
                 'headers': {'Content-type': 'video/MP2T;'},
                 'text': None}
         else:
-            self.logger.warning('All tuners already in use [{}][{}] max tuners: {}' \
+            self.logger.warning(
+                'All tuners already in use [{}][{}] max tuners: {}'
                 .format(_namespace, _instance, len(WebHTTPHandler.rmg_station_scans[_namespace])))
             return {
                 'tuner': i,
                 'code': 400,
                 'headers': {'Content-type': 'text/html'},
                 'text': web_templates['htmlError'].format('400 - All tuners already in use.')}
+
+    @property
+    def config_section(self):
+        return utils.instance_config_section(self.namespace, self.instance)

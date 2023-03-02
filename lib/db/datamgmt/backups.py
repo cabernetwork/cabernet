@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -18,13 +18,10 @@ substantial portions of the Software.
 
 import datetime
 import glob
-import importlib
-import inspect
 import logging
 import os
 import pathlib
 import shutil
-import time
 import zipfile
 
 from lib.db.db_scheduler import DBScheduler
@@ -35,6 +32,7 @@ from lib.db.db_config_defn import DBConfigDefn
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
 CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', '.github', 'build', 'plugins_ext', 'misc']
 CODE_FILES_TO_IGNORE = ['config.ini', 'is_container']
+
 
 def scheduler_tasks(config):
     scheduler_db = DBScheduler(config)
@@ -47,20 +45,22 @@ def scheduler_tasks(config):
             20,
             'thread',
             'Backs up cabernet data including databases and config'
-            ):
+    ):
         scheduler_db.save_trigger(
             'Applications',
             'Backup',
             'weekly',
             dayofweek='Sunday',
             timeofday='02:00'
-            )
-    #Backup.log_backups()
+        )
+    # Backup.log_backups()
+
 
 def backup_data(_plugins):
     b = Backups(_plugins)
     b.backup_data()
     return True
+
 
 class Backups:
     def __init__(self, _plugins):
@@ -73,7 +73,7 @@ class Backups:
         # also deal with the number of backup folder limit and clean up
         backups_to_retain = self.config['datamgmt']['backups-backupstoretain'] - 1
         backups_location = self.config['datamgmt']['backups-location']
-        folderlist = sorted(glob.glob(os.path.join(backups_location, BACKUP_FOLDER_NAME+'*')))
+        folderlist = sorted(glob.glob(os.path.join(backups_location, BACKUP_FOLDER_NAME + '*')))
 
         while len(folderlist) > backups_to_retain:
             try:
@@ -81,7 +81,7 @@ class Backups:
             except PermissionError as e:
                 logging.warning(e)
                 break
-            folderlist = sorted(glob.glob(os.path.join(backups_location, BACKUP_FOLDER_NAME+'*')))
+            folderlist = sorted(glob.glob(os.path.join(backups_location, BACKUP_FOLDER_NAME + '*')))
         new_backup_folder = BACKUP_FOLDER_NAME + datetime.datetime.now().strftime('_%Y%m%d_%H%M')
         new_backup_path = pathlib.Path(backups_location, new_backup_folder)
 
@@ -125,7 +125,7 @@ class Backups:
         # default compression is 6
         zf = zipfile.ZipFile(pathlib.Path(
             self.config['datamgmt']['backups-location'], _backup_folder,
-            'cabernet_code.zip'), 
+            'cabernet_code.zip'),
             'w', compression=zipfile.ZIP_DEFLATED)
 
         base_path = os.path.dirname(self.config['paths']['main_dir'])
@@ -144,8 +144,8 @@ class Backups:
             rel_dirname = dirname.replace(base_path, '.')
             zf.write(dirname, arcname=rel_dirname)
             for filename in files:
-                zf.write(os.path.join(dirname, filename), 
-                    arcname=pathlib.Path(rel_dirname, filename))
+                zf.write(os.path.join(dirname, filename),
+                         arcname=pathlib.Path(rel_dirname, filename))
         zf.close()
         return True
 
@@ -167,17 +167,17 @@ class Backups:
         files, so standard code filtering is required.
         """
         new_code_path = os.path.join(self.config['paths']['tmp_dir'],
-            _folder)
+                                     _folder)
         for dirname, subdirs, files in os.walk(new_code_path):
             for d in CODE_DIRS_TO_IGNORE:
                 if d in subdirs:
                     subdirs.remove(d)
             rel_dirname = dirname.replace(new_code_path, '.')
             for filename in files:
-                os.makedirs(os.path.join(self.config['paths']['main_dir'], rel_dirname), \
-                    exist_ok=True)
-                shutil.move(os.path.join(dirname, filename), 
-                    os.path.join(self.config['paths']['main_dir'], rel_dirname))
+                os.makedirs(os.path.join(self.config['paths']['main_dir'], rel_dirname),
+                            exist_ok=True)
+                shutil.move(os.path.join(dirname, filename),
+                            os.path.join(self.config['paths']['main_dir'], rel_dirname))
 
     def check_code_write_permissions(self):
         result = ''
@@ -192,5 +192,3 @@ class Backups:
             return None
         else:
             return result
-
-

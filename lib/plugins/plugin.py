@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -27,7 +27,6 @@ from lib.config.config_defn import ConfigDefn
 from lib.db.db_plugins import DBPlugins
 from lib.db.db_config_defn import DBConfigDefn
 
-
 PLUGIN_CONFIG_DEFN_FILE = 'config_defn.json'
 PLUGIN_INSTANCE_DEFN_FILE = 'instance_defn.json'
 PLUGIN_MANIFEST_FILE = 'plugin.json'
@@ -40,7 +39,6 @@ def register(func):
 
 
 class Plugin:
-
     # Temporarily used to register the plugin setup() function
     _plugin_func = None
     logger = None
@@ -60,7 +58,7 @@ class Plugin:
         self.init_func = Plugin._plugin_func
         self.plugin_settings = {}
         self.plugin_db = DBPlugins(_config_obj.data)
-        self.namespace = None
+        self.namespace = ''
         self.instances = []
         self.load_plugin_manifest(_plugin_defn)
         self.plugin_obj = None
@@ -76,7 +74,7 @@ class Plugin:
             self.logger.debug(
                 'Plugin Config Defn file loaded at {}'.format(self.plugin_path))
             defn_obj = ConfigDefn(self.plugin_path, PLUGIN_CONFIG_DEFN_FILE, self.config_obj.data)
-            
+
             default_config = defn_obj.get_default_config()
             self.config_obj.merge_config(default_config)
             defn_obj.call_oninit(self.config_obj)
@@ -95,7 +93,8 @@ class Plugin:
 
     def load_instances(self):
         inst_defn_obj = ConfigDefn(self.plugin_path, PLUGIN_INSTANCE_DEFN_FILE, self.config_obj.data, True)
-        # determine in the config data whether the instance of this name exists.  It would have a section name = 'name-instance'
+        # determine in the config data whether the instance of this name exists.
+        # It would have a section name = 'name-instance'
         self.instances = self.find_instances()
         if len(self.instances) == 0:
             self.enabled = False
@@ -114,16 +113,17 @@ class Plugin:
                 base_section = section.split('_', 1)[0]
                 area_data['sections'][base_section + '_' + inst] = area_data['sections'].pop(section)
                 if 'label' in self.config_obj.data[base_section + '_' + inst] \
-                    and self.config_obj.data[base_section + '_' + inst]['label'] is not None:
-                    area_data['sections'][base_section + '_' + inst]['label'] = self.config_obj.data[base_section + '_' + inst]['label']
+                        and self.config_obj.data[base_section + '_' + inst]['label'] is not None:
+                    area_data['sections'][base_section + '_' + inst]['label'] = \
+                        self.config_obj.data[base_section + '_' + inst]['label']
                 inst_defn_obj.save_defn_to_db()
-                
+
                 default_config = inst_defn_obj.get_default_config()
                 self.config_obj.merge_config(default_config)
                 inst_defn_obj.call_oninit(self.config_obj)
                 self.config_obj.defn_json.merge_defn_obj(inst_defn_obj)
-                for area, area_data in inst_defn_obj.config_defn.items():
-                    for section, section_data in area_data['sections'].items():
+                for area2, area_data2 in inst_defn_obj.config_defn.items():
+                    for section, section_data in area_data2['sections'].items():
                         for setting in section_data['settings'].keys():
                             new_value = self.config_obj.fix_value_type(
                                 section, setting, self.config_obj.data[section][setting])
@@ -162,4 +162,3 @@ class Plugin:
     @property
     def name(self):
         return self.plugin_settings['name']
-

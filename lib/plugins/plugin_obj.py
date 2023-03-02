@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -34,6 +34,7 @@ class PluginObj:
     def __init__(self, _plugin):
         self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
+        self.plugins = None
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.def_trans = ''.join([
@@ -41,7 +42,7 @@ class PluginObj:
             string.ascii_lowercase,
             string.digits,
             '+/'
-            ]).encode()
+        ]).encode()
         self.instances = {}
         self.scheduler_db = DBScheduler(self.config_obj.data)
         self.scheduler_tasks()
@@ -53,9 +54,9 @@ class PluginObj:
     # used to interface to the app.
 
     ##############################
-    ### EXTERNAL STREAM METHODS
+    # ## EXTERNAL STREAM METHODS
     ##############################
-    
+
     def is_time_to_refresh_ext(self, _last_refresh, _instance):
         """
         External request to determine if the m3u8 stream uri needs to 
@@ -74,7 +75,7 @@ class PluginObj:
         return self.instances[_instance].get_channel_uri(_sid)
 
     ##############################
-    ### EXTERNAL EPG METHODS
+    # ## EXTERNAL EPG METHODS
     ##############################
 
     def get_channel_day_ext(self, _zone, _uid, _day, _instance='default'):
@@ -104,7 +105,6 @@ class PluginObj:
 
     # END OF INTERFACE METHODS
 
-
     def scheduler_tasks(self):
         """
         dummy routine that will be overridden by subclass
@@ -123,40 +123,41 @@ class PluginObj:
             if self.config_obj.data.get(instance_config):
                 if not self.config_obj.data[instance_config]['enabled']:
                     self.logger.notice('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
-                        .format(_namespace, _instance, self.namespace))
+                                       .format(_namespace, _instance, self.namespace))
                     self.config_obj.write(
-                            instance_config, 'enabled', True)
+                        instance_config, 'enabled', True)
                     raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
-                        .format(_namespace, self.namespace))
+                                                       .format(_namespace, self.namespace))
             else:
                 self.logger.notice('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
-                        .format(_namespace, _instance, self.namespace))
+                                   .format(_namespace, _instance, self.namespace))
                 self.config_obj.write(
-                        instance_config, 'Label', _namespace + ' Instance')
+                    instance_config, 'Label', _namespace + ' Instance')
                 self.config_obj.write(
-                        instance_config, 'enabled', True)
+                    instance_config, 'enabled', True)
                 raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
-                    .format(_namespace, self.namespace))
+                                                   .format(_namespace, self.namespace))
         else:
             self.logger.error('Requested Plugin {} by {} Missing'
-                .format(_namespace, self.namespace))
+                              .format(_namespace, self.namespace))
             raise exceptions.CabernetException('Requested Plugin {} by {} Missing'
-                .format(_namespace, self.namespace))
+                                               .format(_namespace, self.namespace))
         if not self.plugins[_namespace].enabled:
             self.logger.notice('{}:{} not enabled and requested by {}. Restart Required'
-                .format(_namespace, _instance, self.namespace))
+                               .format(_namespace, _instance, self.namespace))
             raise exceptions.CabernetException('{}:{} not enabled and requested by {}. Restart Required'
-                .format(_namespace, _instance, self.namespace))
+                                               .format(_namespace, _instance, self.namespace))
 
     def refresh_obj(self, _topic, _task_name):
         if not self.enabled:
-            self.logger.debug('{} Plugin disabled, not refreshing {}' \
+            self.logger.debug(
+                '{} Plugin disabled, not refreshing {}'
                 .format(self.plugin.name, _topic))
             return
-        self.web_admin_url = 'http://localhost:' + \
-            str(self.config_obj.data['web']['web_admin_port'])
+        web_admin_url = 'http://localhost:' + \
+                        str(self.config_obj.data['web']['web_admin_port'])
         task = self.scheduler_db.get_tasks(_topic, _task_name)[0]
-        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
+        url = (web_admin_url + '/api/scheduler?action=runtask&taskid={}'
                .format(task['taskid']))
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req) as resp:
@@ -177,7 +178,6 @@ class PluginObj:
         Called from the scheduler
         """
         return self.refresh_it('Channels', _instance)
-        
 
     def refresh_epg(self, _instance=None):
         """
@@ -191,7 +191,8 @@ class PluginObj:
         """
         try:
             if not self.enabled:
-                self.logger.debug('{} Plugin disabled, not refreshing {}' \
+                self.logger.debug(
+                    '{} Plugin disabled, not refreshing {}'
                     .format(self.plugin.name, _what_to_refresh))
                 return False
             if _instance is None:
@@ -216,7 +217,7 @@ class PluginObj:
         Used for scheduler on events
         """
         tz_delta = datetime.datetime.now() - datetime.datetime.utcnow()
-        tz_hours = round(tz_delta.total_seconds()/3610)
+        tz_hours = round(tz_delta.total_seconds() / 3610)
         local_hours = tz_hours + _hours
         if local_hours < 0:
             local_hours += 24
@@ -229,30 +230,27 @@ class PluginObj:
             _data = _data.encode()
         return base64.b64encode(_data).translate(
             _data.maketrans(self.def_trans,
-            self.config_obj.data['main']['plugin_data'].encode()))
+                            self.config_obj.data['main']['plugin_data'].encode()))
 
     def uncompress(self, _data):
         if type(_data) is str:
             _data = _data.encode()
-        a = self.config_obj.data['main']['plugin_data'].encode()
+        self.config_obj.data['main']['plugin_data'].encode()
         try:
             return base64.b64decode(_data.translate(_data.maketrans(
                 self.config_obj.data['main']['plugin_data']
                 .encode(), self.def_trans))) \
                 .decode()
-        except (binascii.Error, UnicodeDecodeError) as ex:
-            self.logger.error('Uncompression Error, invalid string {}' \
-                .format(_data))
+        except (binascii.Error, UnicodeDecodeError):
+            self.logger.error('Uncompression Error, invalid string {}'.format(_data))
             return None
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
             for inst, inst_obj in self.instances.items():
-                self.logger.notice('######## CHECKING AND UPDATING LOGGER')
                 inst_obj.check_logger_refresh()
 
     @property
     def name(self):
         return self.namespace
-

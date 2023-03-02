@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -34,7 +34,7 @@ from .web_handler import WebHTTPHandler
 
 @filerequest.route('/html/', '/images/', '/modules/')
 def lib_web_htdocs(_webserver):
-    valid_check = re.match(r'^(/([A-Za-z0-9\._\-]+)/[A-Za-z0-9\._\-/]+)[?%&A-Za-z0-9\._\-/=]*$', _webserver.path)
+    valid_check = re.match(r'^(/([A-Za-z0-9._\-]+)/[A-Za-z0-9._\-/]+)[?%&A-Za-z0-9._\-/=]*$', _webserver.path)
     if not valid_check:
         return False
     file_path = valid_check.group(1)
@@ -47,13 +47,13 @@ def lib_web_htdocs(_webserver):
 
 @filerequest.route('/temp/')
 def data_web(_webserver):
-    valid_check = re.match(r'^(/([A-Za-z0-9\._\-]+)/[A-Za-z0-9\._\-/]+)[?%&A-Za-z0-9\._\-/=]*$', _webserver.path)
+    valid_check = re.match(r'^(/([A-Za-z0-9._\-]+)/[A-Za-z0-9._\-/]+)[?%&A-Za-z0-9._\-/=]*$', _webserver.path)
     if not valid_check:
         return False
     url_path = valid_check.group(1)
 
-    temp_path = pathlib.Path(_webserver.config['paths']['data_dir'],
-        'web')
+    temp_path = pathlib.Path(
+        _webserver.config['paths']['data_dir'], 'web')
     if not temp_path.exists():
         return False
     path_list = url_path.split('/')
@@ -64,7 +64,7 @@ def data_web(_webserver):
 @getrequest.route('/tunerstatus')
 def tunerstatus(_webserver):
     _webserver.send_response(302)
-    _webserver.send_header('Location',  '{}{}{}'.format('http://', _webserver.stream_url, '/tunerstatus'))
+    _webserver.send_header('Location', '{}{}{}'.format('http://', _webserver.stream_url, '/tunerstatus'))
     _webserver.end_headers()
 
 
@@ -75,9 +75,11 @@ class WebAdminHttpHandler(WebHTTPHandler):
     def __init__(self, *args):
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         self.script_dir = pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
-        self.stream_url = self.config['web']['plex_accessible_ip'] + \
-            ':' + str(self.config['web']['plex_accessible_port'])
-        self.web_admin_url = self.config['web']['plex_accessible_ip'] + \
+        self.stream_url = \
+            self.config['web']['plex_accessible_ip'] + ':' + \
+            str(self.config['web']['plex_accessible_port'])
+        self.web_admin_url = \
+            self.config['web']['plex_accessible_ip'] + \
             ':' + str(self.config['web']['web_admin_port'])
         self.content_path = None
         self.query_data = None
@@ -90,11 +92,10 @@ class WebAdminHttpHandler(WebHTTPHandler):
             super().__init__(*args)
         except ValueError as ex:
             self.logger.warning('ValueError occurred, Possible Bad stream recieved.  {}'.format(str(ex)))
-        
 
     def do_GET(self):
         try:
-            valid_check = re.match(r'^(/([A-Za-z0-9\._\-]+)/[A-Za-z0-9\._\-/]+)[?%&A-Za-z0-9\._\-/=]*$', self.path)
+            valid_check = re.match(r'^(/([A-Za-z0-9._\-]+)/[A-Za-z0-9._\-/]+)[?%&A-Za-z0-9._\-/=]*$', self.path)
             self.content_path, self.query_data = self.get_query_data()
             self.plugins.config_obj.refresh_config_data()
             utils.start_mem_trace(self.config)
@@ -105,16 +106,16 @@ class WebAdminHttpHandler(WebHTTPHandler):
                 pass
             else:
                 self.logger.notice('UNKNOWN HTTP Request {}'.format(self.content_path))
-                self.do_mime_response(501, 'text/html', 
-                    web_templates['htmlError'].format('501 - Not Implemented'))
+                self.do_mime_response(501, 'text/html',
+                                      web_templates['htmlError'].format('501 - Not Implemented'))
             snapshot = utils.end_mem_trace(self.config)
             utils.display_top(self.config, snapshot)
-            
+
             return
         except MemoryError as ex:
             self.logger.error('UNKNOWN MEMORY EXCEPTION: {}'.format(ex))
-            self.do_mime_response(501, 'text/html', 
-                web_templates['htmlError'].format('501 - {}'.format(ex)))
+            self.do_mime_response(501, 'text/html',
+                                  web_templates['htmlError'].format('501 - {}'.format(ex)))
             snapshot = utils.end_mem_trace(self.config)
             utils.display_top(self.config, snapshot)
         except IOError as ex:
@@ -128,11 +129,11 @@ class WebAdminHttpHandler(WebHTTPHandler):
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION on GET=', ex))
-            self.do_mime_response(501, 'text/html', 
-                web_templates['htmlError'].format('501 - Server Error'))
+            self.do_mime_response(501, 'text/html',
+                                  web_templates['htmlError'].format('501 - Server Error'))
             snapshot = utils.end_mem_trace(self.config)
             utils.display_top(self.config, snapshot)
-        
+
     def do_POST(self):
         try:
             self.content_path = self.path
@@ -149,19 +150,17 @@ class WebAdminHttpHandler(WebHTTPHandler):
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION on POST=', ex))
-            self.do_mime_response(501, 'text/html', 
-                web_templates['htmlError'].format('501 - Server Error'))
-
-
+            self.do_mime_response(501, 'text/html',
+                                  web_templates['htmlError'].format('501 - Server Error'))
 
     @classmethod
     def get_ns_inst_path(cls, _query_data):
         if _query_data['name']:
-            path = '/'+_query_data['name']
+            path = '/' + _query_data['name']
         else:
             path = ''
         if _query_data['instance']:
-            path += '/'+_query_data['instance']
+            path += '/' + _query_data['instance']
         return path
 
     def put_hdhr_queue(self, _namespace, _index, _channel, _status):
@@ -174,7 +173,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             old_status = 'Idle'
         else:
             old_status = 'Scan'
-            
+
         if _namespace is None:
             for namespace, status_list in WebAdminHttpHandler.rmg_station_scans.items():
                 for i, status in enumerate(status_list):
@@ -197,13 +196,13 @@ class WebAdminHttpHandler(WebHTTPHandler):
         WebAdminHttpHandler.hdhr_station_scan = new_value
 
     @classmethod
-    def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+    def init_class_var_sub(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
         super(WebAdminHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
         WebHTTPHandler.sched_queue = _sched_queue
         getrequest.log_urls()
         postrequest.log_urls()
         filerequest.log_urls()
-        
+
 
 class WebAdminHttpServer(Thread):
 
@@ -212,6 +211,7 @@ class WebAdminHttpServer(Thread):
         self.bind_ip = _plugins.config_obj.data['web']['bind_ip']
         self.bind_port = _plugins.config_obj.data['web']['web_admin_port']
         self.socket = server_socket
+        self.server_close = None
         self.start()
 
     def run(self):
@@ -227,6 +227,7 @@ def FactoryWebAdminHttpHandler():
     class CustomWebAdminHttpHandler(WebAdminHttpHandler):
         def __init__(self, *args, **kwargs):
             super(CustomWebAdminHttpHandler, self).__init__(*args, **kwargs)
+
     return CustomWebAdminHttpHandler
 
 

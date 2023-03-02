@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,14 +16,12 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import collections
 import datetime
 import json
 import logging
 import io
-import os
-import pathlib
 import re
-import shutil
 import threading
 import time
 import urllib.request
@@ -63,7 +61,6 @@ class PluginChannels:
         else:
             return _number
 
-
     def get_channels(self):
         """
         Interface method to override
@@ -96,12 +93,11 @@ class PluginChannels:
     def get_m3u8_data(self, _uri, _header=None):
         if _header is None:
             return m3u8.load(_uri,
-                headers={'User-agent': utils.DEFAULT_USER_AGENT})
+                             headers={'User-agent': utils.DEFAULT_USER_AGENT})
         else:
             return m3u8.load(_uri,
-                headers=_header)
+                             headers=_header)
 
-        
     def refresh_channels(self, force=False):
         if self.config_obj.data[self.config_section].get('channel-start_ch_num') is not None:
             self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
@@ -113,8 +109,8 @@ class PluginChannels:
             update_needed = True
         else:
             delta = datetime.datetime.now() - last_update
-            if delta.total_seconds() / 3600 >= self.config_obj.data[
-                    self.config_section]['channel-update_timeout']:
+            if delta.total_seconds() / 3600 >= \
+                    self.config_obj.data[self.config_section]['channel-update_timeout']:
                 update_needed = True
         if update_needed or force:
             i = 0
@@ -123,19 +119,23 @@ class PluginChannels:
                 i += 1
                 time.sleep(0.5)
                 ch_dict = self.get_channels()
-            if ch_dict == None:
-                self.logger.warning('Unable to retrieve channel data from {}:{}, aborting refresh' \
+            if ch_dict is None:
+                self.logger.warning(
+                    'Unable to retrieve channel data from {}:{}, aborting refresh'
                     .format(self.plugin_obj.name, self.instance_key))
                 return False
             if 'channel-import_groups' in self.config_obj.data[self.config_section]:
-                self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict, \
+                self.db.save_channel_list(
+                    self.plugin_obj.name, self.instance_key, ch_dict,
                     self.config_obj.data[self.config_section]['channel-import_groups'])
             else:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict)
-            self.logger.debug('{}:{} Channel update complete' \
+            self.logger.debug(
+                '{}:{} Channel update complete'
                 .format(self.plugin_obj.name, self.instance_key))
         else:
-            self.logger.debug('Channel data still new for {} {}, not refreshing' \
+            self.logger.debug(
+                'Channel data still new for {} {}, not refreshing'
                 .format(self.plugin_obj.name, self.instance_key))
             return False
 
@@ -153,15 +153,14 @@ class PluginChannels:
         if _ch_uid is not None:
             ch_row = self.db.get_channel(_ch_uid, self.plugin_obj.name, self.instance_key)
             if ch_row is not None:
-                ch_dict = ch_row['json']
                 if ch_row['json']['thumbnail'] == _thumbnail:
                     return ch_row['json']['thumbnail_size']
 
         h = {'User-Agent': utils.DEFAULT_USER_AGENT,
-            'Accept': '*/*',
-            'Accept-Encoding': 'identity',
-            'Connection': 'Keep-Alive'
-            }
+             'Accept': '*/*',
+             'Accept-Encoding': 'identity',
+             'Connection': 'Keep-Alive'
+             }
         req = urllib.request.Request(_thumbnail, headers=h)
         with urllib.request.urlopen(req) as resp:
             img_blob = resp.read()
@@ -171,49 +170,112 @@ class PluginChannels:
                 thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
             except get_image_size.UnknownImageFormat as e:
                 self.logger.warning('{}: Thumbnail unknown format. {}'
-                    .format(self.plugin_obj.name, str(e)))
+                                    .format(self.plugin_obj.name, str(e)))
                 pass
         return thumbnail_size
 
     @handle_url_except
-    def get_best_stream(self, _url, _channel_id):
-        self.logger.debug('{}: Getting best video stream info for {} {}' \
+    def get_best_stream(self, _url, _channel_id, _referer=None):
+        self.logger.debug(
+            '{}: Getting best video stream info for {} {}'
             .format(self.plugin_obj.name, _channel_id, _url))
-        bestStream = None
-        videoUrlM3u = m3u8.load(_url,
-            headers={'User-agent': utils.DEFAULT_USER_AGENT})
-        self.logger.debug("Found " + str(len(videoUrlM3u.playlists)) + " Playlists")
+        best_stream = None
+        if _referer:
+            header = {
+                'User-agent': utils.DEFAULT_USER_AGENT,
+                'Referer': _referer}
+        else:
+            header = {'User-agent': utils.DEFAULT_USER_AGENT}
 
-        if len(videoUrlM3u.playlists) > 0:
-            for videoStream in videoUrlM3u.playlists:
-                if bestStream is None:
-                    bestStream = videoStream
-                elif videoStream.stream_info.resolution is None:
-                    if videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth:
-                        bestStream = videoStream
-                elif ((videoStream.stream_info.resolution[0] > bestStream.stream_info.resolution[0]) and
-                      (videoStream.stream_info.resolution[1] > bestStream.stream_info.resolution[1])):
-                    bestStream = videoStream
-                elif ((videoStream.stream_info.resolution[0] == bestStream.stream_info.resolution[0]) and
-                      (videoStream.stream_info.resolution[1] == bestStream.stream_info.resolution[1]) and
-                      (videoStream.stream_info.bandwidth > bestStream.stream_info.bandwidth)):
-                    bestStream = videoStream
-            if bestStream is not None:
-                if bestStream.stream_info.resolution is None:
-                    self.logger.debug('{} will use bandwidth at {} bps' \
-                        .format(_channel_id, str(bestStream.stream_info.bandwidth)))
+        ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
+        ch_json = ch_dict['json']
+        best_resolution = -1
+        video_url_m3u = m3u8.load(
+            _url, headers=header)
+        if not video_url_m3u:
+            self.logger.notice('{}:{} Unable to obtain m3u file, aborting stream {}'
+                               .format(self.plugin_obj.name, self.instance_key, _channel_id))
+            return
+        self.logger.debug("Found " + str(len(video_url_m3u.playlists)) + " Playlists")
+
+        if len(video_url_m3u.playlists) > 0:
+            max_bitrate = self.config_obj.data[self.config_section]['player-stream_quality']
+            bitrate_list = {}
+            for video_stream in video_url_m3u.playlists:
+                bitrate_list[video_stream.stream_info.bandwidth] = video_stream
+            bitrate_list = collections.OrderedDict(sorted(bitrate_list.items(), reverse=True))
+            # bitrate is sorted from highest to lowest
+            if list(bitrate_list.keys())[0] > max_bitrate:
+                is_set_by_bitrate = True
+            else:
+                is_set_by_bitrate = False
+            for bps, seg in bitrate_list.items():
+                if bps < max_bitrate:
+                    best_stream = seg
+                    if seg.stream_info.resolution:
+                        best_resolution = seg.stream_info.resolution[1]
+                    break
                 else:
-                    self.logger.notice(self.plugin_obj.name + ': ' + _channel_id + " will use " +
-                        str(bestStream.stream_info.resolution[0]) + "x" +
-                        str(bestStream.stream_info.resolution[1]) +
-                        " resolution at " + str(bestStream.stream_info.bandwidth) + "bps")
-                return bestStream.absolute_uri
+                    best_stream = seg
+                    if seg.stream_info.resolution:
+                        best_resolution = seg.stream_info.resolution[1]
+
+            for video_stream in video_url_m3u.playlists:
+                if best_stream is None:
+                    best_stream = video_stream
+                    if video_stream.stream_info.resolution:
+                        best_resolution = video_stream.stream_info.resolution[1]
+                elif not video_stream.stream_info.resolution:
+                    # already set earlier
+                    continue
+                elif ((video_stream.stream_info.resolution[0] > best_stream.stream_info.resolution[0]) and
+                      (video_stream.stream_info.resolution[1] > best_stream.stream_info.resolution[1]) and
+                      not is_set_by_bitrate):
+                    best_stream = video_stream
+                    best_resolution = video_stream.stream_info.resolution[1]
+                elif ((video_stream.stream_info.resolution[0] == best_stream.stream_info.resolution[0]) and
+                      (video_stream.stream_info.resolution[1] == best_stream.stream_info.resolution[1]) and
+                      (video_stream.stream_info.bandwidth > best_stream.stream_info.bandwidth) and
+                      not is_set_by_bitrate):
+                    best_stream = video_stream
+                    best_resolution = video_stream.stream_info.resolution[1]
+
+            json_needs_updating = False
+            if best_stream is not None:
+                # use resolution over 720 as HD or
+                # bandwidth over 3mil
+                if best_resolution >= 720 and ch_json['HD'] == 0:
+                    ch_json['HD'] = 1
+                    json_needs_updating = True
+                elif 0 < best_resolution < 720 and ch_json['HD'] == 1:
+                    ch_json['HD'] = 0
+                    json_needs_updating = True
+                elif best_stream.stream_info.bandwidth > 3000000 and ch_json['HD'] == 0:
+                    ch_json['HD'] = 1
+                    json_needs_updating = True
+                elif best_stream.stream_info.bandwidth <= 3000000 and ch_json['HD'] == 1:
+                    ch_json['HD'] = 0
+                    json_needs_updating = True
+
+                if best_stream.stream_info.resolution is None:
+                    self.logger.debug(
+                        '{} will use bandwidth at {} bps'
+                        .format(_channel_id, str(best_stream.stream_info.bandwidth)))
+                else:
+                    self.logger.notice(
+                        self.plugin_obj.name + ': ' + _channel_id + " will use " +
+                        str(best_stream.stream_info.resolution[0]) + "x" +
+                        str(best_stream.stream_info.resolution[1]) +
+                        " resolution at " + str(best_stream.stream_info.bandwidth) + "bps")
+
+                if json_needs_updating:
+                    self.db.update_channel_json(ch_json, self.plugin_obj.name, self.instance_key)
+                return best_stream.absolute_uri
         else:
             self.logger.debug('{}: {} No variant streams found for this station.  Assuming single stream only.'
-                .format(self.plugin_obj.name, _channel_id))
+                              .format(self.plugin_obj.name, _channel_id))
             return _url
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER 40')
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))

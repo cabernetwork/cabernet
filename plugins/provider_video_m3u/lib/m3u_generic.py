@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,15 +16,11 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
-import random
-import time
-import urllib.request
-
 from lib.plugins.plugin_obj import PluginObj
 
 from .m3u_generic_instance import M3UGenericInstance
 from ..lib import translations
+
 
 class M3UGeneric(PluginObj):
 

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -34,6 +34,7 @@ class PluginInstanceObj:
         self.scheduler_tasks()
         self.enabled = True
         self.channels = None
+        self.programs = None
         self.epg = None
         if not self.config_obj.data[self.config_section]['enabled']:
             self.enabled = False
@@ -41,7 +42,7 @@ class PluginInstanceObj:
             self.enabled = True
 
     ##############################
-    ### EXTERNAL STREAM METHODS
+    # ## EXTERNAL STREAM METHODS
     ##############################
 
     def is_time_to_refresh(self, _last_refresh):
@@ -60,12 +61,13 @@ class PluginInstanceObj:
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             return self.channels.get_channel_uri(sid)
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not getting Channel uri' \
+            self.logger.debug(
+                '{}:{} Plugin instance disabled, not getting Channel uri'
                 .format(self.plugin_obj.name, self.instance_key))
             return None
 
     ##############################
-    ### EXTERNAL EPG METHODS
+    # ## EXTERNAL EPG METHODS
     ##############################
 
     def get_channel_day(self, _zone, _uid, _day):
@@ -76,10 +78,10 @@ class PluginInstanceObj:
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             return self.epg.get_channel_day(_zone, _uid, _day)
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not getting EPG channel data' \
+            self.logger.debug(
+                '{}:{} Plugin instance disabled, not getting EPG channel data'
                 .format(self.plugin_obj.name, self.instance_key))
             return None
-
 
     def get_program_info(self, _prog_id):
         """
@@ -90,10 +92,10 @@ class PluginInstanceObj:
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             return self.programs.get_program_info(_prog_id)
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not getting EPG program data' \
+            self.logger.debug(
+                '{}:{} Plugin instance disabled, not getting EPG program data'
                 .format(self.plugin_obj.name, self.instance_key))
             return None
-
 
     def get_channel_list(self, _zone_id, _ch_ids=None):
         """
@@ -103,13 +105,12 @@ class PluginInstanceObj:
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
             return self.channels.get_channel_list(_zone_id, _ch_ids)
         else:
-            self.logger.debug('{}:{} Plugin instance disabled, not getting EPG zone data' \
+            self.logger.debug(
+                '{}:{} Plugin instance disabled, not getting EPG zone data'
                 .format(self.plugin_obj.name, self.instance_key))
             return None
 
-
     ##############################
-
 
     def scheduler_tasks(self):
         """
@@ -117,7 +118,6 @@ class PluginInstanceObj:
         if scheduler tasks are needed at the instance level
         """
         pass
-
 
     def refresh_channels(self):
         """
@@ -128,10 +128,10 @@ class PluginInstanceObj:
                 self.config_obj.data[self.config_section]['enabled']:
             return self.channels.refresh_channels()
         else:
-            self.logger.notice('{}:{} Plugin instance disabled, not refreshing Channels' \
+            self.logger.notice(
+                '{}:{} Plugin instance disabled, not refreshing Channels'
                 .format(self.plugin_obj.name, self.instance_key))
             return False
-
 
     def refresh_epg(self):
         """
@@ -142,14 +142,14 @@ class PluginInstanceObj:
                 self.config_obj.data[self.config_section]['enabled']:
             return self.epg.refresh_epg()
         else:
-            self.logger.info('{}:{} Plugin instance disabled, not refreshing EPG' \
+            self.logger.info(
+                '{}:{} Plugin instance disabled, not refreshing EPG'
                 .format(self.plugin_obj.name, self.instance_key))
             return False
-                
+
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER2')
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
             if self.channels is not None:
                 self.channels.check_logger_refresh()
             if self.epg is not None:

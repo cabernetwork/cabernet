@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -31,7 +31,6 @@ PLUGIN_DEFN_FILE = 'plugin_defn.json'
 
 
 class PluginHandler:
-
     logger = None
     cls_plugins = None
 
@@ -48,14 +47,14 @@ class PluginHandler:
         PluginHandler.cls_plugins = self.plugins
 
     def collect_plugins(self, _plugins_pkg):
-        plugin_db = DBPlugins(self.config_obj.data)
-        #plugin_db.reinitialize_tables()
+        # plugin_db = DBPlugins(self.config_obj.data)
+        # plugin_db.reinitialize_tables()
         for folder in importlib.resources.contents(_plugins_pkg):
             if folder.startswith('__'):
                 continue
             try:
                 importlib.resources.read_text(_plugins_pkg, folder)
-            except (IsADirectoryError, PermissionError) as e:
+            except (IsADirectoryError, PermissionError):
                 try:
                     plugin = Plugin(self.config_obj, self.plugin_defn, '.'.join([_plugins_pkg, folder]))
                     self.plugins[plugin.name] = plugin

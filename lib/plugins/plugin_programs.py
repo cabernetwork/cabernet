@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,17 +16,14 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import json
 import logging
 import threading
 import urllib.request
 
 import lib.common.utils as utils
-from lib.db.db_epg import DBepg
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-
 
 
 class PluginPrograms:
@@ -57,11 +54,6 @@ class PluginPrograms:
             x = json.load(resp)
         return x
 
-
-
-
-
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER3')
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))

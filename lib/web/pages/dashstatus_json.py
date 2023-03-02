@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -20,6 +20,7 @@ import datetime
 import json
 import logging
 import urllib
+import urllib.request
 
 from lib.common.decorators import getrequest
 from lib.common.decorators import handle_url_except
@@ -31,12 +32,12 @@ def pages_dashstatus_json(_webserver):
     dashstatus_js = DashStatusJS(_webserver.config)
     expire_time = datetime.datetime.utcnow()
     expire_str = expire_time.strftime("%a, %d %b %Y %H:%M:%S GMT")
-    _webserver.do_dict_response({ 
-            'code': 200, 'headers': {'Content-type': 'application/json',
-            'Expires': expire_str
-            },
-            'text': dashstatus_js.get()
-            })
+    _webserver.do_dict_response({
+        'code': 200, 'headers': {'Content-type': 'application/json',
+                                 'Expires': expire_str
+                                 },
+        'text': dashstatus_js.get()
+    })
     return True
 
 
@@ -56,8 +57,8 @@ class DashStatusJS:
 
     def get_tuner_status(self):
         web_tuner_url = 'http://localhost:' + \
-            str(self.config['web']['plex_accessible_port'])
-        url = ( web_tuner_url + '/tunerstatus')
+                        str(self.config['web']['plex_accessible_port'])
+        url = (web_tuner_url + '/tunerstatus')
         return self.get_url(url)
 
     @handle_url_except()

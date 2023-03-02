@@ -18,12 +18,10 @@ substantial portions of the Software.
 
 import json
 import datetime
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
-
 
 DB_TEMP_TABLE = 'temp'
 DB_CONFIG_NAME = 'db_files-temp_db'
@@ -45,7 +43,7 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS temp
         """,
-        ],
+    ],
 
     'temp_add':
         """
@@ -94,7 +92,7 @@ class DBTemp(DB):
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        deleted = self.delete(DB_TEMP_TABLE +'_by_day', (_namespace, _instance, _hours,))
+        deleted = self.delete(DB_TEMP_TABLE + '_by_day', (_namespace, _instance, _hours,))
 
     def del_instance(self, _namespace, _instance):
         """
@@ -107,7 +105,6 @@ class DBTemp(DB):
     def get_record(self, _namespace, _instance, _value):
         return self.get_dict(DB_TEMP_TABLE, (_namespace, _instance, _value))
 
-        
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):
         self.export_sql(backup_folder)

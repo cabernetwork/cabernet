@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -28,7 +28,6 @@ from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 
 
-
 class PluginEPG:
 
     def __init__(self, _instance_obj):
@@ -39,13 +38,12 @@ class PluginEPG:
         self.plugin_obj = _instance_obj.plugin_obj
         self.db = DBepg(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
-        self.episode_adj = self.config_obj.data \
-            [self.instance_obj.config_section].get('epg-episode_adjustment')
+        self.episode_adj = self.config_obj.data[self.instance_obj.config_section]\
+            .get('epg-episode_adjustment')
         if self.episode_adj is None:
             self.episode_adj = 0
         else:
             self.episode_adj = int(self.episode_adj)
-            
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -65,7 +63,7 @@ class PluginEPG:
             return False
         if not self.config_obj.data[self.instance_obj.config_section]['epg-enabled']:
             self.logger.info('EPG Collection not enabled for {} {}'
-                .format(self.plugin_obj.name, self.instance_key))
+                             .format(self.plugin_obj.name, self.instance_key))
             return False
         forced_dates, aging_dates = self.dates_to_pull()
         self.db.del_old_programs(self.plugin_obj.name, self.instance_key)
@@ -90,9 +88,6 @@ class PluginEPG:
         This interface is for the epg plugins
         """
         pass
-
-
-
 
     def dates_to_pull(self):
         """
@@ -127,5 +122,4 @@ class PluginEPG:
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
-            self.logger.notice('######## CHECKING AND UPDATING LOGGER3')
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))

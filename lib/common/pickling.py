@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -23,17 +23,19 @@ import os
 
 TRAILER = '.pkl'
 
+
 class Pickling:
     """
     Do to MS Windows OS not forking processes, pickling must occur
     to have the variables passed to the process have data.
     Simple variables may be passed succesffully without pickling.
     """
+
     def __init__(self, _config):
         self.logger = logging.getLogger(__name__)
         self.config = _config
         self.temp_dir = _config['paths']['data_dir']
-    
+
     def to_pickle(self, _object_to_pickle):
         class_name = _object_to_pickle.__class__.__name__
         self.logger.debug('Pickling {}'.format(class_name))
@@ -52,7 +54,7 @@ class Pickling:
             return obj_copy
         else:
             self.logger.warning('Pickling import file does not exist: {}'
-                .format(file_path))
+                                .format(file_path))
             return None
 
     def delete_pickle(self, _class_name):
@@ -62,9 +64,7 @@ class Pickling:
             os.remove(file_path)
         else:
             self.logger.warning('Deleting pickle file does not exist: {}'
-                .format(file_path))
-            
-
+                                .format(file_path))
 
     def get_file_path(self, classname):
         file_path = pathlib.Path(self.temp_dir) \

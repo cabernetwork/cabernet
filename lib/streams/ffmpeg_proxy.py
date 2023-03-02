@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -27,6 +27,8 @@ from .stream import Stream
 from .stream_queue import StreamQueue
 from .pts_validation import PTSValidation
 
+MAX_IDLE_TIMER = 20
+
 
 class FFMpegProxy(Stream):
 
@@ -46,7 +48,6 @@ class FFMpegProxy(Stream):
         self.stream_queue = None
         self.pts_validation = None
         super().__init__(_plugins, _hdhr_queue)
-        self.config = self.plugins.config_obj.data
         self.db_configdefn = DBConfigDefn(self.config)
         self.video = Video(self.config)
 
@@ -59,54 +60,58 @@ class FFMpegProxy(Stream):
                 WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
 
     def stream(self, _channel_dict, _write_buffer):
+        self.logger.info('Using ffmpeg_proxy for channel {}'.format(_channel_dict['uid']))
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         self.config = self.db_configdefn.get_config()
         self.pts_validation = PTSValidation(self.config, self.channel_dict)
         channel_uri = self.get_stream_uri(self.channel_dict)
         if not channel_uri:
-            self.logger.warning('Unknown Channel')
+            self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
             return
         self.ffmpeg_proc = self.open_ffmpeg_proc(channel_uri)
         time.sleep(0.01)
         self.last_refresh = time.time()
         self.block_prev_time = self.last_refresh
         self.buffer_prev_time = self.last_refresh
-        self.video.data = self.read_buffer()
+        self.read_buffer()
         while True:
             if not self.video.data:
-                self.logger.debug('No Video Data, refreshing stream')
+                self.logger.info(
+                    'No Video Data, refreshing stream {} {}'
+                    .format(_channel_dict['uid'], self.ffmpeg_proc.pid))
                 self.ffmpeg_proc = self.refresh_stream()
             else:
                 try:
-                    self.validate_stream(self.video)
+                    self.validate_stream()
                     self.update_tuner_status('Streaming')
+                    start_ttw = time.time()
                     self.write_buffer.write(self.video.data)
+                    delta_ttw = time.time() - start_ttw
+                    self.logger.info(
+                        'Serving {} {} ({}B) ttw:{:.2f}s'
+                        .format(self.ffmpeg_proc.pid, _channel_dict['uid'],
+                                len(self.video.data), delta_ttw))
                 except IOError as e:
                     if e.errno in [errno.EPIPE, errno.ECONNABORTED, errno.ECONNRESET, errno.ECONNREFUSED]:
-                        self.logger.info('1. Connection dropped by end device')
+                        self.logger.info('1. Connection dropped by end device {}'.format(self.ffmpeg_proc.pid))
                         break
                     else:
                         self.logger.error('{}{}'.format(
-                            '1 ################ UNEXPECTED EXCEPTION=', e))
+                            '1 UNEXPECTED EXCEPTION=', e))
                         raise
             try:
-                self.video.data = self.read_buffer()
+                self.read_buffer()
             except Exception as e:
                 self.logger.error('{}{}'.format(
-                    '2 ################ UNEXPECTED EXCEPTION=', e))
+                    '2 UNEXPECTED EXCEPTION=', e))
                 raise
-        self.logger.debug('Terminating ffmpeg stream')
-        self.ffmpeg_proc.terminate()
-        try:
-            self.ffmpeg_proc.communicate()
-        except ValueError:
-            pass
+        self.terminate_stream()
 
     def validate_stream(self):
-        if not self.config[self.channel_dict['namespace'].lower()]['player-enable_pts_filter']:
+        if not self.config[self.config_section]['player-enable_pts_filter']:
             return
-            
+
         has_changed = True
         while has_changed:
             has_changed = False
@@ -119,42 +124,50 @@ class FFMpegProxy(Stream):
                 has_changed = True
             if results['refresh_stream']:
                 self.ffmpeg_proc = self.refresh_stream()
-                self.video.data = self.read_buffer()
+                self.read_buffer()
                 has_changed = True
             if results['reread_buffer']:
-                self.video.data = self.read_buffer()
+                self.read_buffer()
                 has_changed = True
-        return 
+        return
 
     def read_buffer(self):
         data_found = False
         self.video.data = None
-        idle_timer = 2
+        idle_timer = MAX_IDLE_TIMER  # time slice segments are less than 10 seconds
         while not data_found:
             self.video.data = self.stream_queue.read()
             if self.video.data:
                 data_found = True
             else:
-                time.sleep(0.2)
+                time.sleep(1)
                 idle_timer -= 1
-                if idle_timer == 0:
-                    if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
-                            .is_time_to_refresh_ext(self.last_refresh, self.channel_dict['instance']):
-                        self.ffmpeg_proc = self.refresh_stream()
+                if idle_timer < 1:
+                    idle_timer = MAX_IDLE_TIMER  # time slice segments are less than 10 seconds
+                    self.logger.info(
+                        'No Video Data, refreshing stream {}'
+                        .format(self.ffmpeg_proc.pid))
+                    self.ffmpeg_proc = self.refresh_stream()
+                elif int(MAX_IDLE_TIMER / 2) == idle_timer:
+                    self.update_tuner_status('No Reply')
         return
+
+    def terminate_stream(self):
+        self.logger.debug('Terminating ffmpeg stream {}'.format(self.ffmpeg_proc.pid))
+        while True:
+            try:
+                self.ffmpeg_proc.terminate()
+                self.ffmpeg_proc.wait(timeout=1.5)
+                break
+            except ValueError:
+                pass
+            except subprocess.TimeoutExpired:
+                time.sleep(0.01)
 
     def refresh_stream(self):
         self.last_refresh = time.time()
         channel_uri = self.get_stream_uri(self.channel_dict)
-        try:
-            self.ffmpeg_proc.terminate()
-            self.ffmpeg_proc.wait(timeout=0.1)
-            self.logger.debug('Previous ffmpeg terminated')
-        except ValueError:
-            pass
-        except subprocess.TimeoutExpired:
-            self.ffmpeg_proc.terminate()
-            time.sleep(0.01)
+        self.terminate_stream()
 
         self.logger.debug('{}{}'.format(
             'Refresh Stream channelUri=', channel_uri))
@@ -170,7 +183,8 @@ class FFMpegProxy(Stream):
         visible by looking at the video packets for a 6 second window being 171
         instead of 180.  Following the first read, the packets increase to 180.
         """
-        ffmpeg_command = [self.config['paths']['ffmpeg_path'],
+        ffmpeg_command = [
+            self.config['paths']['ffmpeg_path'],
             '-i', str(_channel_uri),
             '-f', 'mpegts',
             '-nostats',
@@ -178,7 +192,8 @@ class FFMpegProxy(Stream):
             '-loglevel', 'warning',
             '-copyts',
             'pipe:1']
-        ffmpeg_process = subprocess.Popen(ffmpeg_command,
+        ffmpeg_process = subprocess.Popen(
+            ffmpeg_command,
             stdout=subprocess.PIPE,
             bufsize=-1)
         self.stream_queue = StreamQueue(188, ffmpeg_process, self.channel_dict['uid'])
@@ -192,18 +207,38 @@ class FFMpegProxy(Stream):
         visible by looking at the video packets for a 6 second window being 171
         instead of 180.  Following the first read, the packets increase to 180.
         """
-        ffmpeg_command = [self.config['paths']['ffmpeg_path'],
+        header = self.channel_dict['json'].get('Header')
+        str_array = []
+        if header:
+            str_array.append('-headers')
+            header_value = ''
+            for key, value in header.items():
+                header_value += key+': '+value+'\r\n'
+                if key == 'Referer':
+                    self.logger.debug('Using HTTP Referer: {}  Channel: {}'.format(value, self.channel_dict['uid']))
+            str_array.append(header_value)
+
+        ffmpeg_options = [
             '-i', str(_channel_uri),
             '-nostats',
             '-hide_banner',
             '-fflags', '+genpts',
             '-threads', '2',
-            '-loglevel', 'fatal',
+            '-loglevel', 'quiet',
             '-c', 'copy',
             '-f', 'mpegts',
             '-c', 'copy',
             'pipe:1']
-        ffmpeg_process = subprocess.Popen(ffmpeg_command,
+
+        ffmpeg_command = [
+            self.config['paths']['ffmpeg_path']
+            ]
+        # Header option must come first in the options list
+        if str_array:
+            ffmpeg_command.extend(str_array)
+        ffmpeg_command.extend(ffmpeg_options)
+        ffmpeg_process = subprocess.Popen(
+            ffmpeg_command,
             stdout=subprocess.PIPE,
             bufsize=-1)
         self.stream_queue = StreamQueue(188, ffmpeg_process, self.channel_dict['uid'])

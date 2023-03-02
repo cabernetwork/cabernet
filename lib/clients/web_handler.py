@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -20,14 +20,13 @@ import importlib
 import importlib.resources
 import logging
 import mimetypes
-import os
 import pathlib
 import platform
 import socket
 import time
 import urllib
+import urllib.parse
 from http.server import BaseHTTPRequestHandler
-from multiprocessing import Queue
 
 import lib.common.utils as utils
 from lib.web.pages.templates import web_templates
@@ -162,7 +161,13 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
             self.wfile.write(_data)
         except BrokenPipeError as ex:
             self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
-    
+
+    @classmethod
+    def init_class_var_sub(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+        """
+        Interface class
+        """
+        pass
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue):
@@ -214,7 +219,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         server_socket.listen(int(_plugins.config_obj.data['web']['concurrent_listeners']))
         utils.logging_setup(_plugins.config_obj.data)
         logger = logging.getLogger(__name__)
-        cls.init_class_var(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
+        cls.init_class_var_sub(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
         if cls.total_instances == 0:
             _plugins.config_obj.data['web']['concurrent_listeners']
         logger.info(

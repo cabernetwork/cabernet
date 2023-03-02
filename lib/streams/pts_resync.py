@@ -22,7 +22,6 @@ import subprocess
 import time
 from threading import Thread
 
-import lib.common.utils as utils
 from .stream_queue import StreamQueue
 
 
@@ -49,7 +48,7 @@ class PTSResync:
             try:
                 self.ffmpeg_proc.stdin.write(_video.data)
                 break
-            except (BrokenPipeError, TypeError) as ex:
+            except (BrokenPipeError, TypeError):
                 # This occurs when the process does not start correctly
                 self.stream_queue.terminate()
                 self.ffmpeg_proc.terminate()
@@ -63,7 +62,6 @@ class PTSResync:
                 time.sleep(0.01)
                 self.logger.info('Restarting PTSResync ffmpeg due to corrupted process start {}'.format(os.getpid()))
                 self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
-
 
     def resequence_pts(self, _video):
         if not self.config[self.config_section]['player-enable_pts_resync']:
@@ -99,7 +97,8 @@ class PTSResync:
         visible by looking at the video packets for a 6 second window being 171
         instead of 180.  Following the first read, the packets increase to 180.
         """
-        ffmpeg_command = [self.config['paths']['ffmpeg_path'],
+        ffmpeg_command = [
+            self.config['paths']['ffmpeg_path'],
             '-nostats',
             '-hide_banner',
             '-loglevel', 'fatal',
@@ -109,9 +108,9 @@ class PTSResync:
             '-f', 'mpegts',
             '-c', 'copy',
             'pipe:1']
-        ffmpeg_process = subprocess.Popen(ffmpeg_command,
-            stdin=subprocess.PIPE, 
+        ffmpeg_process = subprocess.Popen(
+            ffmpeg_command,
+            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             bufsize=-1)
         return ffmpeg_process
-

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,8 +16,6 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
-import http
 import logging
 import os
 import re
@@ -25,6 +23,7 @@ import socket
 import sys
 import threading
 import time
+import urllib.parse
 import urllib.request
 from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -42,13 +41,12 @@ from lib.streams.video import Video
 from .pts_validation import PTSValidation
 from .pts_resync import PTSResync
 
-
 PLAY_LIST = OrderedDict()
-IN_QUEUE = None
-STREAM_QUEUE = None
-OUT_QUEUE = None
+IN_QUEUE = Queue()
+OUT_QUEUE = Queue()
 TERMINATE_REQUESTED = False
 MAX_STREAM_QUEUE_SIZE = 100
+STREAM_QUEUE = Queue()
 
 
 class M3U8Queue(Thread):
@@ -61,7 +59,7 @@ class M3U8Queue(Thread):
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
-        self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+        self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
         self.namespace = _channel_dict['namespace'].lower()
         self.pts_validation = None
@@ -82,7 +80,7 @@ class M3U8Queue(Thread):
             self.use_date_on_key = True
         else:
             self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
-        
+
         self.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
         self.key_list = {}
         self.start()
@@ -93,7 +91,7 @@ class M3U8Queue(Thread):
         with urllib.request.urlopen(req, timeout=10) as resp:
             x = resp.read()
         return x
-    
+
     def run(self):
         global OUT_QUEUE
         global STREAM_QUEUE
@@ -106,9 +104,9 @@ class M3U8Queue(Thread):
                     break
                 elif queue_item['uri_dt'] == 'status':
                     OUT_QUEUE.put({'uri': 'running',
-                        'data': None,
-                        'stream': None,
-                        'atsc': None})
+                                   'data': None,
+                                   'stream': None,
+                                   'atsc': None})
                     time.sleep(0.01)
                     continue
                 self.process_m3u8_item(queue_item)
@@ -132,7 +130,6 @@ class M3U8Queue(Thread):
         if self.pts_resync is not None:
             self.pts_resync.terminate()
         self.clear_queues()
-                
 
     def decrypt_stream(self, _data):
         if _data['key'] and _data['key']['uri']:
@@ -193,33 +190,31 @@ class M3U8Queue(Thread):
         data = _queue_item['data']
         if data['filtered']:
             OUT_QUEUE.put({'uri': uri_dt[0],
-                'data': data,
-                'stream': self.get_stream_from_atsc(),
-                'atsc': None})
+                           'data': data,
+                           'stream': self.get_stream_from_atsc(),
+                           'atsc': None})
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
         else:
-            count = 1
             while True:
                 self.video.data = self.get_uri_data(uri_dt[0])
                 break
-
             if uri_dt not in PLAY_LIST.keys():
                 return
             if self.video.data is None:
                 PLAY_LIST[uri_dt]['played'] = True
                 OUT_QUEUE.put({'uri': uri_dt[0],
-                    'data': data,
-                    'stream': None,
-                    'atsc': None
-                    })
+                               'data': data,
+                               'stream': None,
+                               'atsc': None
+                               })
                 return
             if not self.decrypt_stream(data):
                 # terminate if stream is not decryptable
                 OUT_QUEUE.put({'uri': 'terminate',
-                    'data': data,
-                    'stream': None,
-                    'atsc': None})
+                               'data': data,
+                               'stream': None,
+                               'atsc': None})
                 TERMINATE_REQUESTED = True
                 self.pts_resync.terminate()
                 self.clear_queues()
@@ -229,39 +224,39 @@ class M3U8Queue(Thread):
             if not self.is_pts_valid():
                 PLAY_LIST[uri_dt]['played'] = True
                 OUT_QUEUE.put({'uri': uri_dt[0],
-                    'data': data,
-                    'stream': None,
-                    'atsc': None
-                    })
+                               'data': data,
+                               'stream': None,
+                               'atsc': None
+                               })
                 return
-                
+
             if self.first_segment:
-                #print('writing out FIRST segment')
+                # print('writing out FIRST segment')
                 self.first_segment = False
-                #print('writing out FIRST segment')
-            
+                # print('writing out FIRST segment')
+
             self.pts_resync.resequence_pts(self.video)
+
             if self.video.data is None:
                 OUT_QUEUE.put({'uri': uri_dt[0],
-                    'data': data,
-                    'stream': self.video.data,
-                    'atsc': None})
+                               'data': data,
+                               'stream': self.video.data,
+                               'atsc': None})
                 PLAY_LIST[uri_dt]['played'] = True
                 time.sleep(0.01)
                 return
             atsc_default_msg = self.atsc_processing()
             OUT_QUEUE.put({'uri': uri_dt[0],
-                'data': data,
-                'stream': self.video.data,
-                'atsc': atsc_default_msg
-                })
+                           'data': data,
+                           'stream': self.video.data,
+                           'atsc': atsc_default_msg
+                           })
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
 
     def is_pts_valid(self):
         if self.pts_validation is None:
             return True
-        before = len(self.video.data)
         results = self.pts_validation.check_pts(self.video)
         if results['byteoffset'] != 0:
             return False
@@ -284,7 +279,8 @@ class M3U8Queue(Thread):
         global STREAM_QUEUE
         global OUT_QUEUE
         global IN_QUEUE
-        # closing a multiporcessing queue with 'close' without emptying it will prevent a process dependant on that queue 
+        # closing a multiporcessing queue with 'close' without emptying
+        # it will prevent a process dependant on that queue
         # from terminating and fulfilling a 'join' if there was an entry in the queue
         # so we need to proactivley clear all queue entries instead of closing the queues
         clear_q(STREAM_QUEUE)
@@ -298,9 +294,10 @@ class M3U8Process(Thread):
     Includes managing the processing queue and providing
     the M3U8Queue with what to process.
     """
+
     def __init__(self, _config, _plugins, _channel_dict):
         Thread.__init__(self)
-        self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+        self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         global IN_QUEUE
         global OUT_QUEUE
         global TERMINATE_REQUESTED
@@ -314,7 +311,7 @@ class M3U8Process(Thread):
             self.use_date_on_key = True
         else:
             self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
-        
+
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
@@ -324,15 +321,15 @@ class M3U8Process(Thread):
             i -= 1
             time.sleep(0.02)
         if IN_QUEUE.empty():
-            self.logger.warning('1Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
+            self.logger.info('1Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
             TERMINATE_REQUESTED = True
             time.sleep(0.01)
             return
         time.sleep(0.01)
         try:
-            queue_item = IN_QUEUE.get(False, 1)
+            IN_QUEUE.get(False, 1)
         except Empty:
-            self.logger.debug('2Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
+            self.logger.info('2Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
             TERMINATE_REQUESTED = True
             time.sleep(0.01)
             return
@@ -341,36 +338,36 @@ class M3U8Process(Thread):
         if not self.stream_uri:
             self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
             OUT_QUEUE.put({'uri': 'terminate',
-                'data': None,
-                'stream': None,
-                'atsc': None})
+                           'data': None,
+                           'stream': None,
+                           'atsc': None})
             TERMINATE_REQUESTED = True
             time.sleep(0.01)
             return
         else:
             OUT_QUEUE.put({'uri': 'running',
-                'data': None,
-                'stream': None,
-                'atsc': None})
+                           'data': None,
+                           'stream': None,
+                           'atsc': None})
             time.sleep(0.01)
         self.is_running = True
         self.duration = 6
         self.m3u8_q = M3U8Queue(_config, _channel_dict)
+        self.file_filter = None
         self.start()
 
     def run(self):
         global TERMINATE_REQUESTED
         try:
             self.logger.debug('M3U8: {} {}'.format(self.stream_uri, os.getpid()))
-            self.file_filter = None
             if self.config[self.config_section]['player-enable_url_filter']:
                 stream_filter = self.config[self.config_section]['player-url_filter']
                 if stream_filter is not None:
                     self.file_filter = re.compile(stream_filter)
                 else:
                     self.logger.warning('[{}]][player-enable_url_filter]'
-                        ' enabled but [player-url_filter] not set'
-                        .format(self.config_section))
+                                        ' enabled but [player-url_filter] not set'
+                                        .format(self.config_section))
             while not TERMINATE_REQUESTED:
                 added = 0
                 removed = 0
@@ -384,8 +381,8 @@ class M3U8Process(Thread):
                 if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, self.channel_dict['instance']):
                     self.stream_uri = self.get_stream_uri()
-                    self.logger.debug('M3U8: {} {}' \
-                        .format(self.stream_uri, os.getpid()))
+                    self.logger.debug('M3U8: {} {}'
+                                      .format(self.stream_uri, os.getpid()))
                     self.last_refresh = time.time()
                     self.sleep(0.3)
                 elif added == 0 and self.duration > 0:
@@ -400,7 +397,7 @@ class M3U8Process(Thread):
         self.m3u8_q.join()
 
     def sleep(self, _time):
-        for i in range(round(_time*10)):
+        for i in range(round(_time * 10)):
             if not TERMINATE_REQUESTED:
                 time.sleep(self.duration * 0.1)
 
@@ -429,18 +426,17 @@ class M3U8Process(Thread):
             return None
         return _segment.current_program_date_time.replace(microsecond=0)
 
-
     def add_to_stream_queue(self, _playlist):
         global PLAY_LIST
         global STREAM_QUEUE
         global TERMINATE_REQUESTED
         total_added = 0
         if _playlist.keys != [None]:
-            keys = [{"uri": key.absolute_uri, "method": key.method, "iv": key.iv} \
-                for key in _playlist.keys if key]
+            keys = [{"uri": key.absolute_uri, "method": key.method, "iv": key.iv}
+                    for key in _playlist.keys if key]
             if len(keys) != len(_playlist.segments):
-                keys = [{"uri": keys[0]['uri'], "method": keys[0]['method'], "iv": keys[0]['iv']} \
-                    for i in range(0, len(_playlist.segments))]
+                keys = [{"uri": keys[0]['uri'], "method": keys[0]['method'], "iv": keys[0]['iv']}
+                        for i in range(0, len(_playlist.segments))]
         else:
             keys = [None for i in range(0, len(_playlist.segments))]
         num_segments = len(_playlist.segments)
@@ -450,10 +446,10 @@ class M3U8Process(Thread):
                 seg_to_play = num_segments
             elif seg_to_play > num_segments:
                 seg_to_play = num_segments
-            
-            skipped_seg = num_segments-seg_to_play
-            #total_added += self.add_segment(_playlist.segments[0], keys[0])
-            
+
+            skipped_seg = num_segments - seg_to_play
+            # total_added += self.add_segment(_playlist.segments[0], keys[0])
+
             for m3u8_segment, key in zip(_playlist.segments[0:skipped_seg], keys[0:skipped_seg]):
                 total_added += self.add_segment(m3u8_segment, key, _default_played=True)
             for i in range(skipped_seg, num_segments):
@@ -477,8 +473,8 @@ class M3U8Process(Thread):
                     if last_key == uri_dt:
                         i = num_segments - index
             remaining_segs = num_segments - i
-            for m3u8_segment, key in zip(_playlist \
-                    .segments[i:num_segments], keys[i:num_segments]):
+            for m3u8_segment, key in zip(
+                    _playlist.segments[i:num_segments], keys[i:num_segments]):
                 remaining_segs -= 1
                 if remaining_segs < 1:
                     # delay is this is the last segment to add from the provider
@@ -519,14 +515,14 @@ class M3U8Process(Thread):
                 self.duration = _segment.duration
             try:
                 if not played and not TERMINATE_REQUESTED:
-                    self.logger.debug('Added {} to play queue {}' \
-                        .format(uri, os.getpid()))
+                    self.logger.debug('Added {} to play queue {}'
+                                      .format(uri, os.getpid()))
                     STREAM_QUEUE.put({'uri_dt': uri_dt,
-                        'data': PLAY_LIST[uri_dt]})
+                                      'data': PLAY_LIST[uri_dt]})
                     return 1
                 if _default_played:
-                    self.logger.debug('Skipping {} {} {}' \
-                        .format(uri, os.getpid(), _segment.program_date_time))
+                    self.logger.debug('Skipping {} {} {}'
+                                      .format(uri, os.getpid(), _segment.program_date_time))
             except ValueError:
                 # queue is closed, terminating
                 pass
@@ -551,7 +547,7 @@ class M3U8Process(Thread):
                     s_key = (s_uri, s_dt)
                 else:
                     s_key = (s_uri, 0)
-                
+
                 if s_key in PLAY_LIST.keys():
                     continue
                 else:
@@ -561,7 +557,7 @@ class M3U8Process(Thread):
                     except ValueError:
                         # not in list
                         pass
-            
+
         for segment_key in list(PLAY_LIST.keys()):
             is_found = False
             for segment_m3u8 in _playlist.segments:
@@ -578,8 +574,8 @@ class M3U8Process(Thread):
                 if PLAY_LIST[segment_key]['played']:
                     del PLAY_LIST[segment_key]
                     total_removed += 1
-                    self.logger.debug('Removed {} from play queue {}' \
-                        .format(segment_key[0], os.getpid()))
+                    self.logger.debug('Removed {} from play queue {}'
+                                      .format(segment_key[0], os.getpid()))
                 continue
             else:
                 break
@@ -593,6 +589,7 @@ class M3U8Process(Thread):
         else:
             return None
 
+
 def clear_q(q):
     try:
         while True:
@@ -600,10 +597,12 @@ def clear_q(q):
     except (Empty, ValueError, EOFError):
         pass
 
+
 def clear_queues():
     clear_q(OUT_QUEUE)
     clear_q(STREAM_QUEUE)
     clear_q(IN_QUEUE)
+
 
 def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None):
     """
@@ -613,6 +612,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
     global STREAM_QUEUE
     global OUT_QUEUE
     global TERMINATE_REQUESTED
+    logger = None
     try:
         utils.logging_setup(_plugins.config_obj.data)
         logger = logging.getLogger(__name__)
@@ -633,6 +633,9 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     p_m3u8.join()
                     # finally make sure all queues are clear so that this process can be joined
                     clear_queues()
+                elif q_item['uri'] == 'status':
+                    STREAM_QUEUE.put({'uri_dt': 'status'})
+                    logger.debug('Sending Status response to stream process {}'.format(os.getpid()))
                 else:
                     logger.debug('UNKNOWN m3u8 queue request {}'.format(q_item['uri']))
             except (KeyboardInterrupt, EOFError, TypeError, ValueError):
@@ -644,8 +647,6 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                 time.sleep(0.01)
                 sys.exit()
         sys.exit()
-
-
     except Exception as ex:
         logger.exception('{}{}'.format(
             'UNEXPECTED EXCEPTION startup=', str(ex)))

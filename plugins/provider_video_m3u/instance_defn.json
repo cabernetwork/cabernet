@@ -85,6 +85,13 @@
                         "level": 1,
                         "help": "M3U8 send m3u8 file directly to client.  ffmpeg uses ffmpeg for m3u8 urls. streamlink uses the python module streamlink. internal uses internally coded modules."
                     },
+                    "player-stream_quality":{
+                        "label": "Maximum Stream Quality",
+                        "type": "integer",
+                        "default": 999999999,
+                        "level": 3,
+                        "help": "Only used with internalproxy. Maximum bps bandwidth requested for a stream. If a lower bandwidth is available, it is used.  default (999999999) means select the best quality.",
+                    },
                     "player-play_all_segments":{
                         "label": "Play All (VOD)",
                         "type": "boolean",

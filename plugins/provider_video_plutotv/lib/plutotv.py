@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,15 +16,13 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import random
-import time
-import urllib.request
 
 from lib.plugins.plugin_obj import PluginObj
 
 from .plutotv_instance import PlutoTVInstance
 from ..lib import translations
+
 
 class PlutoTV(PluginObj):
 
@@ -38,7 +36,7 @@ class PlutoTV(PluginObj):
 
     def scheduler_tasks(self):
         sched_ch_hours = self.utc_to_local_time(23)
-        sched_ch_mins = random.randint(1,55)
+        sched_ch_mins = random.randint(1, 55)
         sched_ch = '{:0>2d}:{:0>2d}'.format(sched_ch_hours, sched_ch_mins)
         if self.scheduler_db.save_task(
                 'Channels',
@@ -49,7 +47,7 @@ class PlutoTV(PluginObj):
                 20,
                 'inline',
                 'Pulls channel lineup from {}'.format(self.namespace)
-                ):
+        ):
             self.scheduler_db.save_trigger(
                 'Channels',
                 'Refresh {} Channels'.format(self.namespace),
@@ -59,7 +57,7 @@ class PlutoTV(PluginObj):
                 'Refresh {} Channels'.format(self.namespace),
                 'daily',
                 timeofday=sched_ch
-                )
+            )
         if self.scheduler_db.save_task(
                 'EPG',
                 'Refresh {} EPG'.format(self.namespace),
@@ -69,7 +67,7 @@ class PlutoTV(PluginObj):
                 10,
                 'thread',
                 'Pulls channel program data from {}'.format(self.namespace)
-                ):
+        ):
             self.scheduler_db.save_trigger(
                 'EPG',
                 'Refresh {} EPG'.format(self.namespace),
@@ -80,4 +78,4 @@ class PlutoTV(PluginObj):
                 'interval',
                 interval=200,
                 randdur=80
-                )
+            )

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,10 +16,6 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import io
-import urllib
-
-import lib.image_size.get_image_size as get_image_size
 import lib.common.utils as utils
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
@@ -39,8 +35,6 @@ def get_channels_form_html(_webserver, _namespace=None, _sort_col=None, _sort_di
 
 @postrequest.route('/api/channels_form')
 def post_channels_html(_webserver):
-    # Take each key and make a [section][key] to store the value
-    channel_changes = {}
     namespace = _webserver.query_data['name'][0]
     sort_col = _webserver.query_data['sort_col'][0]
     sort_dir = _webserver.query_data['sort_dir'][0]
@@ -49,7 +43,7 @@ def post_channels_html(_webserver):
     del _webserver.query_data['sort_dir']
     del _webserver.query_data['sort_col']
     filter_dict = get_filter_data(_webserver.query_data)
-    
+
     if sort_col is None:
         cu = ChannelsURL(_webserver.config)
         results = cu.update_channels(namespace, _webserver.query_data)
@@ -69,6 +63,8 @@ class ChannelsFormHTML:
         self.num_enabled = 0
         self.sort_column = None
         self.sort_direction = None
+        self.ch_data = None
+        self.filter_dict = None
 
     def get(self, _namespace, _sort_col, _sort_dir, _filter_dict):
         self.sort_column = _sort_col
@@ -77,7 +73,7 @@ class ChannelsFormHTML:
         self.filter_dict = _filter_dict
         sort_data = self.get_db_sort_data(_sort_col, _sort_dir)
         self.ch_data = self.db.get_sorted_channels(self.namespace, None, sort_data[0], sort_data[1])
-        return ''.join([self.header,self.body])
+        return ''.join([self.header, self.body])
 
     def get_db_sort_data(self, _sort_col, _sort_dir):
         if _sort_dir == 'sortdesc':
@@ -116,27 +112,27 @@ class ChannelsFormHTML:
             '<script src="/modules/table/table.js"></script>',
             '<link rel="stylesheet" type="text/css" href="/modules/channels/channelsform.css">',
             '</head><body>'
-            ])
+        ])
 
     @property
     def form_header(self):
         header_dir = {
-            'enabled':'sortnone',
-            'instance':'sortnone',
-            'num':'sortnone',
-            'name':'sortnone',
-            'group':'sortnone',
-            'thumbnail':'sortnone',
-            'metadata':'sortnone'
+            'enabled': 'sortnone',
+            'instance': 'sortnone',
+            'num': 'sortnone',
+            'name': 'sortnone',
+            'group': 'sortnone',
+            'thumbnail': 'sortnone',
+            'metadata': 'sortnone'
         }
         header_dir[self.sort_column] = self.sort_direction
-        
+
         return ''.join([
             '<input type="hidden" name="name" value="', self.namespace, '" >',
             '<input type="hidden" name="sort_col" >',
             '<input type="hidden" name="sort_dir" >',
             '<table><tr><td>Total Unique Channels = ', str(self.num_of_channels), '</td></tr>',
-            '<tr><td>Total Enabled Unique Channels = ', str(self.num_enabled), '</td>'
+            '<tr><td>Total Enabled Unique Channels = ', str(self.num_enabled), '</td>',
             '<td style="min-width:18ch; text-align: center">',
             '<button STYLE="background-color: #E0E0E0;" ',
             'type="submit"><b>Save changes</b></button>',
@@ -147,11 +143,13 @@ class ChannelsFormHTML:
             '<label title="enabled=green, disabled=red, disabled dup=violet, duplicate=yellow indicator">',
             '<img class="sortit ', header_dir['enabled'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
-            '<th style="min-width: 11ch;" class="header"><label title="Table is for a plugin. Each row has an instance for a channel">',
+            '<th style="min-width: 11ch;" class="header"><label title="Table is for a plugin. ',
+            'Each row has an instance for a channel">',
             'instance',
             '<img class="sortit ', header_dir['instance'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
-            '<th style="min-width: 8ch;" class="header"><label title="Channel number.  DVR may require this to be a number">',
+            '<th style="min-width: 8ch;" class="header"><label title="Channel number.  ',
+            'DVR may require this to be a number">',
             'num',
             '<img class="sortit ', header_dir['num'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
@@ -159,11 +157,13 @@ class ChannelsFormHTML:
             'name',
             '<img class="sortit ', header_dir['name'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
-            '<th style="min-width: 10ch;" class="header"><label title="Group or tag name. Expects only one value. Use blank for empty cells">',
+            '<th style="min-width: 10ch;" class="header"><label title="Group or tag name. Expects only one value. ',
+            'Use blank for empty cells">',
             'group',
             '<img class="sortit ', header_dir['group'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
-            '<th class="header"><label title="Use http:// https:// or (Linux) file:/// (Windows) file:///C:/ Be careful when using spaces in the path. Use blank for empty cells">',
+            '<th class="header"><label title="Use http:// https:// or (Linux) file:/// (Windows) ',
+            'file:///C:/ Be careful when using spaces in the path. Use blank for empty cells">',
             'thumbnail',
             '<img class="sortit ', header_dir['thumbnail'], '">',
             '<img class="filterit"><span class=vertline><img></span></label></th>',
@@ -194,7 +194,7 @@ class ChannelsFormHTML:
             '<center>instance</center>'
             '<ul>',
             '<li style="list-style-type:none;">',
-            self.get_filter_text_chkbox('instance'), ' Filter: ', self.get_filter_textbox('instance'), 
+            self.get_filter_text_chkbox('instance'), ' Filter: ', self.get_filter_textbox('instance'),
             '</li>',
             '</ul>',
             '</div>',
@@ -203,7 +203,7 @@ class ChannelsFormHTML:
             '<center>num</center>'
             '<ul>',
             '<li style="list-style-type:none;">',
-            self.get_filter_text_chkbox('num'), ' Filter: ', self.get_filter_textbox('num'), 
+            self.get_filter_text_chkbox('num'), ' Filter: ', self.get_filter_textbox('num'),
             '</li>',
             '</ul>',
             '</div>',
@@ -211,7 +211,7 @@ class ChannelsFormHTML:
             '<center>name</center>'
             '<ul>',
             '<li style="list-style-type:none;">',
-            self.get_filter_text_chkbox('name'), ' Filter: ', self.get_filter_textbox('name'), 
+            self.get_filter_text_chkbox('name'), ' Filter: ', self.get_filter_textbox('name'),
             '</li>',
             '</ul>',
             '</div>',
@@ -219,7 +219,7 @@ class ChannelsFormHTML:
             '<center>group</center>'
             '<ul>',
             '<li style="list-style-type:none;">',
-            self.get_filter_text_chkbox('group'), ' Filter: ', self.get_filter_textbox('group'), 
+            self.get_filter_text_chkbox('group'), ' Filter: ', self.get_filter_textbox('group'),
             '</li>',
             '</ul>',
             '</div>',
@@ -227,7 +227,7 @@ class ChannelsFormHTML:
             '<center>thumbnail</center>'
             '<ul>',
             '<li style="list-style-type:none;">',
-            self.get_filter_text_chkbox('thumbnail'), ' Filter: ', self.get_filter_textbox('thumbnail'), 
+            self.get_filter_text_chkbox('thumbnail'), ' Filter: ', self.get_filter_textbox('thumbnail'),
             '</li>',
             '</ul>',
             '</div>',
@@ -239,8 +239,7 @@ class ChannelsFormHTML:
             '</li>',
             '</ul>',
             '</div>',
-            ])
-
+        ])
 
     def get_filter_enable_checkbox(self, _name):
         name = _name + "-mi"
@@ -250,7 +249,6 @@ class ChannelsFormHTML:
             return '<input id="' + name + '" name="' + name + '" value="1" type=checkbox checked>'
         else:
             return '<input id="' + name + '" name="' + name + '" value="1" type=checkbox>'
-
 
     def get_filter_textbox(self, _name):
         name = _name + "-text"
@@ -262,18 +260,18 @@ class ChannelsFormHTML:
     def get_filter_text_chkbox(self, _name):
         name = _name + "-checkbox"
         if self.filter_dict is None:
-            return '<input id="text-mi" name="' + name + '" value="1" type=checkbox>'        
+            return '<input id="text-mi" name="' + name + '" value="1" type=checkbox>'
         elif name in self.filter_dict:
             return '<input id="text-mi" name="' + name + '" value="1" type=checkbox checked>'
         else:
             return '<input id="text-mi" name="' + name + '" value="1" type=checkbox>'
-        
+
     @property
     def form(self):
         t = self.table
         forms_html = ''.join(['<form id="channelform" ',
-            'action="/api/channels_form" method="post">',
-            self.form_header, t, '</form>'])
+                              'action="/api/channels_form" method="post">',
+                              self.form_header, t, '</form>'])
         return forms_html
 
     @property
@@ -309,7 +307,7 @@ class ChannelsFormHTML:
                     vod = 'Live'
             else:
                 vod = ''
-                
+
             max_image_size = self.lookup_config_size()
             if sid_data['thumbnail_size'] is not None:
                 image_size = sid_data['thumbnail_size']
@@ -327,13 +325,12 @@ class ChannelsFormHTML:
             else:
                 display_image = ''
                 image_size = 'UNK'
-                img_width = 0
 
             if sid_data['json']['groups_other'] is None:
                 groups_other = ''
             else:
                 groups_other = str(sid_data['json']['groups_other'])
-                
+
             if sid_data['json']['thumbnail_size'] is not None:
                 original_size = sid_data['json']['thumbnail_size']
             else:
@@ -348,13 +345,13 @@ class ChannelsFormHTML:
                 '">',
                 '</td>',
                 '<td style="text-align: center">', instance, '</td>',
-                '<td style="text-align: center">', 
+                '<td style="text-align: center">',
                 self.get_input_text(sid_data, sid, instance, 'display_number'), '</td>',
-                '<td style="text-align: center">', 
+                '<td style="text-align: center">',
                 self.get_input_text(sid_data, sid, instance, 'display_name'), '</td>',
-                '<td style="text-align: center">', 
+                '<td style="text-align: center">',
                 self.get_input_text(sid_data, sid, instance, 'group_tag'), '</td>',
-                '<td><table width="100%"><tr><td style="border: none; background: none;">', 
+                '<td><table width="100%"><tr><td style="border: none; background: none;">',
                 self.get_input_text(sid_data, sid, instance, 'thumbnail'),
                 '</td></tr><tr><td style="border: none; background: none;">',
                 display_image,
@@ -362,57 +359,58 @@ class ChannelsFormHTML:
                 'size=', str(image_size), '   original_size=', str(original_size),
                 '</td></tr></table></td>',
                 '<td style="text-align: center">', quality, ' ', vod, ' ',
-                sid_data['json']['callsign'], ' ', sid,'<br>',
+                sid_data['json']['callsign'], ' ', sid, '<br>',
                 groups_other,
                 '</td>',
                 '</tr>'
-                ])
+            ])
             table_html += row
         self.num_of_channels = len(sids_processed.keys())
-        self.num_enabled = sum(x == True for x in sids_processed.values())
+        self.num_enabled = sum(x for x in sids_processed.values())
         return ''.join([table_html, '</tbody></table>'])
 
     def get_input_text(self, _sid_data, _sid, _instance, _title):
         if _sid_data[_title] is not None:
-            size = len(_sid_data[_title]) 
+            size = len(_sid_data[_title])
             if size > 30:
                 rows = 1
                 if size > 70:
                     rows = 2
                 return ''.join(['<textarea name="',
-                    self.get_input_name(_sid, _instance, _title),
-                    '" rows=', str(rows), ' cols=22>', _sid_data[_title], 
-                    '</textarea>'])
+                                self.get_input_name(_sid, _instance, _title),
+                                '" rows=', str(rows), ' cols=22>', _sid_data[_title],
+                                '</textarea>'])
             else:
                 if size > 24:
                     size = 20
                 elif size < 3:
                     size = 3
                 return ''.join(['<input type="text" name="',
-                    self.get_input_name(_sid, _instance, _title),
-                    '" value="', _sid_data[_title], 
-                    '" size="', str(int(size*.9)), '">'])
+                                self.get_input_name(_sid, _instance, _title),
+                                '" value="', _sid_data[_title],
+                                '" size="', str(int(size * .9)), '">'])
         else:
             return ''.join(['<input type="text" name="',
-                self.get_input_name(_sid, _instance, _title),
-                '" size="5">'])
-
+                            self.get_input_name(_sid, _instance, _title),
+                            '" size="5">'])
 
     def get_input_name(self, _sid, _instance, _title):
         _sid = _sid.replace('-', '%2d')
-        return  ''.join([_sid, '-', _instance, '-', _title])
+        return ''.join([_sid, '-', _instance, '-', _title])
 
     @property
     def body(self):
         return ''.join([
             '<section id="status"></section>',
             self.form,
-            '<footer><p>Clearing any field and saving will revert to the default value. Sorting a column will clear any filters applied. ',
-            ' Help is provided on the column titles.',
-            ' First column displays the status of the channel: either enabled, disabled or duplicate (enabled or disabled).',
-            ' The thumbnail field must have an entry; not using the thumbnail is a configuration parameter under Settings - Clients - EPG.',
+            '<footer><p>Clearing any field and saving will revert to the default value. Sorting ',
+            'a column will clear any filters applied. Help is provided on the column titles. ',
+            'First column displays the status of the channel: either enabled, disabled or duplicate',
+            ' (enabled or disabled). The thumbnail field must have an entry; not using the ',
+            'thumbnail is a configuration parameter under Settings - Clients - EPG.',
             ' Thumbnail filtering is only on the URL.',
-            ' The size of the thumbnail presented in the table is set using the configuration parameter under Settings - Internal - Channels.</p>',
+            ' The size of the thumbnail presented in the table is set using the configuration',
+            ' parameter under Settings - Internal - Channels.</p>',
             '</footer></body>'])
 
     def lookup_config_size(self):
@@ -435,10 +433,11 @@ class ChannelsFormHTML:
             return None
 
 
-
 def get_filter_data(query_data):
-    filter_names_list = ['enabled-mi', 'duplicate-mi', 'disabled-mi', 'duplicate_disabled-mi',
-        'instance-checkbox', 'instance-text', 'num-text', 'num-checkbox', 'name-text', 'name-checkbox', 'group-text', 
+    filter_names_list = [
+        'enabled-mi', 'duplicate-mi', 'disabled-mi', 'duplicate_disabled-mi',
+        'instance-checkbox', 'instance-text', 'num-text', 'num-checkbox', 'name-text', 'name-checkbox',
+        'group-text',
         'group-checkbox', 'thumbnail-text', 'thumbnail-checkbox',
         'metadata-text', 'metadata-checkbox']
     filter_dict = {}

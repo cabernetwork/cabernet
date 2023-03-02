@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,20 +16,13 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import importlib
 import logging
-import os
-import shutil
-import sqlite3
-import threading
-import time
 
-import lib.common.utils as utils
 from lib.db.db_channels import DBChannels
-from lib.db.db_scheduler import DBScheduler
 
 REQUIRED_VERSION = '0.9.9'
-LOGGER = None
+LOGGER = logging.getLogger(__name__)
+
 
 def patch_upgrade(_config_obj, _new_version):
     """
@@ -41,7 +34,6 @@ def patch_upgrade(_config_obj, _new_version):
     it is associated is tested with this new version.
     """
     global LOGGER
-    LOGGER = logging.getLogger(__name__)
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
@@ -68,11 +60,11 @@ def find_key_by_section(_config_obj, _key, _section):
             for section in sections:
                 _config_obj.write(section, _key, value)
             _config_obj.write(_section, _key, None)
-    
+
 
 def find_instance(_config, _plugin_name):
     sections = []
     for section in _config.keys():
-        if section.startswith(_plugin_name+'_'):
+        if section.startswith(_plugin_name + '_'):
             sections.append(section)
     return sections

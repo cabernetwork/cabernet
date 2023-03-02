@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -17,7 +17,6 @@ substantial portions of the Software.
 """
 
 import datetime
-import json
 import logging
 import time
 
@@ -36,7 +35,7 @@ def get_schedule_html(_webserver):
     elif 'deltask' in _webserver.query_data:
         schedule_html.del_task(_webserver.query_data['task'])
         time.sleep(0.05)
-        html = schedule_html.get(_webserver.query_data)        
+        html = schedule_html.get(_webserver.query_data)
     elif 'delete' in _webserver.query_data:
         schedule_html.del_trigger(_webserver.query_data['trigger'])
         time.sleep(0.05)
@@ -86,10 +85,9 @@ class ScheduleHTML:
 
     @property
     def body(self):
-        return ''.join(['<body>', self.title, self.schedule_tasks, self.task,
-            '</body>'
-            ])
-    
+        return ''.join(['<body>', self.title, self.schedule_tasks,
+                        self.task, '</body>'])
+
     @property
     def title(self):
         return ''.join([
@@ -108,22 +106,24 @@ class ScheduleHTML:
         ])
         i = 0
         for task_dict in tasks:
-            i +=1
+            i += 1
             if task_dict['area'] != current_area:
                 if i > 1:
                     html = ''.join([html,
-                        '</div></div></div></td></tr>'
-                        ])
+                                    '</div></div></div></td></tr>'
+                                    ])
                 current_area = task_dict['area']
                 if current_area in self.query_data:
                     checked = "checked"
                 else:
                     checked = ""
-                html = ''.join([html,
+                html = ''.join([
+                    html,
                     '<tr><td colspan=3>',
                     '<div>',
-                    '<input id="schedcoll',str(i),'" class="toggle" type="checkbox" ', checked ,'>',
-                    '<label for="schedcoll',str(i),'" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton schedSection">',
+                    '<input id="schedcoll', str(i), '" class="toggle" type="checkbox" ', checked, '>',
+                    '<label for="schedcoll', str(i),
+                    '" class="label-toggle navDrawerCollapseButton navCollapsibleButton navButton schedSection">',
                     current_area, '<span id="', current_area,
                     '_sect" style="max-width: 20%; margin-left: 1em;" class=""></span></label>',
                     '<div class="collapsible-content">',
@@ -160,53 +160,53 @@ class ScheduleHTML:
                 else:
                     dur_delta = str(task_dict['duration']) + ' seconds'
             html = ''.join([html,
-                '<div style="display: flex;" title="', task_dict['title'], '">',
-                '<div class="schedIcon">',
-                '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', 
-                task_dict['taskid'], '")\'>',
-                '<i class="md-icon">schedule</i></a></div>',
-                '<div class="schedTask">',
-                '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=',
-                task_dict['taskid'], '")\'>',
-                '<div class="schedTitle">', task_dict['title'], '</div>',
-                '<div>Plugin: ', task_dict['namespace']
-            ])
+                            '<div style="display: flex;" title="', task_dict['title'], '">',
+                            '<div class="schedIcon">',
+                            '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=',
+                            task_dict['taskid'], '")\'>',
+                            '<i class="md-icon">schedule</i></a></div>',
+                            '<div class="schedTask">',
+                            '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=',
+                            task_dict['taskid'], '")\'>',
+                            '<div class="schedTitle">', task_dict['title'], '</div>',
+                            '<div>Plugin: ', task_dict['namespace']
+                            ])
             if task_dict['active']:
                 html = ''.join([html,
-                    ' -- Currently Running</div><div class="progress-line"></div>'
-                ])
+                                ' -- Currently Running</div><div class="progress-line"></div>'
+                                ])
                 play_name = ''
                 play_icon = ''
                 delete_icon = ''
                 delete_name = ''
             else:
                 html = ''.join([html,
-                    ' -- Last ran ', lastran_delta, ' ago, taking ', 
-                    dur_delta, '</div><div class=""></div>'
-                ])
+                                ' -- Last ran ', lastran_delta, ' ago, taking ',
+                                dur_delta, '</div><div class=""></div>'
+                                ])
                 play_name = '&run=1'
                 play_icon = 'play_arrow'
                 delete_icon = 'delete_forever'
                 delete_name = '&deltask=1'
 
             html = ''.join([html,
-                '</a></div><div class="schedIcon">',
-                '<a href="#" onclick=\'load_sched_url("/api/schedulehtml?task=',
-                task_dict['taskid'], play_name, '")\'>',
-                '<i class="md-icon">', play_icon, '</i></a>',
-                '<br>',
-                '<a href="#" title="After deleting, restart app to restore tasks to default" ', 
-                'onclick=\'load_sched_url("/api/schedulehtml?task=',
-                task_dict['taskid'], delete_name, '")\'>',
-                '<i class="md-icon">', delete_icon, '</i></a>',
-                '</div></div><hr style="margin-top: 0;">'
-            ])
+                            '</a></div><div class="schedIcon">',
+                            '<a href="#" onclick=\'load_sched_url("/api/schedulehtml?task=',
+                            task_dict['taskid'], play_name, '")\'>',
+                            '<i class="md-icon">', play_icon, '</i></a>',
+                            '<br>',
+                            '<a href="#" title="After deleting, restart app to restore tasks to default" ',
+                            'onclick=\'load_sched_url("/api/schedulehtml?task=',
+                            task_dict['taskid'], delete_name, '")\'>',
+                            '<i class="md-icon">', delete_icon, '</i></a>',
+                            '</div></div><hr style="margin-top: 0;">'
+                            ])
         html = ''.join([html,
-            '</div></div></div></td></tr></table></div>'
-            ])
+                        '</div></div></div></td></tr></table></div>'
+                        ])
         return html
- 
-    @property 
+
+    @property
     def task(self):
         return ''.join([
             '<div id="schedtask" class="schedTable schedHide"></div>'
@@ -230,12 +230,12 @@ class ScheduleHTML:
             '<tr>',
             '<td class="schedIcon"></td>',
             '<td colspan=2>', str(task_dict['description']), '</div></td>'
-            '</tr>',
+                                                             '</tr>',
             '<td class="schedIcon"></td>',
-            '<td colspan=2><b>Namespace:</b> ', str(task_dict['namespace']), 
+            '<td colspan=2><b>Namespace:</b> ', str(task_dict['namespace']),
             ' &nbsp; <b>Instance:</b> ', str(task_dict['instance']),
-            ' &nbsp; <b>Priority:</b> ', str(task_dict['priority']), 
-            ' &nbsp; <b>Thread Type:</b> ', str(task_dict['threadtype']), 
+            ' &nbsp; <b>Priority:</b> ', str(task_dict['priority']),
+            ' &nbsp; <b>Thread Type:</b> ', str(task_dict['threadtype']),
             '</div></td>',
             '<tr>',
             '<tr><td>&nbsp;</td></tr>',
@@ -245,7 +245,7 @@ class ScheduleHTML:
             '<i class="schedIcon md-icon" style="padding-left: 1px; text-align: left;">add</i></button>',
             '</div></td>',
             '</tr>',
-            ])
+        ])
 
         trigger_array = self.scheduler_db.get_triggers(_id)
         for trigger_dict in trigger_array:
@@ -257,7 +257,7 @@ class ScheduleHTML:
                 trigger_str = ''.join([
                     'Every ', trigger_dict['dayofweek'],
                     ' at ', trigger_dict['timeofday']
-                    ])
+                ])
             elif trigger_dict['timetype'] == 'interval':
                 interval_mins = trigger_dict['interval']
                 remainder_hrs = interval_mins % 60
@@ -269,10 +269,10 @@ class ScheduleHTML:
                 trigger_str = 'Every ' + interval_str
                 if trigger_dict['randdur'] != -1:
                     trigger_str += ' with random maximum added time of ' + str(trigger_dict['randdur']) + ' minutes'
-                
+
             else:
                 trigger_str = 'UNKNOWN'
-        
+
             html = ''.join([
                 html,
                 '<tr>',
@@ -282,16 +282,16 @@ class ScheduleHTML:
                 trigger_str,
                 '</td>',
                 '<td class="schedIcon">',
-                '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', _id, 
+                '<a href="#" onclick=\'load_task_url("/api/schedulehtml?task=', _id,
                 '&trigger=', trigger_dict['uuid'], '&delete=1")\'>',
                 '<i class="md-icon">delete_forever</i></a></td>',
                 '</tr>'
-                ])
+            ])
 
         return ''.join([
             html,
             '</table>'
-            ])
+        ])
 
     def get_trigger(self, _id):
         task_dict = self.scheduler_db.get_task(_id)
@@ -306,7 +306,7 @@ class ScheduleHTML:
             instance = ""
         else:
             instance = task_dict['instance']
-            
+
         return "".join([
             '<script src="/modules/scheduler/trigger.js"></script>',
             '<form id="triggerform" action="/api/schedulehtml" method="post">',
@@ -322,7 +322,7 @@ class ScheduleHTML:
             'Add Trigger</div></td>'
             '</tr>',
             '<tr>',
-            '<td><b>Task: ', task_dict['title'], 
+            '<td><b>Task: ', task_dict['title'],
             '<input type="hidden" name="title" value="', task_dict['title'], '" >',
             '</b><br><br></td>'
             '</tr>',
@@ -392,7 +392,7 @@ class ScheduleHTML:
             '<option value="45">45 min</option>',
             '<option value="50">50 min</option>',
             '<option value="55">55 min</option>',
-            '</select>','<br><br>',
+            '</select>', '<br><br>',
             '</td></tr>',
             '<tr><td><div id="divINTL" class="schedHide">Every: &nbsp; ',
             '<select name="interval"</select>',
@@ -444,7 +444,8 @@ class ScheduleHTML:
             '</select><br><br>',
             '</td></tr>',
             '<tr><td><button type="submit">Add</button>',
-            ' &nbsp; <button onclick=\'load_task_url("/api/schedulehtml?task=', _id, '"); return false;\' >Cancel</button>',
+            ' &nbsp; <button onclick=\'load_task_url("/api/schedulehtml?task=', _id,
+            '"); return false;\' >Cancel</button>',
             '<tr><td>&nbsp;</td></tr>',
             '</table></form>',
             '<section id="status"></section>'
@@ -467,7 +468,7 @@ class ScheduleHTML:
                 'area': query_data['area'][0],
                 'title': query_data['title'][0],
                 'timetype': query_data['timetype'][0],
-                'timeofday': query_data['timeofdayhr'][0]+':'+query_data['timeofdaymin'][0]
+                'timeofday': query_data['timeofdayhr'][0] + ':' + query_data['timeofdaymin'][0]
             }})
             time.sleep(0.05)
             return 'Daily Trigger added'
@@ -481,7 +482,7 @@ class ScheduleHTML:
                 'area': query_data['area'][0],
                 'title': query_data['title'][0],
                 'timetype': query_data['timetype'][0],
-                'timeofday': query_data['timeofdayhr'][0]+':'+query_data['timeofdaymin'][0],
+                'timeofday': query_data['timeofdayhr'][0] + ':' + query_data['timeofdaymin'][0],
                 'dayofweek': query_data['dayofweek'][0]
             }})
             time.sleep(0.05)
@@ -500,20 +501,18 @@ class ScheduleHTML:
             time.sleep(0.05)
             return 'Interval Trigger added'
         return 'UNKNOWN'
-        
+
     def del_trigger(self, _uuid):
         if self.scheduler_db.get_trigger(_uuid) is None:
             return None
-        self.queue.put({'cmd': 'del', 'uuid': _uuid })
+        self.queue.put({'cmd': 'del', 'uuid': _uuid})
         time.sleep(0.05)
         return 'Interval Trigger deleted'
 
     def run_task(self, _taskid):
-        self.queue.put({'cmd': 'runtask', 'taskid': _taskid })
+        self.queue.put({'cmd': 'runtask', 'taskid': _taskid})
         return None
-
 
     def del_task(self, _taskid):
-        self.queue.put({'cmd': 'deltask', 'taskid': _taskid })
+        self.queue.put({'cmd': 'deltask', 'taskid': _taskid})
         return None
-

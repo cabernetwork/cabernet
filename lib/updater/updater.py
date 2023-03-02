@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -17,16 +17,14 @@ substantial portions of the Software.
 """
 
 import importlib
+import importlib.resources
 import json
 import logging
-import pathlib
 import re
 import time
-import urllib.request
 from threading import Thread
 
 import lib.common.utils as utils
-import lib.updater.cabernet as cabernet
 from lib.db.db_scheduler import DBScheduler
 from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import getrequest
@@ -34,9 +32,11 @@ from lib.web.pages.templates import web_templates
 from lib.updater.cabernet import CabernetUpgrade
 from lib.common.string_obj import StringObj
 from lib.common.tmp_mgmt import TMPMgmt
+from lib.updater import cabernet
 
 STATUS = StringObj()
 IS_UPGRADING = False
+
 
 @getrequest.route('/api/upgrade')
 def upgrade(_webserver):
@@ -46,8 +46,8 @@ def upgrade(_webserver):
     try:
         if 'id' in _webserver.query_data:
             if _webserver.query_data['id'] != utils.CABERNET_NAMESPACE:
-                _webserver.do_mime_response(501, 'text/html', 
-                    web_templates['htmlError'].format('501 - Invalid ID'))
+                _webserver.do_mime_response(501, 'text/html',
+                                            web_templates['htmlError'].format('501 - Invalid ID'))
                 return
             if not IS_UPGRADING:
                 IS_UPGRADING = True
@@ -59,10 +59,10 @@ def upgrade(_webserver):
             return
         else:
             _webserver.do_mime_response(501, 'text/html',
-                web_templates['htmlError'].format('404 - Unknown action'))
+                                        web_templates['htmlError'].format('404 - Unknown action'))
     except KeyError:
-        _webserver.do_mime_response(501, 'text/html', 
-            web_templates['htmlError'].format('501 - Badly formed request'))
+        _webserver.do_mime_response(501, 'text/html',
+                                    web_templates['htmlError'].format('501 - Badly formed request'))
 
 
 def check_for_updates(plugins):
@@ -94,14 +94,14 @@ class Updater:
                 20,
                 'thread',
                 'Checks cabernet and all plugins for updated versions'
-                ):
+        ):
             scheduler_db.save_trigger(
                 'Applications',
                 'Check for Updates',
                 'interval',
                 interval=2850,
                 randdur=60
-                )
+            )
             scheduler_db.save_trigger(
                 'Applications',
                 'Check for Updates',
@@ -115,7 +115,7 @@ class Updater:
         """
         Loads the manifest for cabernet from a file
         """
-        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], MANIFEST_FILE)
+        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], cabernet.MANIFEST_FILE)
         settings = json.loads(json_settings)
         return settings
 
@@ -130,7 +130,7 @@ class Updater:
         Saves to DB the manifest for cabernet
         """
         self.plugin_db.save_plugin(_manifest)
- 
+
     def upgrade_app(self, _id):
         """
         Initial request to perform an upgrade
@@ -163,9 +163,9 @@ class Updater:
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         self.restart_app()
-        
+
     def restart_app(self):
         # get schedDB and find restart taskid.
         scheduler_db = DBScheduler(self.config)
         task = scheduler_db.get_tasks('Applications', 'Restart')[0]
-        self.sched_queue.put({'cmd': 'runtask', 'taskid': task['taskid'] })
+        self.sched_queue.put({'cmd': 'runtask', 'taskid': task['taskid']})

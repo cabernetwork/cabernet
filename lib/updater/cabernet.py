@@ -18,6 +18,7 @@ substantial portions of the Software.
 
 import glob
 import importlib
+import importlib.resources
 import json
 import logging
 import os
@@ -38,6 +39,7 @@ from lib.common.tmp_mgmt import TMPMgmt
 MANIFEST_FILE = 'manifest.json'
 TMP_ZIPFILE = utils.CABERNET_NAMESPACE + '.zip'
 
+
 class CabernetUpgrade:
 
     def __init__(self, _plugins):
@@ -48,7 +50,7 @@ class CabernetUpgrade:
         self.config = _plugins.config_obj.data
         self.plugin_db = DBPlugins(self.config)
         self.tmp_mgmt = TMPMgmt(self.config)
-        
+
     def update_version_info(self):
         """
         Updates the database with the latest version release data
@@ -74,7 +76,7 @@ class CabernetUpgrade:
         json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], MANIFEST_FILE)
         settings = json.loads(json_settings)
         return settings
-        
+
     def load_manifest(self):
         """
         Loads the cabernet manifest from DB
@@ -90,19 +92,19 @@ class CabernetUpgrade:
         Saves to DB the manifest for cabernet
         """
         self.plugin_db.save_plugin(_manifest)
-        
+
     def github_releases(self, _manifest):
         url = ''.join([
-            _manifest['github_repo_' + self.config['main']['upgrade_quality'] ],
+            _manifest['github_repo_' + self.config['main']['upgrade_quality']],
             '/releases'
-            ])
+        ])
         return self.get_uri_data(url)
 
-    @handle_json_except 
-    @handle_url_except 
+    @handle_json_except
+    @handle_url_except
     def get_uri_data(self, _uri):
-        header = {'Content-Type': 'application/json', 
-            'User-agent': utils.DEFAULT_USER_AGENT}
+        header = {'Content-Type': 'application/json',
+                  'User-agent': utils.DEFAULT_USER_AGENT}
         req = urllib.request.Request(_uri, headers=header)
         with urllib.request.urlopen(req, timeout=10.0) as resp:
             x = json.load(resp)
@@ -113,10 +115,11 @@ class CabernetUpgrade:
         x = self.version_re.match(current_version)
         c_version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', current_version)[0])
         prev_version = release_data_list[0]['tag_name']
+        data = None
         for data in release_data_list:
             numbers = re.findall(r'\d+\.(\d+)\.(\d+).\d+', data['tag_name'])[0]
             version_float = float('{:01d}.{:02d}'.format(int(numbers[0]), int(numbers[1])))
-            if version_float-0.101 < c_version_float:
+            if version_float - 0.101 < c_version_float:
                 break
         prev_version = data['tag_name']
         return prev_version
@@ -132,37 +135,35 @@ class CabernetUpgrade:
             self.logger.info('Cabernet is on the current version, not upgrading')
             _web_status.data += 'Cabernet is on the current version, not upgrading<br>\r\n'
             return False
-        
-        
+
         # This checks to see if additional files or folders are in the 
         # basedir area. if so, abort upgrade.
         # It is basically for the case where we have the wrong directory
         _web_status.data += 'Checking current install area for expected files...<br>\r\n'
         if not self.check_expected_files(_web_status):
             return False
-        
+
         b = backups.Backups(self.plugins)
-        
+
         # recursively check all folders from the basedir to see if they are writable
         _web_status.data += 'Checking write permissions...<br>\r\n'
         resp = b.check_code_write_permissions()
         if resp is not None:
             _web_status.data += resp
             return False
-        
-        
+
         # simple call to run a backup of the data and source
         # use a direct call to the backup methods instead of calling the scheduler
         _web_status.data += 'Creating backup of code and data...<br>\r\n'
         if not b.backup_all():
             _web_status.data += 'Backup failed, aborting upgrade<br>\r\n'
             return False
-        
+
         _web_status.data += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
-                c_manifest['github_repo_' + self.config['main']['upgrade_quality'] ], 
-                'zipball', c_manifest['next_version']
-                ])):
+            c_manifest['github_repo_' + self.config['main']['upgrade_quality']],
+            'zipball', c_manifest['next_version']
+        ])):
             _web_status.data += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False
 
@@ -199,26 +200,27 @@ class CabernetUpgrade:
         Check the base directory files to see if all are expected.
         """
         files_present = ['build', 'lib', 'misc', 'plugins', 'plugins_ext',
-            '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
-            'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
-            'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
-            'TVHEADEND.md', 'docker-compose.yml', 'requirements.txt', 'tvh_main.py',
-            'data', 'config.ini', 'is_container', '.git', 'cabernet.url', 'ffmpeg', 
-            'README.txt', 'uninst.exe' ]
+                         '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
+                         'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
+                         'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
+                         'TVHEADEND.md', 'docker-compose.yml', 'requirements.txt', 'tvh_main.py',
+                         'data', 'config.ini', 'is_container', '.git', 'cabernet.url', 'ffmpeg',
+                         'README.txt', 'uninst.exe']
 
-        filelist = [os.path.basename(x) for x in 
-            glob.glob(os.path.join(self.config['paths']['main_dir'], '*'))]
+        filelist = [os.path.basename(x) for x in
+                    glob.glob(os.path.join(self.config['paths']['main_dir'], '*'))]
         response = True
         for file in filelist:
             if file not in files_present:
-                _web_status.data += '#### Extra file(s) found in install directory, aborting upgrade. FILE: {}<br>\r\n'.format(file)
+                _web_status.data += '#### Extra file(s) found in install directory, aborting upgrade. FILE: {}<br>\r\n'\
+                    .format(file)
                 response = False
         return response
 
     @handle_json_except
     @handle_url_except
     def download_zip(self, _zip_url):
-                          
+
         buf_size = 2 * 16 * 16 * 1024
         save_path = pathlib.Path(self.config['paths']['tmp_dir']).joinpath(TMP_ZIPFILE)
         h = {'Content-Type': 'application/zip', 'User-agent': utils.DEFAULT_USER_AGENT}
@@ -245,9 +247,9 @@ class CabernetUpgrade:
             return None
 
     def cleanup_tmp(self):
-        dir = self.config['paths']['tmp_dir']
-        for files in os.listdir(dir):
-            path = os.path.join(dir, files)
+        dir_ = self.config['paths']['tmp_dir']
+        for files in os.listdir(dir_):
+            path = os.path.join(dir_, files)
             try:
                 shutil.rmtree(path)
             except OSError:

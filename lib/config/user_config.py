@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -23,8 +23,6 @@ import logging
 import pathlib
 import os
 import shutil
-import time
-import urllib
 
 import lib.common.utils as utils
 import lib.config.config_defn as config_defn
@@ -35,9 +33,9 @@ from lib.web.pages.templates import web_templates
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
 
-
 CONFIG_BKUP_NAME = 'backups-config_ini'
 CONFIG_FILENAME = 'config.ini'
+
 
 def get_config(script_dir, opersystem, args):
     return TVHUserConfig(script_dir, opersystem, args)
@@ -47,14 +45,14 @@ def get_config(script_dir, opersystem, args):
 def config_json(_webserver):
     if _webserver.config['web']['disable_web_config']:
         _webserver.do_mime_response(501, 'text/html', web_templates['htmlError']
-            .format('501 - Config pages disabled.'
-                    ' Set [web][disable_web_config] to False in the config file to enable'))
+                                    .format('501 - Config pages disabled.'
+                                            ' Set [web][disable_web_config] to False in the config file to enable'))
     else:
-        _webserver.do_mime_response(200, 'application/json', json.dumps(_webserver.plugins.config_obj.filter_config_data()))
+        _webserver.do_mime_response(200, 'application/json',
+                                    json.dumps(_webserver.plugins.config_obj.filter_config_data()))
 
 
 class TVHUserConfig:
-
     config_handler = configparser.ConfigParser(interpolation=None)
 
     def __init__(self, _script_dir=None, _opersystem=None, _args=None, _config=None):
@@ -78,7 +76,7 @@ class TVHUserConfig:
             self.defn_json.garbage_collect()
         self.db = DBConfigDefn(self.data)
         self.db.add_config(self.data)
-        
+
     def refresh_config_data(self):
         self.data = self.db.get_config()
 
@@ -89,8 +87,8 @@ class TVHUserConfig:
 
     def init_logger_config(self):
         log_sections = ['loggers', 'logger_root', 'handlers', 'formatters',
-            'handler_filehandler', 'handler_loghandler', 
-            'formatter_extend', 'formatter_simple']
+                        'handler_filehandler', 'handler_loghandler',
+                        'formatter_extend', 'formatter_simple']
         for section in log_sections:
             try:
                 self.config_handler.add_section(section)
@@ -124,10 +122,11 @@ class TVHUserConfig:
     @staticmethod
     def get_config_path(_script_dir, args=None):
         config_file = None
+        poss_config = None
         if args is not None and args.cfg:
             config_file = pathlib.Path(str(args.cfg))
         else:
-            for x in [CONFIG_FILENAME, 'data/'+CONFIG_FILENAME]:
+            for x in [CONFIG_FILENAME, 'data/' + CONFIG_FILENAME]:
                 poss_config = pathlib.Path(_script_dir).joinpath(x)
                 if os.path.exists(poss_config):
                     config_file = poss_config
@@ -148,7 +147,7 @@ class TVHUserConfig:
                     _value = int(_value)
                 if not self.defn_json.validate_list_item(_section, _key, _value):
                     logging.info('INVALID VALUE ({}) FOR CONFIG ITEM [{}][{}]'
-                        .format(_value, _section, _key))
+                                 .format(_value, _section, _key))
                 return _value
             elif val_type == 'integer':
                 return int(_value)
@@ -184,7 +183,7 @@ class TVHUserConfig:
             pass
         else:
             self.logger.debug('unknown value type for [{}][{}]  type is {}'
-                .format(_section, _key, type(self.data[_section][_key])))
+                              .format(_section, _key, type(self.data[_section][_key])))
 
         if self.data[_section][_key] != _updated_data[_section][_key][0]:
             if len(_updated_data[_section][_key]) > 1:
@@ -256,19 +255,18 @@ class TVHUserConfig:
                         = _config_defaults[_section][key]
                     self.logger.debug(
                         'Config Update: Removed [{}][{}]'.format(_section, key))
-                    results += \
-                        '<li>Removed [{}][{}] from {}, using default value</li>' \
+                    results += '<li>Removed [{}][{}] from {}, using default value</li>'\
                         .format(_section, key, CONFIG_FILENAME)
                 else:
                     # set new value
                     if len(_updated_data[_section][key]) == 3:
                         self.logger.debug(
                             'Config Update: Changed [{}][{}] updated'
-                                .format(_section, key))
+                            .format(_section, key))
                     else:
                         self.logger.debug(
                             'Config Update: Changed [{}][{}] to {}'
-                                .format(_section, key, _updated_data[_section][key][0]))
+                            .format(_section, key, _updated_data[_section][key][0]))
 
                     try:
                         self.config_handler.set(
@@ -302,6 +300,7 @@ class TVHUserConfig:
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
 
+
 class BackupConfig:
 
     def __init__(self, _config):
@@ -315,8 +314,8 @@ class BackupConfig:
             if not os.path.isdir(backup_folder):
                 os.mkdir(backup_folder)
             backup_file = pathlib.Path(backup_folder, CONFIG_FILENAME)
-            shutil.copyfile(self.config['paths']['config_file'], 
-                backup_file)
+            shutil.copyfile(self.config['paths']['config_file'],
+                            backup_file)
         except PermissionError as e:
             self.logger.warning(e)
             self.logger.warning('Unable to make backups')
@@ -333,6 +332,6 @@ class BackupConfig:
             msg = 'Backup file does not exist, skipping: {}'.format(backup_file)
             self.logger.info(msg)
             return msg
-        shutil.copyfile(backup_file, 
-            self.config['paths']['config_file'])
-        return CONFIG_FILENAME+' restored, please restart the app'
+        shutil.copyfile(backup_file,
+                        self.config['paths']['config_file'])
+        return CONFIG_FILENAME + ' restored, please restart the app'

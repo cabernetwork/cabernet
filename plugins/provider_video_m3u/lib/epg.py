@@ -2,7 +2,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -18,42 +18,35 @@ substantial portions of the Software.
 """
 
 import datetime
-from xml.etree import ElementTree
-import json
 import pathlib
 import re
-import time
-import urllib.request
 
 import lib.common.exceptions as exceptions
 import lib.common.utils as utils
-from lib.common.decorators import handle_url_except
-from lib.common.decorators import handle_json_except
 from lib.common.xmltv import XMLTV
 from lib.plugins.plugin_epg import PluginEPG
 from lib.db.db_channels import DBChannels
 from lib.db.db_scheduler import DBScheduler
-
-from .translations import plutotv_tv_genres
 
 
 class EPG(PluginEPG):
 
     def __init__(self, _instance_obj):
         super().__init__(_instance_obj)
-        self.url_chars = re.compile('[^\-\.\_\~0-9a-zA-z]')
+        self.url_chars = re.compile(r'[^-._~0-9a-zA-z]')
 
     def dates_to_pull(self):
         """
         Since epg is a single file, will have to parce through the data and split it into days.
         """
         return [1], []
-        
+
     def refresh_programs(self, _epg_day, use_cache=True):
-    
+
         ch_db = DBChannels(self.config_obj.data)
         if self.config_obj.data[self.config_section]['epg-xmltv_file'] is None:
-            raise exceptions.CabernetException('{}:{} XMLTV File config not set, unable to get epg list' \
+            raise exceptions.CabernetException(
+                '{}:{} XMLTV File config not set, unable to get epg list'
                 .format(self.plugin_obj.name, self.instance_key))
         url = self.config_obj.data[self.config_section]['epg-xmltv_file']
         file_type = self.detect_filetype(url)
@@ -77,25 +70,26 @@ class EPG(PluginEPG):
                     continue
                 if ch in epg_ch_list:
                     continue
-                self.logger.debug('{}:{} Channel {} missing program data, adding default for day {}' \
+                self.logger.debug(
+                    '{}:{} Channel {} missing program data, adding default for day {}'
                     .format(self.plugin_obj.name, self.instance_key, ch, start_date))
                 # fill in default program data
                 start_hour = datetime.datetime.utcnow().hour - 2
                 if start_hour < 0:
                     start_hour = 0
                 dt_start_day = datetime.datetime.combine(start_date, datetime.time())
-                for hr in range(start_hour,24):
+                for hr in range(start_hour, 24):
                     dt_start_time = dt_start_day.replace(
                         tzinfo=datetime.timezone.utc, hour=hr, minute=0, second=0, microsecond=0)
                     start = round(dt_start_time.timestamp())
-                    end = round(dt_start_time.timestamp()+3600)
+                    end = round(dt_start_time.timestamp() + 3600)
                     ch_data = ch_list[str(ch)][0]
                     if ch_data['json']['groups_other'] is None:
                         genres = None
                     else:
-                        genres = [ ch_data['json']['groups_other'] ]
-                    prog_one = self.get_blank_program(start, end, 
-                        ch_data['uid'], ch_data['display_name'], genres)
+                        genres = [ch_data['json']['groups_other']]
+                    prog_one = self.get_blank_program(start, end,
+                                                      ch_data['uid'], ch_data['display_name'], genres)
                     program_list.append(prog_one)
             if len(program_list) == 0:
                 if xmltv.has_future_dates:
@@ -103,10 +97,10 @@ class EPG(PluginEPG):
                     continue
                 else:
                     break
-            self.db.save_program_list(self.plugin_obj.name, 
-                self.instance_key, start_date, program_list)
+            self.db.save_program_list(self.plugin_obj.name,
+                                      self.instance_key, start_date, program_list)
             self.logger.debug('Refreshed EPG data for {}:{} day {}'
-                .format(self.plugin_obj.name, self.instance_key, start_date))
+                              .format(self.plugin_obj.name, self.instance_key, start_date))
             if xmltv.has_future_dates:
                 start_date += datetime.timedelta(days=1)
             else:
@@ -116,31 +110,30 @@ class EPG(PluginEPG):
         if active < 2:
             xmltv.cleanup_tmp_folder()
         self.logger.debug('Refreshed EPG Completed for {}:{}'
-            .format(self.plugin_obj.name, self.instance_key))
+                          .format(self.plugin_obj.name, self.instance_key))
 
-    def get_blank_program(self, _start, _end, _ch_id, _ch_title, _groups):    
+    def get_blank_program(self, _start, _end, _ch_id, _ch_title, _groups):
         start_time = utils.tm_local_parse(
             (_start
-            + self.config_obj.data[self.config_section]['epg-start_adjustment'])
+             + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
         end_time = utils.tm_local_parse(
             (_end
-            + self.config_obj.data[self.config_section]['epg-start_adjustment'])
+             + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
         dur_min = int((_end - _start) / 60)
         sid = str(_ch_id)
         title = _ch_title
         json_result = {'channel': sid, 'progid': None, 'start': start_time, 'stop': end_time,
-            'length': dur_min, 'title': title, 'subtitle': None, 'entity_type': None,
-            'desc': 'Not Available', 'short_desc': 'Not Available',
-            'video_quality': None, 'cc': None, 'live': None, 'finale': None,
-            'premiere': None,
-            'air_date': None, 'formatted_date': None, 'icon': None,
-            'rating': None, 'is_new': False, 'genres': _groups, 'directors': None, 'actors': None,
-            'season': None, 'episode': None, 'se_common': None, 'se_xmltv_ns': None,
-            'se_progid': None}
+                       'length': dur_min, 'title': title, 'subtitle': None, 'entity_type': None,
+                       'desc': 'Not Available', 'short_desc': 'Not Available',
+                       'video_quality': None, 'cc': None, 'live': None, 'finale': None,
+                       'premiere': None,
+                       'air_date': None, 'formatted_date': None, 'icon': None,
+                       'rating': None, 'is_new': False, 'genres': _groups, 'directors': None, 'actors': None,
+                       'season': None, 'episode': None, 'se_common': None, 'se_xmltv_ns': None,
+                       'se_progid': None}
         return json_result
-    
 
     def detect_filetype(self, _filename):
         file_type = self.config_obj.data[self.config_section]['epg-xmltv_file_type']
@@ -154,7 +147,7 @@ class EPG(PluginEPG):
                 file_type = '.xml'
             else:
                 raise exceptions.CabernetException(
-                    '{}:{} XMLTV File unknown File Type.  Set the XMLTV File Type in config.' \
+                    '{}:{} XMLTV File unknown File Type.  Set the XMLTV File Type in config.'
                     .format(self.plugin_obj.name, self.instance_key))
         elif file_type == 'gzip':
             file_type = '.gz'
@@ -164,6 +157,6 @@ class EPG(PluginEPG):
             file_type = '.xml'
         else:
             raise exceptions.CabernetException(
-                '{}:{} XMLTV File unknown File Type in config.' \
+                '{}:{} XMLTV File unknown File Type in config.'
                 .format(self.plugin_obj.name, self.instance_key))
         return file_type

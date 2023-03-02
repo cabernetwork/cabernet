@@ -17,8 +17,6 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-from lib.tvheadend.epg_category import groups
-from lib.tvheadend.epg_category import tvh_genres
 
 daddylive_base = 'gfpMXf5BjIUokbpo0bL/zZr+twSK0wH='
 daddylive_channels = '56nPlIC6gxdFyZrEXISGgfW='

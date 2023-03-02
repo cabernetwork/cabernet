@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -19,10 +19,9 @@ substantial portions of the Software.
 import json
 import logging
 import subprocess
-import time
-
 
 import lib.common.utils as utils
+
 
 class PTSValidation:
     logger = None
@@ -46,7 +45,6 @@ class PTSValidation:
             PTSValidation.logger = logging.getLogger(__name__)
         self.config_section = utils.instance_config_section(
             self.channel_dict['namespace'], self.channel_dict['instance'])
-
 
     def check_pts(self, _video):
         """
@@ -75,7 +73,7 @@ class PTSValidation:
                 return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': True}
             elif pts_data['last_pts'] <= self.prev_last_pts:
                 self.logger.debug('Small PTS to Large PTS with entire PTS in the past. last_pts={} vs prev={}'
-                    .format(pts_data['last_pts'], self.prev_last_pts))
+                                  .format(pts_data['last_pts'], self.prev_last_pts))
                 return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': True}
             else:
                 byte_offset = self.find_bad_pkt_offset(from_front=False)
@@ -113,7 +111,7 @@ class PTSValidation:
         elif pts_data['first_pts'] < self.prev_last_pts:
             if pts_data['last_pts'] <= self.prev_last_pts:
                 self.logger.debug('Entire PTS buffer in the past last_pts={} vs prev={}'.format(pts_data['last_pts'],
-                    self.prev_last_pts))
+                                                                                                self.prev_last_pts))
                 return {'refresh_stream': False, 'byteoffset': 0, 'reread_buffer': True}
             else:
                 byte_offset = self.find_past_pkt_offset(self.prev_last_pts)
@@ -163,7 +161,7 @@ class PTSValidation:
             'DELTA PTS=', delta_from_prev,
             'Pkts Rcvd=', len(_pts_json['packets'])))
         return {'first_pts': first_pts, 'last_pts': last_pts,
-            'pts_size': pts_size, 'delta_from_prev': delta_from_prev}
+                'pts_size': pts_size, 'delta_from_prev': delta_from_prev}
 
     def find_bad_pkt_offset(self, from_front):
         """
@@ -212,25 +210,24 @@ class PTSValidation:
                 byte_offset = int(int(self.pts_json['packets'][i]['pos']) / 188) * 188
                 self.logger.debug(
                     '{}{} {}{} {}{}'.format('Future PTS at byte_offset=', byte_offset, 'pkt_pts=', next_pkt_pts,
-                        'prev_pkt=', prev_pkt_dts))
+                                            'prev_pkt=', prev_pkt_dts))
                 break
             i += 1
         return byte_offset
 
-
     def get_probe_results(self, _video):
         ffprobe_command = [self.config['paths']['ffprobe_path'],
-            '-print_format', 'json',
-            '-v', 'quiet', '-show_packets',
-            '-select_streams', 'v:0',
-            '-show_entries', 'side_data=:packet=pts,pos,duration,size',
-            '-']
+                           '-print_format', 'json',
+                           '-v', 'quiet', '-show_packets',
+                           '-select_streams', 'v:0',
+                           '-show_entries', 'side_data=:packet=pts,pos,duration,size',
+                           '-']
         cmdpts = subprocess.Popen(ffprobe_command,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+                                  stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         ptsout = cmdpts.communicate(_video.data)[0]
         exit_code = cmdpts.wait()
         if exit_code != 0:
             self.logger.warning('FFPROBE failed to execute with error code: {}'
-                .format(exit_code))
+                                .format(exit_code))
             return None
         return json.loads(ptsout)

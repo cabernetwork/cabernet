@@ -113,7 +113,7 @@
                         "default": null,
                         "level": 2,
                         "onInit": "lib.config.config_callbacks.set_ffmpeg_path",
-                        "help": "Only used with stream_type=ffmpegproxy"
+                        "help": "Used with stream_type=ffmpegproxy or when PTS Filtering or PTS/DTS Resync are enabled"
                     },
                     "ffprobe_path":{
                         "label": "ffprobe_path",
@@ -121,7 +121,15 @@
                         "default": null,
                         "level": 2,
                         "onInit": "lib.config.config_callbacks.set_ffprobe_path",
-                        "help": "Only used with stream_type=ffmpegproxy"
+                        "help": "Used when PTS Filter is enabled"
+                    },
+                    "streamlink_path":{
+                        "label": "streamlink_path",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_streamlink_path",
+                        "help": "Used with stream_type=streamlinkproxy"
                     }
 
                 }

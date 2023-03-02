@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -40,7 +40,7 @@ class DB:
     conn = {}
 
     def __init__(self, _config, _db_name, _sqlcmds):
-        self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+        self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
         self.db_name = _db_name
         self.sqlcmds = _sqlcmds
@@ -70,7 +70,7 @@ class DB:
             raise e
 
     def rnd_sleep(self, _sec):
-        r = random.randrange(0,50)
+        r = random.randrange(0, 50)
         sec = _sec + r / 100
         time.sleep(sec)
 
@@ -88,7 +88,7 @@ class DB:
                 return lastrow
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} Add request ignored, retrying {}, {}'
-                    .format(self.db_name, i, e))
+                                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -109,7 +109,7 @@ class DB:
                 return num_deleted
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} Delete request ignored, retrying {}, {}'
-                    .format(self.db_name, i, e))
+                                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -130,7 +130,7 @@ class DB:
                 return lastrow
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} Update request ignored, retrying {}, {}'
-                    .format(self.db_name, i, e))
+                                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -153,7 +153,7 @@ class DB:
                 return result
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} GET request ignored retrying {}, {}'
-                    .format(self.db_name, i, e))
+                                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -179,7 +179,7 @@ class DB:
                 return rows
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} GET request ignored retrying {}, {}'
-                    .format(self.db_name, i, e))
+                                    .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
                     cur.close()
@@ -232,7 +232,7 @@ class DB:
         except PermissionError as e:
             self.logger.warning(e)
             self.logger.warning('Unable to make backups')
-            
+
     def import_sql(self, backup_folder):
         self.logger.debug('Running restore for {} database'.format(self.db_name))
         if not os.path.isdir(backup_folder):
@@ -265,7 +265,7 @@ class DB:
         if self.db_name not in DB.conn:
             DB.conn[self.db_name] = {}
         db_conn_dbname = DB.conn[self.db_name]
-        
+
         if threading.get_ident() not in db_conn_dbname:
             db_conn_dbname[threading.get_ident()] = sqlite3.connect(
                 self.db_fullpath, detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)

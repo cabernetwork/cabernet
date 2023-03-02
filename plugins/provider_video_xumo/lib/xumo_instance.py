@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,10 +16,6 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import logging
-
-import lib.common.utils as utils
-import lib.common.exceptions as exceptions
 from lib.plugins.plugin_instance_obj import PluginInstanceObj
 
 from .channels import Channels
