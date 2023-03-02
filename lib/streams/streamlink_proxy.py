@@ -70,6 +70,8 @@ class StreamlinkProxy(Stream):
             self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
             return
         self.streamlink_proc = self.open_streamlink_proc(channel_uri)
+        if not self.streamlink_proc:
+            return
         time.sleep(0.01)
         self.last_refresh = time.time()
         self.block_prev_time = self.last_refresh
@@ -196,7 +198,6 @@ class StreamlinkProxy(Stream):
             self.config['paths']['streamlink_path'],
             '--stdout',
             '--quiet',
-            '--hds-segment-threads', '2',
             '--ffmpeg-fout', 'mpegts',
             '--hls-segment-attempts', '2',
             '--hls-segment-timeout', '5',
@@ -204,10 +205,14 @@ class StreamlinkProxy(Stream):
             '720,best'
         ]
         streamlink_command.extend(str_array)
-        streamlink_process = subprocess.Popen(
-            streamlink_command,
-            stdout=subprocess.PIPE,
-            bufsize=-1)
+        try:
+            streamlink_process = subprocess.Popen(
+                streamlink_command,
+                stdout=subprocess.PIPE,
+                bufsize=-1)
+        except:
+            self.logger.error('Streamlink Binary Not Found: {}'.format(self.config['paths']['streamlink_path']))
+            return        
         self.stream_queue = StreamQueue(188, streamlink_process, self.channel_dict['uid'])
         time.sleep(0.1)
         return streamlink_process
