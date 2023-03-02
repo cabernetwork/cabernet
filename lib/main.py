@@ -201,7 +201,7 @@ def init_webadmin(_config, _plugins, _hdhr_queue, _terminate_queue, _sched_queue
 def init_tuner(_config, _plugins, _hdhr_queue, _terminate_queue):
     LOGGER.notice('Starting streaming tuner website on {}:{}'.format(
         _config['web']['plex_accessible_ip'],
-        _config['web']['plex_accessible_port']))
+        _config['web']['plex_accessible_port_external']))
     tuner = Process(target=web_tuner.start, args=(_plugins, _hdhr_queue, _terminate_queue,))
     tuner.start()
     time.sleep(0.1)

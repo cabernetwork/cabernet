@@ -39,7 +39,14 @@
                         "type": "integer",
                         "default": 5004,
                         "level": 1,
-                        "help": "Port used to stream. Default is 5004"
+                        "help": "Port cabernet connects to to stream. Default is 5004"
+                    },
+                    "plex_accessible_port_external": {
+                      "label": "plex_accessible_port_external",
+                      "type": "integer",
+                      "default": 49004,
+                      "level": 1,
+                      "help": "Port plex connects to stream. Default is 49004"
                     },
                     "web_admin_port":{
                         "label": "web_admin_port",

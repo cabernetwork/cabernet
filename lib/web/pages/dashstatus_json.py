@@ -55,8 +55,8 @@ class DashStatusJS:
         return js
 
     def get_tuner_status(self):
-        web_tuner_url = 'http://localhost:' + \
-            str(self.config['web']['plex_accessible_port'])
+        web_tuner_url = 'http://'+str(self.config['web']['plex_accessible_ip'])+':' + \
+            str(self.config['web']['plex_accessible_port_external'])
         url = ( web_tuner_url + '/tunerstatus')
         return self.get_url(url)
 

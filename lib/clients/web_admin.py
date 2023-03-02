@@ -76,7 +76,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
         os.chdir(os.path.dirname(os.path.abspath(__file__)))
         self.script_dir = pathlib.Path(os.path.dirname(os.path.abspath(__file__)))
         self.stream_url = self.config['web']['plex_accessible_ip'] + \
-            ':' + str(self.config['web']['plex_accessible_port'])
+            ':' + str(self.config['web']['plex_accessible_port_external'])
         self.web_admin_url = self.config['web']['plex_accessible_ip'] + \
             ':' + str(self.config['web']['web_admin_port'])
         self.content_path = None
