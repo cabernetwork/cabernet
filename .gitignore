@@ -28,3 +28,4 @@ misc/
 cabernet.iml
 test*
 /lib/tvheadend/htdocs/Netbeans/nbproject/private/
+**.DS_Store**
