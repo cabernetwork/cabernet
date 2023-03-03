@@ -44,9 +44,9 @@
                     "plex_accessible_port_external": {
                       "label": "plex_accessible_port_external",
                       "type": "integer",
-                      "default": 49004,
+                      "default": 5004,
                       "level": 1,
-                      "help": "Port plex connects to stream. Default is 49004"
+                      "help": "Port plex connects to stream. Default is 5004"
                     },
                     "web_admin_port":{
                         "label": "web_admin_port",
