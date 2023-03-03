@@ -35,13 +35,13 @@ class StreamQueue:
         self.queue = []
         self.proc = _proc
         self.stream_id = _stream_id
-        self.not_terminated = True
+        self.is_terminated = False
 
         def _populate_queue():
             """
             Collect lines from 'stream' and put them in 'queue'.
             """
-            while self.not_terminated:
+            while not self.is_terminated:
                 try:
                     self.sout.flush()
                     video_data = self.sout.read(self.bytes_per_read)
@@ -49,9 +49,11 @@ class StreamQueue:
                         self.queue.append(video_data)
                     else:
                         self.logger.debug('Stream ended for this process, exiting queue thread')
+                        self.is_terminated = True
                         break
                 except ValueError:
                     # occurs on termination with buffer must not be NULL
+                    self.is_terminated = True
                     break
         self._t = Thread(target=_populate_queue, args=())
         self._t.daemon = True
@@ -74,4 +76,4 @@ class StreamQueue:
         return None
         
     def terminate(self):
-        self.not_terminated = False
+        self.is_terminated = True

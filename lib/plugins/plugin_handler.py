@@ -85,7 +85,7 @@ class PluginHandler:
 
     def initialize_plugins(self):
         for name, plugin in self.plugins.items():
-            if not self.config_obj.data[plugin.name.lower()]['enabled']:
+            if not plugin.enabled or not self.config_obj.data[plugin.name.lower()]['enabled']:
                 self.logger.info('Plugin {} is disabled in config.ini'.format(plugin.name))
                 plugin.enabled = False
             else:

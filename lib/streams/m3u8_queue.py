@@ -384,11 +384,9 @@ class M3U8Process(Thread):
                     self.logger.debug('M3U8: {} {}'
                                       .format(self.stream_uri, os.getpid()))
                     self.last_refresh = time.time()
-                    self.sleep(0.3)
-                elif added == 0 and self.duration > 0:
-                    self.sleep(0.8)
-                else:
-                    self.sleep(0.8)
+                    time.sleep(0.3)
+                elif self.duration > 0.5:
+                    self.sleep(self.duration+0.5)
         except Exception as ex:
             self.logger.exception('{}{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Process=', ex))
@@ -397,9 +395,13 @@ class M3U8Process(Thread):
         self.m3u8_q.join()
 
     def sleep(self, _time):
-        for i in range(round(_time * 10)):
+        start_ttw = time.time()
+        for i in range(round(_time * 5)):
             if not TERMINATE_REQUESTED:
-                time.sleep(self.duration * 0.1)
+                time.sleep(self.duration * 0.2)
+            delta_ttw = time.time() - start_ttw
+            if delta_ttw > _time:
+                break
 
     def terminate(self):
         global STREAM_QUEUE
@@ -472,13 +474,8 @@ class M3U8Process(Thread):
                         uri_dt = (uri, 0)
                     if last_key == uri_dt:
                         i = num_segments - index
-            remaining_segs = num_segments - i
             for m3u8_segment, key in zip(
                     _playlist.segments[i:num_segments], keys[i:num_segments]):
-                remaining_segs -= 1
-                if remaining_segs < 1:
-                    # delay is this is the last segment to add from the provider
-                    time.sleep(2)
                 added = self.add_segment(m3u8_segment, key)
                 total_added += added
                 if added == 0 or TERMINATE_REQUESTED:

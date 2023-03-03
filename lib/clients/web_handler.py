@@ -190,11 +190,12 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.channels_db = DBChannels(_plugins.config_obj.data)
         tmp_rmg_scans = {}
         for plugin_name in _plugins.plugins.keys():
-            if _plugins.config_obj.data.get(plugin_name.lower()):
-                if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
-                    tmp_rmg_scans[plugin_name] = []
-                    for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
-                        tmp_rmg_scans[plugin_name].append('Idle')
+            if plugin_name:
+                if _plugins.config_obj.data.get(plugin_name.lower()):
+                    if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
+                        tmp_rmg_scans[plugin_name] = []
+                        for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
+                            tmp_rmg_scans[plugin_name].append('Idle')
         WebHTTPHandler.rmg_station_scans = tmp_rmg_scans
         if WebHTTPHandler.total_instances == 0:
             WebHTTPHandler.total_instances = _plugins.config_obj.data['web']['concurrent_listeners']

@@ -158,6 +158,7 @@ class InternalProxy(Stream):
         elif self.idle_counter % 6 == 0:
             if self.is_starting:
                 self.write_atsc_msg()
+        elif self.idle_counter % 12 == 0:
             self.logger.debug('1 Requesting status from m3u8_queue {}'.format(self.t_m3u8.pid))
             self.in_queue.put({'uri': 'status'})
 

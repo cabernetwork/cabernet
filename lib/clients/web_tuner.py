@@ -276,14 +276,15 @@ class TunerHttpHandler(WebHTTPHandler):
         WebHTTPHandler.logger = logging.getLogger(__name__)
         tuner_count = 0
         for plugin_name in _plugins.plugins.keys():
-            if _plugins.config_obj.data.get(plugin_name.lower()):
-                if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
-                    WebHTTPHandler.logger.debug('{} Implementing {} tuners for {}'
-                                                .format(cls.__name__,
-                                                        _plugins.config_obj.data[plugin_name.lower()][
-                                                            'player-tuner_count'],
-                                                        plugin_name))
-                    tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
+            if plugin_name:
+                if _plugins.config_obj.data.get(plugin_name.lower()):
+                    if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
+                        WebHTTPHandler.logger.debug('{} Implementing {} tuners for {}'
+                                                    .format(cls.__name__,
+                                                            _plugins.config_obj.data[plugin_name.lower()][
+                                                                'player-tuner_count'],
+                                                            plugin_name))
+                        tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
         super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 

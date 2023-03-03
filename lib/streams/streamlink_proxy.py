@@ -20,6 +20,7 @@ import errno
 import subprocess
 import time
 
+import lib.common.exceptions as exceptions
 from lib.clients.web_handler import WebHTTPHandler
 from lib.streams.video import Video
 from lib.db.db_config_defn import DBConfigDefn
@@ -76,7 +77,11 @@ class StreamlinkProxy(Stream):
         self.last_refresh = time.time()
         self.block_prev_time = self.last_refresh
         self.buffer_prev_time = self.last_refresh
-        self.read_buffer()
+        try:
+            self.read_buffer()
+        except exceptions.CabernetException as ex:
+            self.logger.info(str(ex))
+            return
         while True:
             if not self.video.data:
                 self.logger.info(
@@ -142,6 +147,9 @@ class StreamlinkProxy(Stream):
             if self.video.data:
                 data_found = True
             else:
+                if self.stream_queue.is_terminated:
+                    raise exceptions.CabernetException('Streamlink Terminated, exiting stream {}'.format(self.streamlink_proc.pid))
+
                 time.sleep(1)
                 idle_timer -= 1
                 if idle_timer < 1:
@@ -197,7 +205,7 @@ class StreamlinkProxy(Stream):
         streamlink_command = [
             self.config['paths']['streamlink_path'],
             '--stdout',
-            '--quiet',
+            '--loglevel', 'trace',
             '--ffmpeg-fout', 'mpegts',
             '--hls-segment-attempts', '2',
             '--hls-segment-timeout', '5',
