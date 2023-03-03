@@ -114,7 +114,7 @@ class Channels(PluginChannels):
 
         # Get the list of channels daddylive provides by channel name
         uri = self.plugin_obj.unc_daddylive_base + self.plugin_obj.unc_daddylive_channels
-        text = self.get_uri_data(_uri=uri).decode()
+        text = self.get_uri_data(uri).decode()
         if text is None:
             return
         text = text.replace('\n', ' ')

@@ -90,7 +90,7 @@
                         "type": "integer",
                         "default": 999999999,
                         "level": 3,
-                        "help": "Only used with internalproxy. Maximum bps bandwidth requested for a stream. If a lower bandwidth is available, it is used.  default (999999999) means select the best quality.",
+                        "help": "Used with all stream types but m3u8redirect. Maximum bps bandwidth requested for a stream. If a lower bandwidth is available, it is used.  default (999999999) means select the best quality."
                     },
                     "player-play_all_segments":{
                         "label": "Play All (VOD)",
