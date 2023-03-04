@@ -21,14 +21,12 @@
 
 ; MUI 1.67 compatible ------
 !addplugindir '.\Plugins\inetc\Plugins\x86-unicode'
-!addplugindir '.\Plugins\ZipDLL'
 
 !include "MUI.nsh"
 !include "MultiUser.nsh"
 !include "MUI2.nsh"
 !include nsDialogs.nsh
 !include "TvhLib.nsh"
-!include "ZipDLL.nsh"
 
 ; MUI Settings
 !define MUI_ABORTWARNING
@@ -152,7 +150,12 @@ Section "Install FFMPEG" SEC04
             Click OK to abort installation" /SD IDOK
         Abort
     dlok:
-    ZipDLL::extractall "$TEMP\ffmpeg.zip" "$TEMP\ffmpeg"
+    StrCpy $cmd 'powershell expand-archive \"$TEMP\ffmpeg.zip\" \"$TEMP\ffmpeg\"'
+    nsExec::ExecToStack '$cmd'
+    Pop $0 ;return value
+    Pop $1 ; status text
+    ;MessageBox MB_OK "FFMPEG Extract Status:$0 $1"
+
     StrCpy $subfolder "$TEMP\ffmpeg\ffmpeg*.*"
     Call GetSubfolder
     StrCmp $subfolder "" empty
@@ -164,6 +167,7 @@ Section "Install FFMPEG" SEC04
     DELETE "$TEMP\ffmpeg.zip"
     RMDIR /r "$TEMP\ffmpeg\*.*"
     RMDIR "$TEMP\ffmpeg"
+    SetOutPath "$INSTDIR"
 SectionEnd
 
 

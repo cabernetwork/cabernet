@@ -106,6 +106,8 @@ def main(script_dir):
     # Get Operating system
     opersystem = platform.system()
     config_obj = None
+    scheduler = None
+    terminate_queue = None
     try:
         RESTART_REQUESTED = False
 
@@ -116,7 +118,12 @@ def main(script_dir):
         LOGGER.warning('#########################################')
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
         LOGGER.notice('Cabernet v{}'.format(utils.get_version_str()))
+    except KeyboardInterrupt:
+        if LOGGER:
+            LOGGER.warning('^C received, shutting down the server')
+        return
 
+    try:
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
         if args.restart and config['main']['maintenance_mode']:
             LOGGER.info('In maintenance mode, applying patches')
@@ -158,7 +165,8 @@ def main(script_dir):
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
 
     except KeyboardInterrupt:
-        LOGGER.warning('^C received, shutting down the server')
+        if LOGGER:
+            LOGGER.warning('^C received, shutting down the server')
         shutdown(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj, terminate_queue)
 
 
@@ -234,9 +242,10 @@ def init_hdhr(_config, _hdhr_queue):
 
 
 def shutdown(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj, _terminate_queue):
-    _terminate_queue.put('shutdown')
-    time.sleep(2)
-    terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
+    if _terminate_queue:
+        _terminate_queue.put('shutdown')
+        time.sleep(2)
+        terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
     clean_exit()
 
 

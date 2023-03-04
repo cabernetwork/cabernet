@@ -49,6 +49,14 @@ class PluginHandler:
     def collect_plugins(self, _plugins_pkg):
         # plugin_db = DBPlugins(self.config_obj.data)
         # plugin_db.reinitialize_tables()
+        pkg = importlib.util.find_spec(_plugins_pkg)
+        if not pkg:
+            # module folder does not exist, do nothing
+            self.logger.notice(
+                'plugin folder {} does not exist with a __init__.py empty file in it.'
+                .format(_plugins_pkg))
+            return
+        
         for folder in importlib.resources.contents(_plugins_pkg):
             if folder.startswith('__'):
                 continue

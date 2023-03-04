@@ -183,10 +183,14 @@ Function AddFiles
     File "${SOURCEPATH}\TVHEADEND.md"
     File "${SOURCEPATH}\requirements.txt"
     Rename "$INSTDIR\TVHEADEND.md" "$INSTDIR\README.txt"
-    SetOutPath "$INSTDIR"
-    File /r /x __pycache__ /x development "${SOURCEPATH}\lib"
-    SetOutPath "$INSTDIR"
-    File /r /x __pycache__ "${SOURCEPATH}\plugins"
+
+    SetOutPath "$INSTDIR\lib"
+    File /r /x __pycache__ /x development "${SOURCEPATH}\lib\*.*"
+    SetOutPath "$INSTDIR\plugins"
+    File /r /x __pycache__ "${SOURCEPATH}\plugins\*.*"
+    SetOutPath "$INSTDIR\plugins_ext"
+    File /r /x __pycache__ /x provider* "${SOURCEPATH}\plugins_ext\*.*"
+
     SetOutPath "$INSTDIR\build\WINDOWS"
     File "${SOURCEPATH}\build\WINDOWS\UpdateConfig.pyw"
 FunctionEnd
