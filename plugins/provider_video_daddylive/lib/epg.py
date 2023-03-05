@@ -158,7 +158,7 @@ class EPG(PluginEPG):
         prog_details = self.plugin_obj.plugins[_ch_data['json']['plugin']].plugin_obj \
             .get_program_info_ext(prog_id)
         if len(prog_details) == 0:
-            self.logger.warning('Program error: EPG program details missing {} {}'
+            self.logger.notice('Program error: EPG program details missing {} {}'
                                 .format(self.plugin_obj.name, prog_id))
             return None
 

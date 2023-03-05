@@ -186,14 +186,16 @@ def set_ffprobe_path(_config_obj, _section, _key):
 def set_streamlink_path(_config_obj, _section, _key):
     if not _config_obj.data[_section][_key]:
         if platform.system() in ['Windows']:
-            base_ffprobe_dir \
-                = pathlib.Path(_config_obj.script_dir).joinpath('streamlink/bin')
             _config_obj.data[_section][_key] \
-                = str(pathlib.Path(base_ffprobe_dir).joinpath('streamlink.exe'))
+                = 'streamlink.exe'
             _config_obj.logger.notice(
-                'streamlink_path does not exist in [cabernet]/streamlink/bin, will use PATH env to find streamlink.exe')
+                'streamlink_path does not exist in PATH to find streamlink.exe')
         else:
-            _config_obj.data[_section][_key] = 'streamlink'
+            streamlink_file = os.path.expanduser('~/.local/bin/streamlink')
+            if os.path.isfile(streamlink_file):
+                _config_obj.data[_section][_key] = streamlink_file
+            else:
+                _config_obj.data[_section][_key] = 'streamlink'
 
 
 def set_pdata(_config_obj, _section, _key):

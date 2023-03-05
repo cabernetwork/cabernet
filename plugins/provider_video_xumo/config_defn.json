@@ -15,8 +15,23 @@
                         "label": "Enabled",
                         "type": "boolean",
                         "default": true,
-                        "level": 1,
+                        "level": 0,
                         "help": "Will disable if an error occurs; otherwise set to disable to disable plugin"
+                    },
+                    "plugin_image":{
+                        "label": "Image",
+                        "type": "image",
+                        "default": null,
+                        "level": 0,
+                        "help": "The plugin icon"
+                    },
+                    "version":{
+                        "label": "Version",
+                        "type": "string",
+                        "default": null,
+                        "level": 0,
+                        "writable": false,
+                        "help": "Version of the plugin in the plugin.json file"
                     },
                     "geoid": {
                         "label": "geoId",

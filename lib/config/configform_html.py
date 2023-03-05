@@ -26,7 +26,7 @@ def get_configform_html(_webserver):
     if 'area' in _webserver.query_data:
         configform = ConfigFormHTML()
         form = configform.get(_webserver.plugins.config_obj.defn_json.get_defn(
-            _webserver.query_data['area']), _webserver.query_data['area'])
+            _webserver.query_data['area']), _webserver.query_data['area'], _webserver.plugins.config_obj.data)
         _webserver.do_mime_response(200, 'text/html', form)
     else:
         _webserver.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Area Not Found'))
@@ -59,9 +59,11 @@ class ConfigFormHTML:
     def __init__(self):
         self.area = None
         self.config_defn = None
+        self.config = None
 
-    def get(self, _config_defn, _area):
+    def get(self, _config_defn, _area, _config):
         self.area = _area
+        self.config = _config
         self.config_defn = _config_defn
         return ''.join([self.header, self.body])
 
@@ -130,11 +132,15 @@ class ConfigFormHTML:
             '<form id="form', section_data['name'], '" class="sectionForm" ',
             'action="/api/configform" method="post">',
             section_data['description'],
-            '<table>'
+            '<div style="display: flex;"><table>'
         ])
         section_html = '<tbody>'
         subsection = None
         is_section_new = False
+        
+        #
+        # <div style="left: 10%;position: relative;top: 20%;margin-top: 10px;"><img src="xxx"></div>
+        plugin_image = ''
         for setting, setting_data in section_data['settings'].items():
             if setting_data['level'] == 4:
                 continue
@@ -205,21 +211,58 @@ class ConfigFormHTML:
                     'name="', section_data['name'], '-', setting, '">',
                     option_html, '</select>'])
 
+            elif setting_data['type'] == 'image':
+                if setting != 'plugin_image':
+                    input_html = ''.join([
+                        '<img src="" width="128" border="1" alt="',section_data['name'], '-', setting,'">'])
+                else:
+                    img_size = self.lookup_config_size()
+                    plugin_image = ''.join([
+                        '<div style="left: 10%;position: relative;top: 20%;margin-top: 10px;">',
+                        '<img src="/api/manifest?plugin=',
+                        section_data['label'],
+                        '&key=icon" width="',
+                        str(img_size), '" border="1" alt="',section_data['name'], '-', setting,'">',
+                        '</div>'
+                        ])
+
+
             if is_section_new:
                 is_section_new = False
                 section_html = ''.join([section_html,
                                         '<tr class="hlevel"><td><hr><h3>', subsection.upper(), '</h3></td></tr>'])
 
-            section_html = ''.join([section_html,
-                                    '<tr class="dlevel', str(setting_data['level']),
-                                    '"><td><label ', title,
-                                    '>', setting_data['label'], '</label></td><td>', input_html,
-                                    '</td></tr>'])
+            if input_html:
+                section_html = ''.join([section_html,
+                                        '<tr class="dlevel', str(setting_data['level']),
+                                        '"><td><label ', title,
+                                        '>', setting_data['label'], '</label></td><td>', input_html,
+                                        '</td></tr>'])
         return ''.join([
-            form_html, section_html, '</tbody></table>',
-            '<button id="submit" STYLE="background-color: #E0E0E0; margin-top:1em" ',
+            form_html, section_html, '</tbody></table>', plugin_image,
+            '</div><button id="submit" STYLE="background-color: #E0E0E0; margin-top:1em" ',
             'type="submit"><b>Save changes</b></button>',
             '<input type=hidden name="area" value="', self.area, '"></form>'])
+
+    def lookup_config_size(self):
+        size_text = self.config['channels']['thumbnail_size']
+        if size_text == 'None':
+            return 0
+        elif size_text == 'Tiny(16)':
+            return 16
+        elif size_text == 'Small(48)':
+            return 48
+        elif size_text == 'Medium(128)':
+            return 128
+        elif size_text == 'Large(180)':
+            return 180
+        elif size_text == 'X-Large(270)':
+            return 270
+        elif size_text == 'Full-Size':
+            return None
+        else:
+            return None
+
 
     @property
     def body(self):

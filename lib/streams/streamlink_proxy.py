@@ -195,6 +195,18 @@ class StreamlinkProxy(Stream):
         """
         header = self.channel_dict['json'].get('Header')
         str_array = []
+        llevel = self.config['handler_loghandler']['level']
+        if llevel == 'DEBUG':
+            sl_llevel = 'trace'
+        elif llevel == 'INFO':
+            sl_llevel = 'info'
+        elif llevel == 'NOTICE':
+            sl_llevel = 'warning'
+        elif llevel == 'WARNING':
+            sl_llevel = 'error'
+        else:
+            sl_llevel = 'none'
+        
         if header:
             for key, value in header.items():
                 str_array.append('--http-header')
@@ -205,7 +217,7 @@ class StreamlinkProxy(Stream):
         streamlink_command = [
             self.config['paths']['streamlink_path'],
             '--stdout',
-            '--loglevel', 'trace',
+            '--loglevel', sl_llevel,
             '--ffmpeg-fout', 'mpegts',
             '--hls-segment-attempts', '2',
             '--hls-segment-timeout', '5',
@@ -220,7 +232,7 @@ class StreamlinkProxy(Stream):
                 bufsize=-1)
         except:
             self.logger.error('Streamlink Binary Not Found: {}'.format(self.config['paths']['streamlink_path']))
-            return        
+            return
         self.stream_queue = StreamQueue(188, streamlink_process, self.channel_dict['uid'])
         time.sleep(0.1)
         return streamlink_process
