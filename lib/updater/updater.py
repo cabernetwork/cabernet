@@ -152,7 +152,7 @@ class Updater:
 
         STATUS.data += 'Entering Maintenance Mode...<br>\r\n'
         # make sure the config_handler really has the config data uploaded
-        self.config_obj.config_handler.read(self.data['paths']['config_file'])
+        self.config_obj.config_handler.read(self.config_obj.data['paths']['config_file'])
         self.config_obj.write('main', 'maintenance_mode', True)
 
         STATUS.data += 'Restarting app in 3...<br>\r\n'
