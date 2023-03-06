@@ -138,8 +138,6 @@ class ConfigFormHTML:
         subsection = None
         is_section_new = False
         
-        #
-        # <div style="left: 10%;position: relative;top: 20%;margin-top: 10px;"><img src="xxx"></div>
         plugin_image = ''
         for setting, setting_data in section_data['settings'].items():
             if setting_data['level'] == 4:
@@ -216,22 +214,20 @@ class ConfigFormHTML:
                     input_html = ''.join([
                         '<img src="" width="128" border="1" alt="',section_data['name'], '-', setting,'">'])
                 else:
+                    input_html = None
                     img_size = self.lookup_config_size()
                     plugin_image = ''.join([
-                        '<div style="left: 10%;position: relative;top: 20%;margin-top: 10px;">',
+                        '<div style="left: 5%;position: relative;top: 20%;margin-top: 10px;">',
                         '<img src="/api/manifest?plugin=',
                         section_data['label'],
                         '&key=icon" width="',
                         str(img_size), '" border="1" alt="',section_data['name'], '-', setting,'">',
                         '</div>'
                         ])
-
-
             if is_section_new:
                 is_section_new = False
                 section_html = ''.join([section_html,
                                         '<tr class="hlevel"><td><hr><h3>', subsection.upper(), '</h3></td></tr>'])
-
             if input_html:
                 section_html = ''.join([section_html,
                                         '<tr class="dlevel', str(setting_data['level']),

@@ -22,19 +22,19 @@ from lib.common.decorators import postrequest
 from lib.clients.channels.channels import ChannelsURL
 
 
-@getrequest.route('/api/channelsform')
-def get_channels_form_html(_webserver, _namespace=None, _sort_col=None, _sort_dir=None, filter_dict=None):
-    channels_form = ChannelsFormHTML(_webserver.channels_db, _webserver.config)
+@getrequest.route('/api/pluginsform')
+def get_plugins_form_html(_webserver, _namespace=None, _sort_col=None, _sort_dir=None, filter_dict=None):
+    plugins_form = PluginsFormHTML(_webserver.config)
     if _namespace is None:
         name = _webserver.query_data['name']
     else:
         name = _namespace
-    form = channels_form.get(name, _sort_col, _sort_dir, filter_dict)
+    form = plugins_form.get(name, _sort_col, _sort_dir, filter_dict)
     _webserver.do_mime_response(200, 'text/html', form)
 
 
-@postrequest.route('/api/channelsform')
-def post_channels_html(_webserver):
+@postrequest.route('/api/pluginsform')
+def post_plugins_html(_webserver):
     namespace = _webserver.query_data['name'][0]
     sort_col = _webserver.query_data['sort_col'][0]
     sort_dir = _webserver.query_data['sort_dir'][0]
@@ -45,25 +45,24 @@ def post_channels_html(_webserver):
     filter_dict = get_filter_data(_webserver.query_data)
 
     if sort_col is None:
-        cu = ChannelsURL(_webserver.config)
-        results = cu.update_channels(namespace, _webserver.query_data)
+        pu = PluginsURL(_webserver.config)
+        results = pu.update_plugins(namespace, _webserver.query_data)
         _webserver.do_mime_response(200, 'text/html', results)
     else:
-        get_channels_form_html(_webserver, namespace, sort_col, sort_dir, filter_dict)
+        get_plugins_form_html(_webserver, namespace, sort_col, sort_dir, filter_dict)
 
 
-class ChannelsFormHTML:
+class PluginsFormHTML:
 
-    def __init__(self, _channels_db, _config):
-        self.db = _channels_db
+    def __init__(self, _config):
         self.namespace = None
         self.config = _config
         self.active_tab_name = None
-        self.num_of_channels = 0
+        self.num_of_plugins = 0
         self.num_enabled = 0
         self.sort_column = None
         self.sort_direction = None
-        self.ch_data = None
+        self.plugin_data = None
         self.filter_dict = None
 
     def get(self, _namespace, _sort_col, _sort_dir, _filter_dict):
@@ -71,8 +70,6 @@ class ChannelsFormHTML:
         self.sort_direction = _sort_dir
         self.namespace = _namespace
         self.filter_dict = _filter_dict
-        sort_data = self.get_db_sort_data(_sort_col, _sort_dir)
-        self.ch_data = self.db.get_sorted_channels(self.namespace, None, sort_data[0], sort_data[1])
         return ''.join([self.header, self.body])
 
     def get_db_sort_data(self, _sort_col, _sort_dir):
@@ -131,7 +128,7 @@ class ChannelsFormHTML:
             '<input type="hidden" name="name" value="', self.namespace, '" >',
             '<input type="hidden" name="sort_col" >',
             '<input type="hidden" name="sort_dir" >',
-            '<table><tr><td>Total Unique Channels = ', str(self.num_of_channels), '</td></tr>',
+            '<table><tr><td>Total Unique Channels = ', str(self.num_of_plugins), '</td></tr>',
             '<tr><td>Total Enabled Unique Channels = ', str(self.num_enabled), '</td>',
             '<td style="min-width:18ch; text-align: center">',
             '<button STYLE="background-color: #E0E0E0;" ',
@@ -270,13 +267,15 @@ class ChannelsFormHTML:
     def form(self):
         t = self.table
         forms_html = ''.join(['<form id="channelform" ',
-                              'action="/api/channelsform" method="post">',
+                              'action="/api/channels_form" method="post">',
                               self.form_header, t, '</form>'])
         return forms_html
 
     @property
     def table(self):
         table_html = '<tbody>'
+        return ''.join([table_html, '</tbody></table>'])
+
         sids_processed = {}
         for sid_data in self.ch_data:
             sid = sid_data['uid']
@@ -365,7 +364,7 @@ class ChannelsFormHTML:
                 '</tr>'
             ])
             table_html += row
-        self.num_of_channels = len(sids_processed.keys())
+        self.num_of_plugins = len(sids_processed.keys())
         self.num_enabled = sum(x for x in sids_processed.values())
         return ''.join([table_html, '</tbody></table>'])
 

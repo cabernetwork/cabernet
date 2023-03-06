@@ -30,8 +30,8 @@ from lib.common.decorators import Restore
 from lib.db.db_config_defn import DBConfigDefn
 
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
-CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', '.github', 'build', 'plugins_ext', 'misc']
-CODE_FILES_TO_IGNORE = ['config.ini', 'is_container']
+CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', 'ffmpeg', 'streamlink', '.github', 'build', 'plugins_ext', 'misc']
+CODE_FILES_TO_IGNORE = ['config.ini', 'is_container', 'uninst.exe']
 
 
 def scheduler_tasks(config):
@@ -157,7 +157,12 @@ class Backups:
                     subdirs.remove(d)
             for filename in files:
                 if filename not in CODE_FILES_TO_IGNORE:
-                    os.remove(os.path.join(dirname, filename))
+                    try:
+                        os.remove(os.path.join(dirname, filename))
+                    except PermissionError as ex:
+                        self.logger.notice(
+                            'Exception: {}  Unable to delete file prior to overlaying upgrade'
+                            .format(str(ex)))
         return True
 
     def restore_code(self, _folder):
@@ -176,8 +181,13 @@ class Backups:
             for filename in files:
                 os.makedirs(os.path.join(self.config['paths']['main_dir'], rel_dirname),
                             exist_ok=True)
-                shutil.move(os.path.join(dirname, filename),
-                            os.path.join(self.config['paths']['main_dir'], rel_dirname))
+                try:
+                    dest = shutil.move(os.path.join(dirname, filename),
+                                os.path.join(self.config['paths']['main_dir'], rel_dirname))
+                except shutil.Error as ex:
+                    self.logger.notice(
+                        'Exception: {}  Unable to overlay new file'
+                        .format(str(ex)))
 
     def check_code_write_permissions(self):
         result = ''

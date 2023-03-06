@@ -36,7 +36,7 @@ from lib.db.db_plugins import DBPlugins
 BACKUP_FOLDER_NAME = 'CarbernetBackup'
 
 
-@getrequest.route('/api/data_mgmt')
+@getrequest.route('/api/datamgmt')
 def get_data_mgmt_html(_webserver):
     data_mgmt_html = DataMgmtHTML(_webserver.plugins)
     if 'delete' in _webserver.query_data:
@@ -49,7 +49,7 @@ def get_data_mgmt_html(_webserver):
     _webserver.do_mime_response(200, 'text/html', html)
 
 
-@postrequest.route('/api/data_mgmt')
+@postrequest.route('/api/datamgmt')
 def post_data_mgmt_html(_webserver):
     if 'folder' in _webserver.query_data:
         html = restore_from_backup(_webserver.plugins, _webserver.query_data)
@@ -227,7 +227,7 @@ class DataMgmtHTML:
     def db_updates(self):
         html = ''.join([
             '<section id="reset_status"></section>',
-            '<form action="/api/data_mgmt" method="post">',
+            '<form action="/api/datamgmt" method="post">',
             '<table class="dmTable" width=95%>',
             '<tr>',
             '<td class="dmIcon">',
@@ -241,7 +241,7 @@ class DataMgmtHTML:
         html_select = self.select_reset_channel
         html = ''.join([html, html_select,
                         '<tr><td colspan=3><hr></td></tr></table></form>',
-                        '<form action="/api/data_mgmt" method="post">',
+                        '<form action="/api/datamgmt" method="post">',
                         '<table class="dmTable" width=95%>',
                         '<tr>',
                         '<td class="dmIcon">',
@@ -255,7 +255,7 @@ class DataMgmtHTML:
         html_select = self.select_reset_epg
         html = ''.join([html, html_select,
                         '<tr><td colspan=3><hr></td></tr></table></form>',
-                        '<form action="/api/data_mgmt" method="post">',
+                        '<form action="/api/datamgmt" method="post">',
                         '<table class="dmTable" width=95%>',
                         '<tr>',
                         '<td class="dmIcon">',
@@ -269,7 +269,7 @@ class DataMgmtHTML:
         html_select = self.select_reset_sched
         html = ''.join([html, html_select,
                         '<tr><td colspan=3><hr></td></tr></table></form>',
-                        '<form action="/api/data_mgmt" method="post">',
+                        '<form action="/api/datamgmt" method="post">',
                         '<table class="dmTable" width=95%>',
                         '<tr>',
                         '<td class="dmIcon">',
@@ -310,16 +310,16 @@ class DataMgmtHTML:
             html = ''.join([html,
                             '<tr>',
                             '<td class="dmIcon">',
-                            '<a href="#" onclick=\'load_backup_url("/api/data_mgmt?restore=',
+                            '<a href="#" onclick=\'load_backup_url("/api/datamgmt?restore=',
                             filename, '")\'>',
                             '<i class="md-icon">folder</i></a></td>',
                             '<td class="dmItem">',
-                            '<a href="#" onclick=\'load_backup_url("/api/data_mgmt?restore=',
+                            '<a href="#" onclick=\'load_backup_url("/api/datamgmt?restore=',
                             filename, '")\'>',
                             '<div class="dmItemTitle">', datetime_str, '</div>',
                             '<div>', folder, '</div></td>',
                             '<td class="dmIcon">',
-                            '<a href="#" onclick=\'load_dm_url("/api/data_mgmt?delete=',
+                            '<a href="#" onclick=\'load_dm_url("/api/datamgmt?delete=',
                             filename, '")\'>',
                             '<i class="md-icon">delete_forever</i></a></td>',
                             '</tr>'
@@ -350,11 +350,11 @@ class DataMgmtHTML:
 
         html = ''.join([
             '<script src="/modules/datamgmt/restore_backup.js"></script>'
-            '<form action="/api/data_mgmt" method="post">',
+            '<form action="/api/datamgmt" method="post">',
             '<table class="dmTable" width=95%>',
             '<tr>',
             '<td class="dmIcon">',
-            '<a href="#" onclick=\'load_dm_url("/api/data_mgmt")\'>',
+            '<a href="#" onclick=\'load_dm_url("/api/datamgmt")\'>',
             '<div ><i class="md-icon">arrow_back</i></div></a></td>',
             '<td colspan=2 class="dmSection"><div >',
             'Backup from: ', datetime_str, '</div></td>'

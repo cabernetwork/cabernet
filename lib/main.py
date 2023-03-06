@@ -128,8 +128,8 @@ def main(script_dir):
         if args.restart and config['main']['maintenance_mode']:
             LOGGER.info('In maintenance mode, applying patches')
             patcher.patch_upgrade(config_obj, utils.VERSION)
-            config_obj.write('main', 'maintenance_mode', False)
             time.sleep(0.01)
+        config_obj.write('main', 'maintenance_mode', False)
 
         utils.cleanup_web_temp(config)
         plugins = init_plugins(config_obj)

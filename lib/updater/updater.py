@@ -151,11 +151,12 @@ class Updater:
         STATUS.data += '(TBD) Upgrading plugins...<br>\r\n'
 
         STATUS.data += 'Entering Maintenance Mode...<br>\r\n'
+        # make sure the config_handler really has the config data uploaded
+        self.config_obj.config_handler.read(self.data['paths']['config_file'])
         self.config_obj.write('main', 'maintenance_mode', True)
 
         STATUS.data += 'Restarting app in 3...<br>\r\n'
         self.tmp_mgmt.cleanup_tmp()
-        IS_UPGRADING = False
         time.sleep(0.8)
         STATUS.data += '2...<br>\r\n'
         time.sleep(0.8)
@@ -163,6 +164,7 @@ class Updater:
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         self.restart_app()
+        IS_UPGRADING = False
 
     def restart_app(self):
         # get schedDB and find restart taskid.
