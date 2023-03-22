@@ -27,7 +27,7 @@ from lib.common.decorators import handle_json_except
 from lib.common.decorators import handle_url_except
 import lib.common.utils as utils
 from ..lib import daddylive
-
+from .. import resources
 
 class Channels(PluginChannels):
 
@@ -180,9 +180,10 @@ class Channels(PluginChannels):
                 hd = ch_db_data[0]['json']['HD']
                 thumb = ch_db_data[0]['thumbnail']
                 thumb_size = ch_db_data[0]['thumbnail_size']
-                ref_url = ch_db_data[0]['json'].get('ref_url')
+                ref_url = self.get_channel_ref(uid)
+                self.logger.debug('{} Updating Channel {}:{}'.format(self.plugin_obj.name, uid, name))
             else:
-                self.logger.debug('{} 2 Added Channel {}:{}'.format(self.plugin_obj.name, uid, name))
+                self.logger.debug('{} Added Channel {}:{}'.format(self.plugin_obj.name, uid, name))
                 enabled = True
                 hd = 0
                 thumb = None
@@ -234,7 +235,7 @@ class Channels(PluginChannels):
         """
         if self.config_obj.data[self.plugin_obj.name.lower()]['epg-plugin'] == 'ALL':
             ch_list = json.loads(
-                importlib.resources.read_text(package=daddylive.RESOURCE_PATH, resource='channel_list.json'))
+                importlib.resources.read_text(resources, resource='channel_list.json'))
             ch_list = sorted(ch_list, key=lambda d: d['zone'])
             return ch_list
         else:

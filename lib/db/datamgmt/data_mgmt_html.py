@@ -66,7 +66,8 @@ def post_data_mgmt_html(_webserver):
         elif action == 'reset_scheduler':
             html = reset_sched(
                 _webserver.plugins.config_obj.data,
-                _webserver.query_data['name'][0])
+                _webserver.query_data['name'][0],
+                _webserver.sched_queue)
         elif action == 'del_instance':
             html = del_instance(
                 _webserver.plugins.config_obj.data,
@@ -105,12 +106,13 @@ def reset_epg(_config, _name):
             .format(_name)
 
 
-def reset_sched(_config, _name):
+def reset_sched(_config, _name, _sched_queue):
     db_scheduler = DBScheduler(_config)
     tasks = db_scheduler.get_tasks_by_name(_name)
     html = ''
     for task in tasks:
-        db_scheduler.del_task(task['area'], task['title'])
+        _sched_queue.put({'cmd': 'deltask', 'taskid': task['taskid']})
+        #db_scheduler.del_task(task['area'], task['title'])
         html = ''.join([html,
                         '<b>', task['area'], ':', task['title'],
                         '</b> deleted from Scheduler<br>'
@@ -235,7 +237,7 @@ class DataMgmtHTML:
             '<td class="dmItem" >',
             '<div class="dmItemTitle">Reset Channel Data &nbsp; ',
             '<input type="hidden" name="action" value="reset_channel">',
-            '<button type="submit">Reset</button></div>',
+            '<button class="button" type="submit">Reset</button></div>',
             '<div>Next channel request will force pull new data</div></td>',
         ])
         html_select = self.select_reset_channel
@@ -249,7 +251,7 @@ class DataMgmtHTML:
                         '<td class="dmItem">',
                         '<div class="dmItemTitle">Reset EPG Data &nbsp; ',
                         '<input type="hidden" name="action" value="reset_epg">',
-                        '<button type="submit">Reset</button></div>',
+                        '<button class="button" type="submit">Reset</button></div>',
                         '<div>Next epg request will pull all days</div></td>',
                         ])
         html_select = self.select_reset_epg
@@ -263,7 +265,7 @@ class DataMgmtHTML:
                         '<td class="dmItem">',
                         '<div class="dmItemTitle">Reset Scheduler Tasks &nbsp; ',
                         '<input type="hidden" name="action" value="reset_scheduler">',
-                        '<button type="submit">Reset</button></div>',
+                        '<button class="button" type="submit">Reset</button></div>',
                         '<div>Scheduler will reload default tasks on next app restart</div></td>',
                         ])
         html_select = self.select_reset_sched
@@ -277,7 +279,7 @@ class DataMgmtHTML:
                         '<td class="dmItem">',
                         '<div class="dmItemTitle">Delete Instance &nbsp; ',
                         '<input type="hidden" name="action" value="del_instance">',
-                        '<button type="submit">Delete</button></div>',
+                        '<button class="button" type="submit">Delete</button></div>',
                         '<div>Deletes the instance data from the database file.  Update config.ini, ',
                         'as needed, and restart app following a delete</div></td>',
                         ])
@@ -366,7 +368,7 @@ class DataMgmtHTML:
             '</tr>',
             '<tr><td colspan=3><section id="status"></section></td></tr>',
             '<tr><td colspan=3>',
-            '<button class="dmButton" id="submit" STYLE="background-color: #E0E0E0; margin-top:1em" ',
+            '<button class="button dmButton" id="submit" STYLE="color: var(--theme-text-color); background-color: var(--button-background); margin-top:1em" ',
             'type="submit"><b>Restore Now</b></button>',
             '</td></tr>'
         ])

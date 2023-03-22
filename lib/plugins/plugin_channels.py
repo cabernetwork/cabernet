@@ -24,7 +24,6 @@ import io
 import re
 import threading
 import time
-import urllib.request
 
 import lib.m3u8 as m3u8
 import lib.common.utils as utils
@@ -73,9 +72,10 @@ class PluginChannels:
         header = {
             'Content-Type': 'application/json',
             'User-agent': utils.DEFAULT_USER_AGENT}
-        req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            return json.load(resp)
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+        x = resp.json()
+        resp.raise_for_status()
+        return x
 
     @handle_url_except()
     def get_uri_data(self, _uri, _header=None, _data=None):
@@ -84,9 +84,12 @@ class PluginChannels:
                 'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        req = urllib.request.Request(_uri, data=_data, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            return resp.read()
+        if _data:
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=(2, 4))
+        else:
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+        x = resp.content
+        return x
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
@@ -161,17 +164,17 @@ class PluginChannels:
              'Accept-Encoding': 'identity',
              'Connection': 'Keep-Alive'
              }
-        req = urllib.request.Request(_thumbnail, headers=h)
-        with urllib.request.urlopen(req) as resp:
-            img_blob = resp.read()
-            fp = io.BytesIO(img_blob)
-            sz = len(img_blob)
-            try:
-                thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
-            except get_image_size.UnknownImageFormat as e:
-                self.logger.warning('{}: Thumbnail unknown format. {}'
-                                    .format(self.plugin_obj.name, str(e)))
-                pass
+        resp = self.plugin_obj.http_session.get(_thumbnail, headers=h, timeout=(2, 4))
+        resp.raise_for_status()
+        img_blob = resp.content
+        fp = io.BytesIO(img_blob)
+        sz = len(img_blob)
+        try:
+            thumbnail_size = get_image_size.get_image_size_from_bytesio(fp, sz)
+        except get_image_size.UnknownImageFormat as e:
+            self.logger.warning('{}: Thumbnail unknown format. {}'
+                                .format(self.plugin_obj.name, str(e)))
+            pass
         return thumbnail_size
 
     @handle_url_except

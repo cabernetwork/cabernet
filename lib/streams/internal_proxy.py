@@ -23,7 +23,6 @@ import socket
 import threading
 import time
 import urllib.parse
-import urllib.request
 from multiprocessing import Queue, Process
 from queue import Empty
 

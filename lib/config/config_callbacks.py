@@ -318,7 +318,8 @@ def update_channel_num(_config_obj, _section, _key):
     namespace = list(namespace)[0]
     ch_list = db_channels.get_channels(namespace, instance)
     for ch in ch_list.values():
-        ch[0]['display_number'] = str(int(ch[0]['number']) + starting_num)
+        ch[0]['display_number'] = starting_num
+        starting_num += 1
         db_channels.update_channel_number(ch[0])
 
     return '{} {} {}'.format(_section, _key, starting_num, namespace)

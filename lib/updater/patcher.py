@@ -18,9 +18,9 @@ substantial portions of the Software.
 
 import logging
 
-from lib.db.db_channels import DBChannels
+from lib.db.db_plugins import DBPlugins
 
-REQUIRED_VERSION = '0.9.9'
+REQUIRED_VERSION = '0.9.10'
 LOGGER = logging.getLogger(__name__)
 
 
@@ -39,8 +39,8 @@ def patch_upgrade(_config_obj, _new_version):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
         results = 'Patch: Updating Channels database...'
 
-    dbchannels = DBChannels(_config_obj.data)
-    dbchannels.create_tables()
+    dbplugins = DBPlugins(_config_obj.data)
+    dbplugins.reinitialize_tables()
 
     return results
 

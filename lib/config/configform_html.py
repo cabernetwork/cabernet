@@ -35,9 +35,10 @@ def get_configform_html(_webserver):
 @postrequest.route('/api/configform')
 def post_configform_html(_webserver):
     if _webserver.config['web']['disable_web_config']:
-        _webserver.do_mime_response(501, 'text/html', web_templates['htmlError']
-                                    .format('501 - Config pages disabled. '
-                                            'Set [web][disable_web_config] to False in the config file to enable'))
+        _webserver.do_mime_response(
+            501, 'text/html', web_templates['htmlError']
+            .format('501 - Config pages disabled. '
+            'Set [web][disable_web_config] to False in the config file to enable'))
     else:
         # Take each key and make a [section][key] to store the value
         config_changes = {}
@@ -236,7 +237,7 @@ class ConfigFormHTML:
                                         '</td></tr>'])
         return ''.join([
             form_html, section_html, '</tbody></table>', plugin_image,
-            '</div><button id="submit" STYLE="background-color: #E0E0E0; margin-top:1em" ',
+            '</div><button id="submit" class="button" STYLE="margin:1em" ',
             'type="submit"><b>Save changes</b></button>',
             '<input type=hidden name="area" value="', self.area, '"></form>'])
 

@@ -19,12 +19,12 @@ substantial portions of the Software.
 import logging
 import os
 import re
+import requests
 import socket
 import sys
 import threading
 import time
 import urllib.parse
-import urllib.request
 from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -60,6 +60,7 @@ class M3U8Queue(Thread):
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
+        self.http_session = requests.session()
         self.config = _config
         self.namespace = _channel_dict['namespace'].lower()
         self.pts_validation = None
@@ -87,9 +88,9 @@ class M3U8Queue(Thread):
 
     @handle_url_except()
     def get_uri_data(self, _uri):
-        req = urllib.request.Request(_uri, headers=self.header)
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            x = resp.read()
+        resp = self.http_session.get(_uri, headers=self.header, timeout=(2, 4))
+        x = resp.content
+        resp.raise_for_status()
         return x
 
     def run(self):
@@ -231,9 +232,7 @@ class M3U8Queue(Thread):
                 return
 
             if self.first_segment:
-                # print('writing out FIRST segment')
                 self.first_segment = False
-                # print('writing out FIRST segment')
 
             self.pts_resync.resequence_pts(self.video)
 

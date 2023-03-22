@@ -313,7 +313,7 @@ class EPG:
     def gen_header_xml(self):
         if self.namespace is None:
             website = utils.CABERNET_URL
-            name = utils.CABERNET_NAMESPACE
+            name = utils.CABERNET_ID
         else:
             website = self.plugins.plugins[self.namespace].plugin_settings['website']
             name = self.plugins.plugins[self.namespace].plugin_settings['name']
@@ -321,9 +321,8 @@ class EPG:
         xml_out = ElementTree.Element('tv')
         xml_out.set('source-info-url', website)
         xml_out.set('source-info-name', name)
-        xml_out.set('generator-info-name', utils.CABERNET_NAMESPACE)
+        xml_out.set('generator-info-name', utils.CABERNET_ID)
         xml_out.set('generator-info-url', utils.CABERNET_URL)
-        xml_out.set('generator-special-thanks', 'locast2plex')
         return xml_out
 
     @staticmethod

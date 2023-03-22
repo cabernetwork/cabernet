@@ -134,7 +134,7 @@ class ChannelsFormHTML:
             '<table><tr><td>Total Unique Channels = ', str(self.num_of_channels), '</td></tr>',
             '<tr><td>Total Enabled Unique Channels = ', str(self.num_enabled), '</td>',
             '<td style="min-width:18ch; text-align: center">',
-            '<button STYLE="background-color: #E0E0E0;" ',
+            '<button class="button" STYLE="margin:1em" ',
             'type="submit"><b>Save changes</b></button>',
             '</td></tr></table>',
             '<table class="sortable" ><thead><tr>',

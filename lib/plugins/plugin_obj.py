@@ -20,6 +20,7 @@ import base64
 import binascii
 import datetime
 import logging
+import requests
 import string
 import threading
 import time
@@ -35,6 +36,7 @@ class PluginObj:
         self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
         self.plugins = None
+        self.http_session = requests.session()
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.def_trans = ''.join([

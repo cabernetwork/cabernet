@@ -20,7 +20,6 @@ import datetime
 import json
 import logging
 import threading
-import urllib.request
 
 import lib.common.utils as utils
 from lib.db.db_epg import DBepg
@@ -52,9 +51,9 @@ class PluginEPG:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            x = json.load(resp)
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+        x = resp.json()
+        resp.raise_for_status()
         return x
 
     def refresh_epg(self):

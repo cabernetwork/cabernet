@@ -91,14 +91,14 @@ class IndexJS:
     @staticmethod
     def get_version_div(_config):
         plugin_db = DBPlugins(_config)
-        manifest_list = plugin_db.get_plugins(utils.CABERNET_NAMESPACE)
-        if manifest_list is None:
+        manifest_list = plugin_db.get_repos(utils.CABERNET_ID)
+        if manifest_list:
             current_version = utils.VERSION
             upgrade_js = ''
         else:
-            current_version = manifest_list[0]['version']
-            next_version = manifest_list[0]['next_version']
-            latest_version = manifest_list[0]['latest_version']
+            current_version = manifest_list[0]['version']['latest']
+            next_version = manifest_list[0]['version']['next']
+            latest_version = manifest_list[0]['version']['latest']
             if current_version == next_version:
                 upgrade_js = ''
             else:

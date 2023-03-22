@@ -28,8 +28,8 @@ from .stream import Stream
 from .stream_queue import StreamQueue
 from .pts_validation import PTSValidation
 
-MAX_IDLE_TIMER = 20
-
+IDLE_TIMER = 20      # Duration for no video causing a refresh
+MAX_IDLE_TIMER = 59  # duration for no video causing stream termination
 
 class StreamlinkProxy(Stream):
 
@@ -85,7 +85,7 @@ class StreamlinkProxy(Stream):
         while True:
             if not self.video.data:
                 self.logger.info(
-                    'No Video Data, refreshing stream {} {}'
+                    '1 No Video Data, refreshing stream {} {}'
                     .format(_channel_dict['uid'], self.streamlink_proc.pid))
                 self.streamlink_proc = self.refresh_stream()
             else:
@@ -152,12 +152,20 @@ class StreamlinkProxy(Stream):
 
                 time.sleep(1)
                 idle_timer -= 1
+                if idle_timer % IDLE_TIMER == 0:
+                    self.logger.info(
+                        '2 No Video Data, refreshing stream {}'
+                        .format(self.streamlink_proc.pid))
+                    self.streamlink_proc = self.refresh_stream()
+                    
                 if idle_timer < 1:
                     idle_timer = MAX_IDLE_TIMER  # time slice segments are less than 10 seconds
                     self.logger.info(
-                        'No Video Data, refreshing stream {}'
+                        'No Video Data, terminating stream {}'
                         .format(self.streamlink_proc.pid))
-                    self.streamlink_proc = self.refresh_stream()
+                    time.sleep(15)
+                    self.streamlink_proc = self.terminate_stream()
+                    raise exceptions.CabernetException('Unable to get video stream, terminating')
                 elif int(MAX_IDLE_TIMER / 2) == idle_timer:
                     self.update_tuner_status('No Reply')
         return

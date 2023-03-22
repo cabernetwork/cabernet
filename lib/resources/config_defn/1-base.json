@@ -161,7 +161,7 @@
                         "values": ["None", "Tiny(16)", "Small(48)", "Medium(128)", 
                             "Large(180)", "X-Large(270)", "Full-Size"],
                         "level": 1,
-                        "help": "The default size of the thumbnails displayed in the Channel Editor"
+                        "help": "The default size used throughout Cabernet (Channel Editor, Plugins, Config Plugin Icons)"
                     }
                 }
             }

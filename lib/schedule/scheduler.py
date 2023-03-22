@@ -32,10 +32,10 @@ from lib.web.pages.templates import web_templates
 @getrequest.route('/api/scheduler')
 def get_scheduler(_webserver):
     try:
-        if _webserver.query_data['action'] == 'runtask':
-            _webserver.sched_queue.put({'cmd': 'runtask', 'taskid': _webserver.query_data['taskid']})
+        if _webserver.query_data.get('action') == 'runtask':
+            _webserver.sched_queue.put({'cmd': 'runtask', 'taskid': _webserver.query_data.get('taskid')})
             time.sleep(0.1)
-            _webserver.do_mime_response(200, 'text/html', 'action is ' + _webserver.query_data['action'])
+            _webserver.do_mime_response(200, 'text/html', 'action executed: ' + _webserver.query_data['action'])
             return
         else:
             _webserver.do_mime_response(
@@ -240,6 +240,8 @@ class Scheduler(Thread):
                 self.run_task(_queue_item['taskid'])
             elif _queue_item['cmd'] == 'deltask':
                 self.delete_task(_queue_item['taskid'])
+            elif _queue_item['cmd'] == 'delinstance':
+                self.delete_instance(_queue_item['name'], _queue_item['instance'])
             elif _queue_item['cmd'] == 'del':
                 self.delete_trigger(_queue_item['uuid'])
             elif _queue_item['cmd'] == 'add':
@@ -252,7 +254,7 @@ class Scheduler(Thread):
             self.logger.warning('Badly formed scheduled request {} {}'.format(_queue_item, repr(e)))
 
     def delete_trigger(self, _uuid):
-        self.logger.notice('Deleting trigger {}'.format(_uuid))
+        self.logger.debug('Deleting trigger {}'.format(_uuid))
         jobs = self.schedule.get_jobs(_uuid)
         for job in jobs:
             self.schedule.cancel_job(job)
@@ -301,10 +303,23 @@ class Scheduler(Thread):
         trigger = self.scheduler_db.get_trigger(uuid)
         self.add_job(trigger)
 
+    def delete_instance(self, _name, _instance):
+        tasks = self.scheduler_db.get_tasks_by_name(_name, _instance)
+        for task in tasks:
+            self.logger.warning('deleting task {}'.format(task['taskid']))
+            self.delete_task(task['taskid'])
+
     def delete_task(self, _taskid):
         task = self.scheduler_db.get_task(_taskid)
-        if task is not None:
-            self.scheduler_db.del_task(task['area'], task['title'])
+        if task is None:
+            self.logger.notice('Task to delete missing: {}'.format(_taskid))
+            return
+        
+        triggers = self.scheduler_db.get_triggers(_taskid)
+        for trigger in triggers:
+            self.delete_trigger(trigger['uuid'])
+        self.logger.debug('Deleting schedule task: {}'.format(_taskid))
+        self.scheduler_db.del_task(task['area'], task['title'])
 
     def run_task(self, _taskid):
         triggers = self.scheduler_db.get_triggers(_taskid)

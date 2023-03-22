@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -131,6 +131,7 @@ def main(script_dir):
             time.sleep(0.01)
         config_obj.write('main', 'maintenance_mode', False)
 
+    
         utils.cleanup_web_temp(config)
         plugins = init_plugins(config_obj)
         config_obj.defn_json = None

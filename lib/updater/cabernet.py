@@ -37,8 +37,7 @@ from lib.common.decorators import handle_json_except
 from lib.common.tmp_mgmt import TMPMgmt
 
 MANIFEST_FILE = 'manifest.json'
-TMP_ZIPFILE = utils.CABERNET_NAMESPACE + '.zip'
-
+TMP_ZIPFILE = utils.CABERNET_ID + '.zip'
 
 class CabernetUpgrade:
 
@@ -61,27 +60,30 @@ class CabernetUpgrade:
         if release_data_list is not None:
             current_version = utils.VERSION
             last_version = release_data_list[0]['tag_name']
+            last_stable_version = release_data_list[0]['tag_name']
             next_version = self.get_next_release(release_data_list)
-            manifest['version'] = current_version
-            manifest['next_version'] = next_version
-            manifest['latest_version'] = last_version
+            manifest['version']['current'] = current_version
+            manifest['version']['next'] = next_version
+            manifest['version']['latest'] = last_version
+            manifest['version']['installed'] = True
             self.save_manifest(manifest)
             # need to have the task take at least 1 second to register the time
             time.sleep(1)
 
     def import_manifest(self):
         """
-        Loads the manifest for cabernet from a file
+        Loads the manifest for cabernet
         """
-        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], MANIFEST_FILE)
-        settings = json.loads(json_settings)
-        return settings
+        json_settings = self.plugin_db.get_repos(utils.CABERNET_ID)
+        if json_settings:
+            json_settings = json_settings[0]
+        return json_settings
 
     def load_manifest(self):
         """
         Loads the cabernet manifest from DB
         """
-        manifest_list = self.plugin_db.get_plugins(utils.CABERNET_NAMESPACE)
+        manifest_list = self.plugin_db.get_plugins(_installed=True, _namespace=utils.CABERNET_ID)
         if manifest_list is None:
             return None
         else:
@@ -91,11 +93,11 @@ class CabernetUpgrade:
         """
         Saves to DB the manifest for cabernet
         """
-        self.plugin_db.save_plugin(_manifest)
+        self.plugin_db.save_repo(_manifest)
 
     def github_releases(self, _manifest):
         url = ''.join([
-            _manifest['github_repo_' + self.config['main']['upgrade_quality']],
+            _manifest['dir']['github_repo_' + self.config['main']['upgrade_quality']],
             '/releases'
         ])
         return self.get_uri_data(url)
@@ -124,6 +126,15 @@ class CabernetUpgrade:
         prev_version = data['tag_name']
         return prev_version
 
+    def get_stable_release(self, release_data_list):
+        """
+        Get the latest stable release with the format z.y.x.w without additional text...
+        
+        """
+
+
+
+
     def upgrade_app(self, _web_status):
         """
         Initial request to perform an upgrade
@@ -131,7 +142,7 @@ class CabernetUpgrade:
         c_manifest = self.load_manifest()
         if c_manifest is None:
             return False
-        if c_manifest['next_version'] == c_manifest['version']:
+        if c_manifest['next'] == c_manifest['version']:
             self.logger.info('Cabernet is on the current version, not upgrading')
             _web_status.data += 'Cabernet is on the current version, not upgrading<br>\r\n'
             return False
@@ -162,7 +173,7 @@ class CabernetUpgrade:
         _web_status.data += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
             c_manifest['github_repo_' + self.config['main']['upgrade_quality']],
-            'zipball', c_manifest['next_version']
+            'zipball', c_manifest['next']
         ])):
             _web_status.data += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False

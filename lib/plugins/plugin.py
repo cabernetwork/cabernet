@@ -43,14 +43,14 @@ class Plugin:
     _plugin_func = None
     logger = None
 
-    def __init__(self, _config_obj, _plugin_defn, _plugin_path):
+    def __init__(self, _config_obj, _plugin_defn, _plugins_pkg, _plugin_id, _is_external):
 
         if Plugin.logger is None:
             Plugin.logger = logging.getLogger(__name__)
         self.enabled = True
-        self.plugin_path = _plugin_path
+        self.plugin_path = '.'.join([_plugins_pkg, _plugin_id])
+        self.plugin_id = _plugin_id
         self.config_obj = _config_obj
-
         self.db_configdefn = DBConfigDefn(_config_obj.data)
         self.load_config_defn()
 
@@ -60,13 +60,14 @@ class Plugin:
         self.plugin_db = DBPlugins(_config_obj.data)
         self.namespace = ''
         self.instances = []
-        self.load_plugin_manifest(_plugin_defn)
+        self.repo_id = None
+        self.load_plugin_manifest(_plugin_defn, _is_external)
         if not self.namespace:
             self.enabled = False
             self.logger.debug('Plugin disabled in config.ini for {}'.format(self.namespace))
             return
         self.plugin_obj = None
-        self.config_obj.data[self.namespace.lower()]['version'] = self.plugin_settings['version']
+        self.config_obj.data[self.namespace.lower()]['version'] = self.plugin_settings['version']['current']
         if not self.config_obj.data[self.namespace.lower()].get('enabled'):
             self.enabled = False
             self.logger.debug('Plugin disabled in config.ini for {}'.format(self.namespace))
@@ -108,7 +109,7 @@ class Plugin:
             self.logger.info('No instances found, disabling plugin {}'.format(self.namespace))
             return
         for inst in self.instances:
-            self.plugin_db.save_instance(self.namespace, inst, '')
+            self.plugin_db.save_instance(self.repo_id, self.namespace, inst, '')
             # create a defn with the instance name as the section name. then process it.
             inst_defn_obj.is_instance_defn = False
             for area, area_data in inst_defn_obj.config_defn.items():
@@ -144,23 +145,38 @@ class Plugin:
                 instances.append(section.split(inst_sec, 1)[1])
         return instances
 
-    def load_plugin_manifest(self, _plugin_defn):
+    def load_plugin_manifest(self, _plugin_defn, _is_external):
         self.load_default_settings(_plugin_defn)
-        self.import_manifest()
+        self.import_manifest(_is_external)
 
     def load_default_settings(self, _plugin_defn):
         for name, attr in _plugin_defn.items():
             self.plugin_settings[name] = attr['default']
 
-    def import_manifest(self):
+    def import_manifest(self, _is_external):
         try:
-            json_settings = importlib.resources.read_text(self.plugin_path, PLUGIN_MANIFEST_FILE)
-            settings = json.loads(json_settings)
-            self.namespace = settings['name']
-            self.plugin_db.save_plugin(settings)
+            json_settings = self.plugin_db.get_plugins(_installed=None, _repo=None, _plugin_id=self.plugin_id)
+
+            local_settings = importlib.resources.read_text(self.plugin_path, PLUGIN_MANIFEST_FILE)
+            local_settings = json.loads(local_settings)
+            local_settings = local_settings['plugin']
+
+            if not json_settings:
+                json_settings = local_settings
+                json_settings['repoid'] = None
+            else:
+                json_settings = json_settings[0]
+                self.repo_id = json_settings['repoid']
+                if not json_settings['version']['current']:
+                    json_settings['version']['current'] = local_settings['version']['current']
+            json_settings['external'] = _is_external
+            json_settings['version']['installed'] = True
+            self.namespace = json_settings['name']
+            self.plugin_db.save_plugin(json_settings)
             self.logger.debug(
                 'Plugin Manifest file loaded at {}'.format(self.plugin_path))
-            self.plugin_settings = utils.merge_dict(self.plugin_settings, settings, True)
+            self.plugin_settings = utils.merge_dict(self.plugin_settings, json_settings, True)
+
         except FileNotFoundError:
             self.logger.warning(
                 'PLUGIN MANIFEST FILE NOT FOUND AT {}'.format(self.plugin_path))

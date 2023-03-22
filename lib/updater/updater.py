@@ -123,7 +123,7 @@ class Updater:
         """
         Loads the cabernet manifest from DB
         """
-        return self.plugin_db.get_plugins(_manifest)[0]
+        return self.plugin_db.get_plugins(_installed=True, _namespace=_manifest)[0]
 
     def save_manifest(self, _manifest):
         """

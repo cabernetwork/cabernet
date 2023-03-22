@@ -310,7 +310,11 @@ class DBScheduler(DB):
         ))
 
     def get_active_status(self, _taskid):
-        return self.get_dict(DB_TASK_TABLE + '_active', (_taskid,))[0]['active']
+        res = self.get_dict(DB_TASK_TABLE + '_active', (_taskid,))
+        if res:
+            return res[0]['active']
+        else:
+            return None
 
     def get_num_active(self):
         return self.get(DB_TASK_TABLE + '_num_active')[0][0]

@@ -48,15 +48,17 @@ class PluginsHTML:
             'minimum-scale=1.0, maximum-scale=1.0">',
             '<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>',
             '<link rel="stylesheet" type="text/css" href="/modules/tabs/tabs.css">',
-            '<link rel="stylesheet" type="text/css" href="/modules/table/table.css">',
+            '<link rel="stylesheet" type="text/css" href="/modules/pluginmgr/pluginmgrform.css">',
             '<script src="/modules/tabs/tabs.js"></script>',
-            '<script src="/modules/channels/channels.js"></script></head>'
+            '<script src="/modules/pluginmgr/pluginmgr.js"></script></head>',
+            '<script src="/modules/pluginmgr/pluginmgrform.js"></script>'
+            '<script src="/modules/listview/menu.js"></script>'
         ])
 
     @property
     def title(self):
         return ''.join([
-            '<body><div class="container">',
+            '<div class="container">',
             '<h2>Plugins</h2>'
         ])
 
@@ -72,7 +74,7 @@ class PluginsHTML:
                 '<li><a id="tab', name, '" class="form',
                 name, ' configTab ',
                 activeTab,
-                '" href="#" onclick=\'load_form_url("/api/pluginsform?name=',
+                '" href="#" onclick=\'load_form_url("/api/pluginsform?area=',
                 key, '")\'>',
                 '<i class="md-icon tabIcon">',
                 icon,
@@ -87,10 +89,22 @@ class PluginsHTML:
     @property
     def body(self):
         return ''.join([
+            '<body>',
             self.title,
             self.tabs,
-            '<div id="tablecontent"><script>load_form_url("/api/pluginsform?name=My_Plugins")</script></div>'
+            '<div id="pluginscontent" class="pluginShow">',
+            '<script>load_form_url("/api/pluginsform?area=My_Plugins")</script></div>',
+            self.plugin_page
         ])
+
+    @property
+    def plugin_page(self):
+        return ''.join([
+            '<div id="plugincontent" class="pluginHide"></div>'
+        ])
+
+
 
     def get_tabs(self):
         return {'My Plugins': 'extension', 'Catalog': 'add_shopping_cart'}
+

@@ -25,6 +25,7 @@ import lib.common.exceptions as exceptions
 import lib.common.utils as utils
 
 from .plugin import Plugin
+from .repo_handler import RepoHandler
 from lib.db.db_plugins import DBPlugins
 
 PLUGIN_DEFN_FILE = 'plugin_defn.json'
@@ -40,15 +41,15 @@ class PluginHandler:
         if PluginHandler.logger is None:
             PluginHandler.logger = logging.getLogger(__name__)
         self.plugin_defn = self.load_plugin_defn()
-        self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'])
-        self.collect_plugins(self.config_obj.data['paths']['external_plugins_pkg'])
+        self.repos = RepoHandler(self.config_obj)
+        self.repos.load_cabernet_repo()
+        self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'], False)
+        self.collect_plugins(self.config_obj.data['paths']['external_plugins_pkg'], True)
         if PluginHandler.cls_plugins is not None:
             del PluginHandler.cls_plugins
         PluginHandler.cls_plugins = self.plugins
 
-    def collect_plugins(self, _plugins_pkg):
-        # plugin_db = DBPlugins(self.config_obj.data)
-        # plugin_db.reinitialize_tables()
+    def collect_plugins(self, _plugins_pkg, _is_external):
         pkg = importlib.util.find_spec(_plugins_pkg)
         if not pkg:
             # module folder does not exist, do nothing
@@ -64,7 +65,7 @@ class PluginHandler:
                 importlib.resources.read_text(_plugins_pkg, folder)
             except (IsADirectoryError, PermissionError):
                 try:
-                    plugin = Plugin(self.config_obj, self.plugin_defn, '.'.join([_plugins_pkg, folder]))
+                    plugin = Plugin(self.config_obj, self.plugin_defn, _plugins_pkg, folder, _is_external)
                     self.plugins[plugin.name] = plugin
                 except (exceptions.CabernetException, AttributeError):
                     pass
@@ -72,13 +73,15 @@ class PluginHandler:
 
     def del_missing_plugins(self):
         """
-        deletes the plugins from the db that are no longer present
+        updates to uninstalled the plugins from the db that are no longer present
         """
         plugin_db = DBPlugins(self.config_obj.data)
-        plugin_dblist = plugin_db.get_plugins()
-        for p_dict in plugin_dblist:
-            if (p_dict['name'] not in self.plugins) and (p_dict['name'] != utils.CABERNET_NAMESPACE):
-                plugin_db.del_plugin(p_dict['name'])
+        plugin_dblist = plugin_db.get_plugins(_installed=True)
+        if plugin_dblist:
+            for p_dict in plugin_dblist:
+                if (p_dict['name'] not in self.plugins) and (p_dict['name'] != utils.CABERNET_ID):
+                    p_dict['version']['installed'] = False
+                    plugin_db.save_plugin(p_dict)
 
     def load_plugin_defn(self):
         try:

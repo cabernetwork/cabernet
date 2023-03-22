@@ -1,15 +1,26 @@
 {
-    "id": "provider_video_m3u",
-    "name": "M3U",
-    "version": "0.9.4",
-    "provider-name": "rocky4546",
-    "summary": "This is real internet television",
-    "description": "Watch Free TV! Using M3U and XMLTV formats.",
-    "category": ["video"],
-    "license": "MIT License, Copyright (C) 2021 ROCKY4546",
-    "source": "https://github.com/cabernetwork/cabernet",
-    "forum": "https://tvheadend.org/boards/5/topics/43052",
-    "website": "https://docs.fileformat.com/audio/m3u/",
-    "icon": "resources/icon.png",
-    "fanart": "resources/fanart.jpg"
+    "plugin": {
+        "id": "provider_video_m3u",
+        "name": "M3U",
+        "version": {
+            "current": "0.1.0"
+        },
+        "requires": [{
+            "cabernet": {
+                "name": "cabernet",
+                "version": "0.9.10.7"
+            }
+        }],
+        "provider-name": "rocky4546",
+        "summary": "This is real internet television",
+        "description": "Watch Free TV! Using M3U and XMLTV formats.",
+        "category": ["video"],
+        "license": "MIT License, Copyright (C) 2023 ROCKY4546",
+        "source": "https://github.com/cabernetwork/provider_video_m3u",
+        "forum": "https://tvheadend.org/boards/5/topics/43052",
+        "website": "https://docs.fileformat.com/audio/m3u/",
+        "icon": "resources/icon.png",
+        "fanart": "resources/fanart.jpg",
+        "dependencies": null
+    }
 }

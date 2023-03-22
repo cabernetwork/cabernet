@@ -19,7 +19,6 @@ substantial portions of the Software.
 import json
 import logging
 import threading
-import urllib.request
 
 import lib.common.utils as utils
 from lib.common.decorators import handle_url_except
@@ -42,16 +41,16 @@ class PluginPrograms:
         """
         pass
 
-    @handle_url_except(timeout=10.0)
+    @handle_url_except()
     @handle_json_except
     def get_uri_data(self, _uri, _header=None):
         if _header is None:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            x = json.load(resp)
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+        x = resp.json()
+        resp.raise_for_status()
         return x
 
     def check_logger_refresh(self):
