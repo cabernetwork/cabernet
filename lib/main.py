@@ -125,7 +125,7 @@ def main(script_dir):
 
     try:
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
-        if args.restart and config['main']['maintenance_mode']:
+        if config['main']['maintenance_mode']:
             LOGGER.info('In maintenance mode, applying patches')
             patcher.patch_upgrade(config_obj, utils.VERSION)
             time.sleep(0.01)
