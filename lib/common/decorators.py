@@ -71,7 +71,7 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
-            except (urllib.error.URLError, requests.exceptions.InvalidURL) as ex:
+            except urllib.error.URLError as ex:
                 ex_save = ex
                 if isinstance(ex.reason, ConnectionRefusedError):
                     self.logger.info("URLError:ConnectionRefusedError in function {}: {} {} {}"
@@ -91,6 +91,11 @@ def handle_url_except(f=None, timeout=None):
                 else:
                     self.logger.info("URLError in function {}, retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+            except requests.exceptions.InvalidURL as ex:
+                ex_save = ex
+                self.logger.info("InvalidURL Error in function {}(), retrying {} {} {}"
+                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+
             except (socket.timeout, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
                 ex_save = ex
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}"
@@ -98,7 +103,11 @@ def handle_url_except(f=None, timeout=None):
 
             except requests.exceptions.ConnectionError as ex:
                 ex_save = ex
-                if isinstance(ex.args[0].reason, urllib3.exceptions.NewConnectionError):
+                if hasattr(ex.args[0], 'reason'):
+                    reason = ex.args[0].reason
+                else:
+                    reason = None
+                if isinstance(reason, urllib3.exceptions.NewConnectionError):
                     self.logger.info("ConnectionError:ConnectionRefused in function {}, retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
                     count = 4

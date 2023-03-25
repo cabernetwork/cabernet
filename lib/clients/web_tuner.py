@@ -63,7 +63,7 @@ def logreset(_webserver):
     if channel not in station_list.keys():
         # check channel number
         for station in station_list.keys():
-            if station_list[station][0]['number'] == channel:
+            if station_list[station][0]['display_number'] == channel:
                 _webserver.do_tuning(station, _webserver.query_data['name'],
                                      _webserver.query_data['instance'])
                 return
@@ -180,7 +180,7 @@ class TunerHttpHandler(WebHTTPHandler):
             self.do_dict_response(self.m3u8_redirect.gen_m3u8_response(station_data))
             return
         elif self.config[section]['player-stream_type'] == 'internalproxy':
-            resp = self.internal_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'],
+            resp = self.internal_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
                                                     TunerHttpHandler)
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
@@ -188,7 +188,7 @@ class TunerHttpHandler(WebHTTPHandler):
             else:
                 self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue)
         elif self.config[section]['player-stream_type'] == 'ffmpegproxy':
-            resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'],
+            resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
                                                   TunerHttpHandler)
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
@@ -196,7 +196,7 @@ class TunerHttpHandler(WebHTTPHandler):
             else:
                 self.ffmpeg_proxy.stream(station_data, self.wfile)
         elif self.config[section]['player-stream_type'] == 'streamlinkproxy':
-            resp = self.streamlink_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'],
+            resp = self.streamlink_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
                                                       TunerHttpHandler)
             self.do_dict_response(resp)
             if resp['tuner'] < 0:

@@ -51,6 +51,25 @@ class PluginObj:
         self.enabled = True
         self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.enabled = False
+        for key, instance in self.instances.items():
+            return instance.terminate()
+        self.logger = None
+        self.plugin = None
+        self.plugins = None
+        self.http_session = None
+        self.config_obj = None
+        self.namespace = None
+        self.def_trans = None
+        self.instances = None
+        self.scheduler_db = None
+
+
     # INTERFACE METHODS
     # Plugin may have the following methods
     # used to interface to the app.

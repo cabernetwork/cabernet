@@ -29,12 +29,13 @@ from lib.plugins.plugin_manager.plugin_manager import PluginManager
 
 @getrequest.route('/api/pluginsform')
 def get_plugins_form_html(_webserver, _namespace=None, _sort_col=None, _sort_dir=None, filter_dict=None):
-    plugins_form = PluginsFormHTML(_webserver.config, _webserver.plugins.plugins)
+    plugins_form = PluginsFormHTML(_webserver.config)
 
     _area = _webserver.query_data.get('area')
     _plugin = _webserver.query_data.get('plugin')
+    _repo = _webserver.query_data.get('repo')
     
-    if _area is None and _plugin is None:
+    if _area is None and _plugin is None and _repo is None:
         _webserver.do_mime_response(
             404, 'text/html', web_templates['htmlError']
             .format('404 - Badly formed request'))
@@ -45,16 +46,23 @@ def get_plugins_form_html(_webserver, _namespace=None, _sort_col=None, _sort_dir
             except exceptions.CabernetException as ex:
                 _webserver.do_mime_response(
                     404, 'text/html', web_templates['htmlError']
-                    .format('404 - Badly formed request'))
-    elif _plugin:
+                    .format('404 - Badly formed area request'))
+    elif _plugin and _repo:
         try:
-            form = plugins_form.get_plugin(_plugin)
+            form = plugins_form.get_plugin(_repo, _plugin)
             _webserver.do_mime_response(200, 'text/html', form)
         except exceptions.CabernetException as ex:
             _webserver.do_mime_response(
                 404, 'text/html', web_templates['htmlError']
-                .format('404 - Badly formed request'))
+                .format('404 - Badly formed plugin request'))
+    else:
+        # case where plugin and repo are not provided together
+        _webserver.do_mime_response(
+            404, 'text/html', web_templates['htmlError']
+            .format('404 - Badly formed plugin/repo request'))
         
+
+
 
 @postrequest.route('/api/pluginsform')
 def post_plugins_html(_webserver):
@@ -66,9 +74,13 @@ def post_plugins_html(_webserver):
         pluginid = pluginid[0]
         repoid = repoid[0]
         if action == "deletePlugin":
-            pm = PluginManager(_webserver.config)
+            pm = PluginManager(_webserver.config, _webserver.plugins)
             results = pm.delete_plugin(repoid, pluginid, _webserver.sched_queue)
-            _webserver.do_mime_response(200, 'text/html', "deleting plugin "+str(action)+" "+str(results))
+            _webserver.do_mime_response(200, 'text/html', 'STATUS: Deleting plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
+        elif action == "installPlugin":
+            pm = PluginManager(_webserver.config, _webserver.plugins)
+            results = pm.install_plugin(repoid, pluginid, _webserver.sched_queue)
+            _webserver.do_mime_response(200, 'text/html', 'STATUS: Installing plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
         else:
             _webserver.do_mime_response(200, 'text/html', "doing something else"+str(action[0]))
         
@@ -81,10 +93,9 @@ def post_plugins_html(_webserver):
 
 class PluginsFormHTML:
 
-    def __init__(self, _config, _installed_plugins):
+    def __init__(self, _config):
         self.logger = logging.getLogger(__name__)
         self.config = _config
-        self.installed_plugins = _installed_plugins
         self.plugin_db = DBPlugins(self.config)
         self.active_tab_name = None
         self.num_of_plugins = 0
@@ -95,14 +106,24 @@ class PluginsFormHTML:
         self.area = _area
         return ''.join([self.header, self.body])
 
-    def get_plugin(self, _plugin):
-        return ''.join([self.get_plugin_header(_plugin), self.get_menu_section(_plugin), self.get_plugin_section(_plugin)])
-    
+    def get_plugin(self, _repo_id, _plugin_id):
+        plugin_defn = self.plugin_db.get_plugins(
+                _installed=None,
+                _repo_id=_repo_id,
+                _plugin_id=_plugin_id)
+        if not plugin_defn:
+            self.logger.warning(
+                'HTTP request: Unknown plugin: {}'
+                .format(_plugin_id))
+            raise exceptions.CabernetException(
+                'Unknown Plugin: {}'
+                .format(_plugin_id))
+        plugin_defn = plugin_defn[0]
+        return ''.join([self.get_plugin_header(plugin_defn), self.get_menu_section(plugin_defn), self.get_plugin_section(plugin_defn)])
 
-
-    def get_menu_section(self, _plugin):
-        pluginid = self.installed_plugins[_plugin].plugin_id
-        repoid = self.installed_plugins[_plugin].repo_id
+    def get_menu_section(self, _plugin_defn):
+        pluginid = _plugin_defn['id']
+        repoid = _plugin_defn['repoid']
         return ''.join([
             '<div id="menuActionStatus"></div>',
             '<form id="menuForm" action="/api/pluginsform" method="post">'
@@ -115,16 +136,17 @@ class PluginsFormHTML:
             '<div class="menuPanel">',
             '<ul class="menuList">',
             '<li class="menuItem">',
-            '<button type="submit" name="action" value="deletePlugin" class="menuButton">',
+            '<button type="submit" name="action" value="deletePlugin" class="menuButton" ',
+            'title="Deletes the plugin folder and scheduled events">',
             '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
-            'Delete Plugin and Data',
+            'Delete Plugin only',
             '</button>',
             '</li>',
 
             '<li class="menuItem">',
             '<button type="submit" formtarget="#menuActionStatus" name="action" value="deletePlugin2" class="menuButton">',
             '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
-            'Delete Plugin only',
+            'Delete Plugin and Data',
             '</button>',
             '</li>',
 
@@ -132,7 +154,8 @@ class PluginsFormHTML:
             '<ul class="menuList">',
 
             '<li class="menuItem">',
-            '<button type="submit" name="action" value="downloadPlugin" class="menuButton">',
+            '<button type="submit" name="action" value="installPlugin" class="menuButton" ',
+            'title="Download and install latest version of plugin, updates handler and schedule events">',
             '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">download</i>',
             'Install Plugin',
             '</button>',
@@ -164,33 +187,20 @@ class PluginsFormHTML:
             '</div></form>'])
 
     
-    def get_plugin_header(self, _plugin):
-        plugin_defn = self.plugin_db.get_plugins(
-            _installed=True, 
-            _repo=self.installed_plugins[_plugin].repo_id,  
-            _plugin_id=self.installed_plugins[_plugin].plugin_id)
-        if not plugin_defn:
-            self.logger.warning(
-                'HTTP request: Unknown installed plugin: {}'
-                .format(_plugin))
-            raise exceptions.CabernetException(
-                'Unknown Installed Plugin: {}'
-                .format(_plugin))
-
-        instances = self.plugin_db.get_instances(_namespace=_plugin)
+    def get_plugin_header(self, _plugin_defn):
+        instances = self.plugin_db.get_instances(_namespace=_plugin_defn['name'])
         if instances:
             # array of instance names
-            instances = instances[_plugin]
+            instances = instances[_plugin_defn['name']]
         else:
             instances = None
-        plugin_defn = plugin_defn[0]
         
-        if not plugin_defn['version'].get('latest'):
-            plugin_defn['version']['latest'] = None
+        if not _plugin_defn['version'].get('latest'):
+            _plugin_defn['version']['latest'] = None
 
-        latest_version = plugin_defn['version']['latest']
+        latest_version = _plugin_defn['version']['latest']
         upgrade_available = ''
-        if latest_version != plugin_defn['version']['current']:
+        if latest_version != _plugin_defn['version']['current']:
             upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
                 .format(latest_version)
 
@@ -199,51 +209,40 @@ class PluginsFormHTML:
             '<a href="#" onclick=\'display_plugins()\'>',
             '<div ><i class="md-icon">arrow_back</i></div></a></div>',
             '<div class="pluginSectionName">',
-            str(plugin_defn['name']), '</div></div>',
+            str(_plugin_defn['name']), '</div></div>',
 
-            '<div>', str(plugin_defn['summary']), '</div>',
+            '<div>', str(_plugin_defn['summary']), '</div>',
 
             '<div style="position: relative;">',
             '<img class="image-size" src="/api/manifest?plugin=',
-                plugin_defn['name'], '&key=icon" alt="',
-                plugin_defn['name'],'">',
+                _plugin_defn['name'], '&key=icon" alt="',
+                _plugin_defn['name'],'">',
             '</div>',
 
             '<div>',
-            str(plugin_defn['description']),
+            str(_plugin_defn['description']),
             '</div>',
             '<div style="background: var(--docked-drawer-background);">'
         ])
         return html
     
-    def get_plugin_section(self, _plugin):
-        # works for internal right now...
-        plugin_defn = self.plugin_db.get_plugins(
-            _installed=True, 
-            _repo=self.installed_plugins[_plugin].repo_id,  
-            _plugin_id=self.installed_plugins[_plugin].plugin_id)
-        if not plugin_defn:
-            self.logger.warning(
-                'HTTP request: Unknown installed plugin: {}'
-                .format(_plugin))
-            raise exceptions.CabernetException(
-                'Unknown Installed Plugin: {}'
-                .format(_plugin))
+    def get_plugin_section(self, _plugin_defn):
+        pluginid = _plugin_defn['id']
+        repoid = _plugin_defn['repoid']
 
-        instances = self.plugin_db.get_instances(_namespace=_plugin)
+        instances = self.plugin_db.get_instances(_namespace=_plugin_defn['name'])
         if instances:
             # array of instance names
-            instances = instances[_plugin]
+            instances = instances[_plugin_defn['name']]
         else:
             instances = None
-        plugin_defn = plugin_defn[0]
         
-        if not plugin_defn['version'].get('latest'):
-            plugin_defn['version']['latest'] = None
+        if not _plugin_defn['version'].get('latest'):
+            _plugin_defn['version']['latest'] = None
 
-        latest_version = plugin_defn['version']['latest']
+        latest_version = _plugin_defn['version']['latest']
         upgrade_available = ''
-        if latest_version != plugin_defn['version']['current']:
+        if latest_version != _plugin_defn['version']['current']:
             upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
                 .format(latest_version)
 
@@ -256,42 +255,42 @@ class PluginsFormHTML:
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Dependencies: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['dependencies']), 
+            str(_plugin_defn['dependencies']), 
             '</div>',
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Version Installed: </div>',
             '<div style="float:left; margin-top:3px;" class="pluginValue">',
-            str(plugin_defn['version']['current']), '</div>',
+            str(_plugin_defn['version']['current']), '</div>',
             upgrade_available,
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Latest Version: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['version']['latest']),
+            str(_plugin_defn['version']['latest']),
             '</div>',
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Source: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['source']),
+            str(_plugin_defn['source']),
             '</div>',
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">License: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['license']),
+            str(_plugin_defn['license']),
             '</div>',
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Author: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['provider-name']),
+            str(_plugin_defn['provider-name']),
             '</div>',
             '</div>',
 
@@ -312,14 +311,14 @@ class PluginsFormHTML:
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Category: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['category']),
+            str(_plugin_defn['category']),
             '</div>',
             '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Related Website: </div>',
             '<div class="pluginValue">',
-            str(plugin_defn['website']),
+            str(_plugin_defn['website']),
             '</div>',
             '</div>',
 
@@ -351,30 +350,18 @@ class PluginsFormHTML:
         ])
         return html
 
-    @property
-    def header(self):
-        return ''.join([
-            '<html><head>',
-            '</head>'
-        ])
+    def form_plugins(self, _is_installed):
+        plugin_defns = self.plugin_db.get_plugins(
+            _is_installed, None, None)
 
-    @property
-    def form_installed_plugins(self):
+        self.logger.warning(plugin_defns)
+
         plugins_list = ''
-        for plugin_name in sorted(self.installed_plugins.keys()):
-            plugin_defn = self.plugin_db.get_plugins(
-                _installed=True, 
-                _repo=self.installed_plugins[plugin_name].repo_id,
-                _plugin_id=self.installed_plugins[plugin_name].plugin_id)
-            if not plugin_defn:
-                self.logger.warning(
-                    'HTTP request: Unknown installed plugin: {}'
-                    .format(plugin_name))
-                raise exceptions.CabernetException(
-                    'Unknown Installed Plugin: {}'
-                    .format(plugin_name))
+        for plugin_defn in sorted(plugin_defns, key=lambda p: p['id']):
+            repo_id = plugin_defn['repoid']
+            plugin_id = plugin_defn['id']
+            plugin_name = plugin_defn['name']
 
-            plugin_defn = plugin_defn[0]
             img_size = self.lookup_config_size()
             if not plugin_defn['external']:
                 location = ' (Internal)'
@@ -383,14 +370,23 @@ class PluginsFormHTML:
 
             latest_version = plugin_defn['version']['latest']
             upgrade_available = ''
-            if latest_version != plugin_defn['version']['current']:
-                upgrade_available = '<div class="bottom-left">Upgrade to {}</div>' \
-                    .format(latest_version)
+            if _is_installed:
+                if latest_version != plugin_defn['version']['current']:
+                    upgrade_available = '<div class="bottom-left">Upgrade to {}</div>' \
+                        .format(latest_version)
+                current_version = plugin_defn['version']['current']
+            else:
+                current_version = ''
+            
+
+            self.logger.warning('{} {} {} {} {} {} {}'.format(plugin_id, repo_id, plugin_name, img_size, upgrade_available, location, plugin_defn['version']['current']))
 
             plugins_list += ''.join([
                 '<button class="plugin_item" type="button"',
-                ' onclick=\'load_plugin_url("/api/pluginsform?plugin=',
-                plugin_name, '")\'>',
+                ' onclick=\'load_plugin_url("/api/pluginsform?',
+                'plugin=', plugin_id, 
+                '&repo=', repo_id,
+                '")\'>',
                 '<div>',
                 '<div style="position: relative;">',
                 '<img src="/api/manifest?plugin=',
@@ -400,26 +396,33 @@ class PluginsFormHTML:
                 
                 '</div><div>', plugin_name, location,
                 '</div><div class="pluginText-secondary">',
-                plugin_defn['version']['current'], '</div></div>',
+                str(current_version), '</div></div>',
                 '</button>'
                 ])
         return plugins_list
 
-
+    @property
+    def header(self):
+        return ''.join([
+            '<html><head>',
+            '</head>'
+        ])
 
     @property
     def form(self):
         if self.area == 'My_Plugins':
             forms_html = ''.join([
                 '<div class="plugin_list">',
-                self.form_installed_plugins, '</div>'])
+                self.form_plugins(True), '</div>'])
         elif self.area == 'Catalog':
-            forms_html = ''.join(['list of catalog plugins'])
+            forms_html = ''.join([
+                '<div class="plugin_list">',
+                self.form_plugins(_is_installed=False), 
+                '</div>'])
         else:
             self.logger.warning('HTTP request: unknown area: {}'.format(self.area))
             raise exceptions.CabernetException('Unknown Tab: {}'.format(self.area))
         return forms_html
-
 
     @property
     def body(self):

@@ -137,9 +137,9 @@ class WebAdminHttpHandler(WebHTTPHandler):
     def do_POST(self):
         try:
             self.content_path = self.path
-            self.logger.debug('Receiving POST form {} {}'.format(self.content_path, self.query_data))
             # get POST data
             self.content_path, self.query_data = self.get_query_data()
+            self.logger.debug('Receiving POST form {} {}'.format(self.content_path, self.query_data))
             self.plugins.config_obj.refresh_config_data()
             self.config = self.plugins.config_obj.data
             if postrequest.call_url(self, self.content_path):

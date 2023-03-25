@@ -22,6 +22,7 @@ import logging
 import mimetypes
 import pathlib
 import platform
+import re
 import socket
 import time
 import urllib
@@ -109,6 +110,13 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 if _package:
                     x = importlib.resources.read_binary(_package, _reply_file)
                 else:
+                    # add security to prevent hacker paths
+                    search_file = re.compile(r'^[A-Z]?[:]?([\\\/]([A-Za-z0-9_\-]+[\\\/])+[A-Za-z0-9\._\-]+$)')
+                    valid_check = re.match(search_file, str(_reply_file))
+                    if not valid_check:
+                        self.logger.info('Invalid filepath {}'.format(_reply_file))
+                        self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Invalid File Path'))
+                        return
                     x_path = pathlib.Path(str(_reply_file))
                     with open(x_path, 'br') as reader:
                         x = reader.read()
@@ -130,7 +138,9 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 self.logger.info('ConnectionAbortedError:{}'.format(e))
             except ModuleNotFoundError as e:
                 self.logger.info('ModuleNotFoundError:{}'.format(e))
-                self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Area Not Found'))
+                self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Module Not Found'))
+
+
 
     def do_response(self, _code, _mime, _reply_str=None):
         self.send_response(_code)

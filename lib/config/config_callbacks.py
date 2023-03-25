@@ -123,6 +123,12 @@ def set_logs_path(_config_obj, _section, _key):
                  _config_obj.data['paths']['data_dir'], 'logs')
 
 
+def set_thumbnails_path(_config_obj, _section, _key):
+    if _config_obj.data[_section][_key] is None:
+        set_path(_config_obj, _section, _key,
+                 _config_obj.data['paths']['data_dir'], 'thumbnails')
+
+
 def set_temp_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,

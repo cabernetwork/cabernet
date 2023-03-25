@@ -41,6 +41,18 @@ class PluginPrograms:
         """
         pass
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.logger = None
+        self.instance_obj = None
+        self.config_obj = None
+        self.instance_key = None
+        self.plugin_obj = None
+        self.config_section = None
+
     @handle_url_except()
     @handle_json_except
     def get_uri_data(self, _uri, _header=None):

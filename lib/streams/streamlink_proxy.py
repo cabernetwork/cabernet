@@ -53,7 +53,7 @@ class StreamlinkProxy(Stream):
         self.video = Video(self.config)
 
     def update_tuner_status(self, _status):
-        ch_num = self.channel_dict['number']
+        ch_num = self.channel_dict['display_number']
         namespace = self.channel_dict['namespace']
         scan_list = WebHTTPHandler.rmg_station_scans[namespace]
         for i, tuner in enumerate(scan_list):

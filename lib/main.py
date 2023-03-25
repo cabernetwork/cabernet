@@ -29,13 +29,19 @@ from multiprocessing import Queue, Process
 try:
     from pip._internal import main as pip
     try:
-        import cryptography
-    except ImportError:
-        pip(['install', 'cryptography'])
+        try:
+            import cryptography
+        except ImportError:
+            pip(['install', 'cryptography'])
+        try:
+            import requests
+        except ImportError:
+            pip(['install', 'requests'])
     except ModuleNotFoundError:
         print('Unable to install required cryptography module')
 except (ImportError, ModuleNotFoundError):
-    print('Unable to load pip module to install cryptography module')
+    print('Unable to load pip module to install required modules')
+
 
 
 import lib.clients.hdhr.hdhr_server as hdhr_server
@@ -131,7 +137,6 @@ def main(script_dir):
             time.sleep(0.01)
         config_obj.write('main', 'maintenance_mode', False)
 
-    
         utils.cleanup_web_temp(config)
         plugins = init_plugins(config_obj)
         config_obj.defn_json = None

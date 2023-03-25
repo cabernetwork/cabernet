@@ -41,6 +41,29 @@ class PluginInstanceObj:
         else:
             self.enabled = True
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.enabled = False
+        if self.channels:
+            self.channels.terminate()
+        if self.epg:
+            self.epg.terminate()
+        if self.programs:
+            self.programs.terminate()
+        self.logger = None
+        self.config_obj = None
+        self.plugin_obj = None
+        self.instance_key = None
+        self.scheduler_db = None
+        self.enabled = None
+        self.channels = None
+        self.programs = None
+        self.epg = None
+
+
     ##############################
     # ## EXTERNAL STREAM METHODS
     ##############################

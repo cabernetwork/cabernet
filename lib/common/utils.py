@@ -27,6 +27,7 @@ import ntpath
 import os
 import pathlib
 import platform
+import re
 import shutil
 import socket
 import struct
@@ -36,10 +37,10 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.11.00-RC1'
+VERSION = '0.9.11.00-RC2'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 
@@ -48,6 +49,20 @@ def get_version_str():
 
 logger = None
 LOG_LVL_NOTICE = 25
+SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*')
+
+def get_version_index(_ver):
+    """
+    Based on the version string will calculate a number representing the version,
+    which can be used to compare versions. Ignores any text after the fourth number
+    format a.b.c.d or a.b.c
+    """
+    m = re.findall(SEARCH_VERSION, _ver)
+    d1, d2, d3, d4 = m[0]
+    print(d1, d2, d3, d4)
+    v_int = ((((int(d1)*100)+int(d2 or 0))*100)+int(d3 or 0))*100+int(d4 or 0)
+    return v_int
+
 
 def logging_setup(_config):
     global logger

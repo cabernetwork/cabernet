@@ -95,9 +95,18 @@ sqlcmds = {
         SELECT * FROM plugins WHERE repo LIKE ? AND id LIKE ?
         AND installed=?
         """,
+    'plugins_name_get':
+        """
+        SELECT * FROM plugins WHERE repo LIKE ? AND namespace LIKE ?
+        AND installed=?
+        """,
     'plugins_all_get':
         """
         SELECT * FROM plugins WHERE repo LIKE ? AND id LIKE ?
+        """,
+    'plugins_all_name_get':
+        """
+        SELECT * FROM plugins WHERE repo LIKE ? AND namespace LIKE ?
         """,
     'plugins_del':
         """
@@ -143,9 +152,9 @@ class DBPlugins(DB):
             _plugin_dict['version']['installed'],
             json.dumps(_plugin_dict)))
 
-    def save_instance(self, _repo, _namespace, _instance, _descr):
+    def save_instance(self, _repo_id, _namespace, _instance, _descr):
         self.add(DB_INSTANCE_TABLE, (
-            _repo,
+            _repo_id,
             _namespace,
             _instance,
             _descr))
@@ -170,19 +179,20 @@ class DBPlugins(DB):
         plugins_installed = self.get_plugins(True, _id)
         self.logger.warning('################## TBD, aborting delete {}'.format(len(plugins_installed)))
         
+
         #self.delete(DB_INSTANCE_TABLE, (_id, '%', '%',))
         #self.delete(DB_PLUGINS_TABLE, (_id, '%',))
         #self.delete(DB_REPOS_TABLE, (_id,))
 
-    def get_plugins(self, _installed, _repo=None, _plugin_id=None):
-        if not _repo:
-            _repo = '%'
+    def get_plugins(self, _installed, _repo_id=None, _plugin_id=None):
+        if not _repo_id:
+            _repo_id = '%'
         if not _plugin_id:
             _plugin_id = '%'
         if _installed is None:
-            rows = self.get_dict(DB_PLUGINS_TABLE+'_all', (_repo, _plugin_id,))
+            rows = self.get_dict(DB_PLUGINS_TABLE+'_all', (_repo_id, _plugin_id,))
         else:
-            rows = self.get_dict(DB_PLUGINS_TABLE, (_repo, _plugin_id, _installed,))
+            rows = self.get_dict(DB_PLUGINS_TABLE, (_repo_id, _plugin_id, _installed,))
         plugin_list = []
         for row in rows:
             plugin_list.append(json.loads(row['json']))
@@ -190,13 +200,29 @@ class DBPlugins(DB):
             plugin_list = None
         return plugin_list
 
-    def del_plugin(self, _repo, _plugin_id):
+    def get_plugins_by_name(self, _installed, _repo_id=None, _plugin_name=None):
+        if not _repo_id:
+            _repo_id = '%'
+        if not _plugin_name:
+            _plugin_name = '%'
+        if _installed is None:
+            rows = self.get_dict(DB_PLUGINS_TABLE+'_all_name', (_repo_id, _plugin_name,))
+        else:
+            rows = self.get_dict(DB_PLUGINS_TABLE+'_name', (_repo_id, _plugin_name, _installed,))
+        plugin_list = []
+        for row in rows:
+            plugin_list.append(json.loads(row['json']))
+        if len(plugin_list) == 0:
+            plugin_list = None
+        return plugin_list
+
+    def del_plugin(self, _repo_id, _plugin_id):
         """
         Deletes the instance rows first due to constaints, then
         deletes the plugin
         """
-        self.delete(DB_INSTANCE_TABLE, (_repo, _plugin_id, '%',))
-        self.delete(DB_PLUGINS_TABLE, (_repo, _plugin_id,))
+        self.delete(DB_INSTANCE_TABLE, (_repo_id, _plugin_id, '%',))
+        self.delete(DB_PLUGINS_TABLE, (_repo_id, _plugin_id,))
 
     def del_instance(self, _repo, _namespace, _instance):
         return self.delete(DB_INSTANCE_TABLE, (_repo, _namespace, _instance,))

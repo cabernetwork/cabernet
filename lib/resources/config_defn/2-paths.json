@@ -50,6 +50,15 @@
                         "onInit": "lib.config.config_callbacks.set_logs_path",
                         "help": "Location of log files when set to be used"
                     },
+                    "thumbnails_dir":{
+                        "label": "Thumbnails Cache Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_thumbnails_path",
+                        "help": "Location of where cached thumbnails are stored"
+                    },
                     "tmp_dir":{
                         "label": "TEMP Path",
                         "type": "path",

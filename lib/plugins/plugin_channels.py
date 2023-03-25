@@ -48,6 +48,20 @@ class PluginChannels:
         else:
             self.ch_num_enum = 0
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.logger = None
+        self.instance_obj = None
+        self.config_obj = None
+        self.plugin_obj = None
+        self.instance_key = None
+        self.db = None
+        self.config_section = None
+        self.ch_num_enum = None
+
     def set_channel_num(self, _number):
         """
         if _number is None then will set the channel number based

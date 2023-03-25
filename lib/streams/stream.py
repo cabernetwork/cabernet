@@ -57,7 +57,7 @@ class Stream:
 
     def set_service_name(self, _channel_dict):
         updated_chnum = utils.wrap_chnum(
-            str(_channel_dict['number']), _channel_dict['namespace'],
+            str(_channel_dict['display_number']), _channel_dict['namespace'],
             _channel_dict['instance'], self.config)
 
         if self.config['epg']['epg_channel_number']:

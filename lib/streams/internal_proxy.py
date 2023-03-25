@@ -271,7 +271,7 @@ class InternalProxy(Stream):
             return x_tuple
 
     def update_tuner_status(self, _status):
-        ch_num = self.channel_dict['number']
+        ch_num = self.channel_dict['display_number']
         namespace = self.channel_dict['namespace']
         scan_list = WebHTTPHandler.rmg_station_scans[namespace]
         for i, tuner in enumerate(scan_list):
@@ -290,7 +290,7 @@ class InternalProxy(Stream):
         # counter = -1
         # self.logger.debug('ts counter={}'.format(counter))
         if _uri == self.last_ts_filename:
-            self.logger.warning(
+            self.logger.notice(
                 'TC Counter Same section being transmitted, ignoring uri: {} m3u8pid:{} proxypid:{}'
                 .format(_uri, self.t_m3u8.pid, os.getpid()))
             return False

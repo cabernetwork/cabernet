@@ -64,16 +64,42 @@ class Plugin:
         self.load_plugin_manifest(_plugin_defn, _is_external)
         if not self.namespace:
             self.enabled = False
-            self.logger.debug('Plugin disabled in config.ini for {}'.format(self.namespace))
+            self.logger.debug('1 Plugin disabled in config.ini for {}'.format(self.namespace))
             return
         self.plugin_obj = None
         self.config_obj.data[self.namespace.lower()]['version'] = self.plugin_settings['version']['current']
         if not self.config_obj.data[self.namespace.lower()].get('enabled'):
             self.enabled = False
-            self.logger.debug('Plugin disabled in config.ini for {}'.format(self.namespace))
+            self.logger.debug('2 Plugin disabled in config.ini for {}'.format(self.namespace))
             return
         self.load_instances()
         self.logger.notice('Plugin created for {}'.format(self.namespace))
+
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.enabled = False
+        self.config_obj.write(
+            self.namespace.lower(), 'enabled', False)
+
+        if self.plugin_obj:
+            self.plugin_obj.terminate()
+        self.plugin_path = None
+        self.plugin_id = None
+        self.config_obj = None
+        self.db_configdefn = None
+        self.init_func = None
+        self.plugin_settings = None
+        self.plugin_db = None
+        self.namespace = None
+        self.instances = None
+        self.repo_id = None
+        self.plugin_obj = None
+
+
+
 
 
     def load_config_defn(self):
@@ -155,7 +181,7 @@ class Plugin:
 
     def import_manifest(self, _is_external):
         try:
-            json_settings = self.plugin_db.get_plugins(_installed=None, _repo=None, _plugin_id=self.plugin_id)
+            json_settings = self.plugin_db.get_plugins(_installed=None, _repo_id=None, _plugin_id=self.plugin_id)
 
             local_settings = importlib.resources.read_text(self.plugin_path, PLUGIN_MANIFEST_FILE)
             local_settings = json.loads(local_settings)

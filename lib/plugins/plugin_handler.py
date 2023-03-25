@@ -49,6 +49,13 @@ class PluginHandler:
             del PluginHandler.cls_plugins
         PluginHandler.cls_plugins = self.plugins
 
+    def terminate(self, _plugin_name):
+        """
+        calls terminate to the plugin requested
+        """
+        self.plugins[_plugin_name].terminate()
+        del self.plugins[_plugin_name]
+
     def collect_plugins(self, _plugins_pkg, _is_external):
         pkg = importlib.util.find_spec(_plugins_pkg)
         if not pkg:
@@ -69,6 +76,8 @@ class PluginHandler:
                     self.plugins[plugin.name] = plugin
                 except (exceptions.CabernetException, AttributeError):
                     pass
+            except Exception:
+                pass
         self.del_missing_plugins()
 
     def del_missing_plugins(self):

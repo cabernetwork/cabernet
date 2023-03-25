@@ -44,6 +44,20 @@ class PluginEPG:
         else:
             self.episode_adj = int(self.episode_adj)
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.logger = None
+        self.instance_obj = None
+        self.config_obj = None
+        self.instance_key = None
+        self.plugin_obj = None
+        self.db = None
+        self.config_section = None
+        self.episode_adj = None
+
     @handle_url_except(timeout=10.0)
     @handle_json_except
     def get_uri_data(self, _uri, _header=None):

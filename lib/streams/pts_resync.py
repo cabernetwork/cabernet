@@ -31,6 +31,8 @@ class PTSResync:
         self.logger = logging.getLogger(__name__)
         self.config = _config
         self.config_section = _config_section
+        self.empty_packet_count = 0
+        self.is_restart_requested = False
         self.id = _id
         if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
             self.ffmpeg_proc = self.open_ffmpeg_proc()
@@ -39,29 +41,59 @@ class PTSResync:
         self.stream_queue = StreamQueue(188, self.ffmpeg_proc, _id)
         if self.config[self.config_section]['player-enable_pts_resync']:
             if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
-                self.logger.info('PTS Resync running ffmpeg')
+                self.logger.debug('PTS Resync running ffmpeg')
 
     def video_to_stdin(self, _video):
-        i = 2
+        i = 3
+        is_looping = False
         while i > 0:
             i -= 1
             try:
-                self.ffmpeg_proc.stdin.write(_video.data)
+                if _video.data:
+                    self.ffmpeg_proc.stdin.write(_video.data)
                 break
-            except (BrokenPipeError, TypeError):
+            except (BrokenPipeError, TypeError) as ex:
                 # This occurs when the process does not start correctly
-                self.stream_queue.terminate()
+                self.logger.warning('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
+                if not self.is_restart_requested:
+                    errcode = self.restart_ffmpeg()
+                    is_looping = True
+                else:
+                    time.sleep(0.7)
+        if is_looping:
+            self.is_restart_requested = False
+
+
+    def restart_ffmpeg(self):
+        self.logger.info('Restarting PTSResync ffmpeg due to no ffmpeg processing {}'.format(self.ffmpeg_proc.pid))
+        errcode = 0
+        self.is_restart_requested = True
+        self.empty_packet_count = 0
+        self.stream_queue.terminate()
+        while True:
+            try:
                 self.ffmpeg_proc.terminate()
-                try:
-                    self.ffmpeg_proc.communicate()
-                except ValueError:
-                    pass
-                while self.ffmpeg_proc.poll() is None:
-                    time.sleep(0.1)
-                self.ffmpeg_proc = self.open_ffmpeg_proc()
+                #self.ffmpeg_proc.wait(timeout=1.5)
+                break
+            except ValueError:
+                pass
+            except subprocess.TimeoutExpired:
                 time.sleep(0.01)
-                self.logger.info('Restarting PTSResync ffmpeg due to corrupted process start {}'.format(os.getpid()))
-                self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
+        try:
+            sout, serr = self.ffmpeg_proc.communicate()
+            errcode = self.ffmpeg_proc.returncode
+            # an errcode of 1 means ffmpeg could not run
+            if errcode == 1:
+                self.logger.debug('FFMPEG ERRCODE: {}, unable for pts_resync to process segment in ffmpeg'.format(self.ffmpeg_proc.returncode))
+        except ValueError:
+            pass
+        while self.ffmpeg_proc.poll() is None:
+            time.sleep(0.1)
+        self.ffmpeg_proc = self.open_ffmpeg_proc()
+        self.stream_queue = StreamQueue(188, self.ffmpeg_proc, self.id)
+        time.sleep(0.5)
+        return errcode
+
 
     def resequence_pts(self, _video):
         if not self.config[self.config_section]['player-enable_pts_resync']:
@@ -69,9 +101,22 @@ class PTSResync:
         if _video.data is None:
             return
         if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
+            while self.is_restart_requested:
+                time.sleep(0.5)
             t_in = Thread(target=self.video_to_stdin, args=(_video,))
             t_in.start()
+            time.sleep(0.1)
             new_video = self.stream_queue.read()
+            if not new_video:
+                self.empty_packet_count += 1
+                if self.empty_packet_count > 2:
+                    if not self.is_restart_requested:
+                        self.restart_ffmpeg()
+                        self.is_restart_requested = False
+            else:
+                self.empty_packet_count = 0
+            
+
             _video.data = new_video
         elif self.config[self.config_section]['player-pts_resync_type'] == 'internal':
             self.logger.warning('player-pts_resync_type internal NOT IMPLEMENTED')
@@ -86,7 +131,10 @@ class PTSResync:
             self.ffmpeg_proc.stdout.flush()
             self.ffmpeg_proc.terminate()
             try:
-                self.ffmpeg_proc.communicate()
+                sout, serr = self.ffmpeg_proc.communicate()
+                errcode = self.ffmpeg_proc.returncode
+                if errcode == 1:
+                    self.logger.DEBUG('FFMPEG errcode on exit: {}, unable for pts_resync to process segment in ffmpeg'.format(self.ffmpeg_proc.returncode))
             except ValueError:
                 pass
 

@@ -131,6 +131,7 @@ class CabernetUpgrade:
         Get the latest stable release with the format z.y.x.w without additional text...
         
         """
+        pass
 
 
 
@@ -210,13 +211,15 @@ class CabernetUpgrade:
         """
         Check the base directory files to see if all are expected.
         """
-        files_present = ['build', 'lib', 'misc', 'plugins', 'plugins_ext',
+        files_present = ['build', 'lib', 'misc',
                          '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
                          'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
                          'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
                          'TVHEADEND.md', 'docker-compose.yml', 'requirements.txt', 'tvh_main.py',
                          'data', 'config.ini', 'is_container', '.git', 'cabernet.url', 'ffmpeg',
                          'README.txt', 'uninst.exe']
+
+        files_present.extend([self.config['paths']['internal_plugins_pkg'],  self.config['paths']['external_plugins_pkg']])
 
         filelist = [os.path.basename(x) for x in
                     glob.glob(os.path.join(self.config['paths']['main_dir'], '*'))]

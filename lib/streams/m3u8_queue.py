@@ -233,9 +233,7 @@ class M3U8Queue(Thread):
 
             if self.first_segment:
                 self.first_segment = False
-
             self.pts_resync.resequence_pts(self.video)
-
             if self.video.data is None:
                 OUT_QUEUE.put({'uri': uri_dt[0],
                                'data': data,

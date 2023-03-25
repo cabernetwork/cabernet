@@ -1,0 +1,194 @@
+Stream 643 -  FOX Deportes USA
+Stream 644 -  TCM USA
+Stream 645 -  L'Équipe France
+Stream 646 -  MAV TV
+Stream 647 -  CMT USA
+Stream 648 - Boomerang
+Stream 649 - Nicktoons
+Stream 650 - TeenNick
+Stream 651 - Destination America
+Stream 652 - Disney JR
+Stream 653 - POP TV USA 
+Stream 654 - MY9TV USA
+Stream 655 - WETV USA
+Stream 656 - IFC TV USA
+Stream 657 - Discovery Family USA
+Stream 658 - Sundance TV
+Stream 659 - VICE TV
+Stream 660 - TV ONE USA
+Stream 661 - MotorTrend
+Stream 662 - METV USA
+Stream 663 - NHL Network
+Stream 664 - ACC Network
+Stream 665 - FYI
+Stream 741 - Ten Sports PK
+Stream 742 - AXS TV USA
+Stream 743 - Galavisión USA
+Stream 744 - Fashion TV
+Stream 206 - AHC USA
+Stream 318 - TBN USA
+Stream 602 - Nat Geo Wild
+Stream 603 - Smithsonian Channel
+Stream 210 - PBS USA
+Stream 211 - Antenna TV USA
+Stream 208 - TeleTOON CA
+Stream 292 - NewsNation USA
+Stream 286 - YTV CA
+Stream 287 - Pac-12 Network
+Stream 212 - Treehouse TV CA
+Stream 600 - Abu Dhabi Sports 1 UAE
+Stream 601 - Abu Dhabi Sports 2 UAE
+Stream 602 - CTV Canada
+Stream 603 - Smithsonian Channel USA
+Stream 604 - Dubai Sports UAE
+Stream 605 - Dubai Sports 2 UAE
+Stream 606 - Dubai Sports 3 UAE
+Stream 607 - Dubai Racing UAE
+Stream 608 - Dubai Racing 2 UAE
+Stream 609 - Yas TV UAE
+Stream 610 - Deutsche Welle Arabic
+Stream 611 - OnTime Sports
+Stream 612 - OnTime Sports 2
+Stream 613 - OnTime Sports 3
+Stream 614 - SSC Sport 1
+Stream 615 - SSC Sport 2
+Stream 616 - SSC Sport 3
+Stream 617 - SSC Sport 4
+Stream 618 - SSC Sport 5
+Stream 619 - SSC Sport Extra 1
+Stream 620 - SSC Sport Extra 2
+Stream 621 - SSC Sport Extra 3
+Stream 622 - Cosmote Sport 1 HD
+Stream 623 - Cosmote Sport 2 HD
+Stream 624 - Cosmote Sport 3 HD
+Stream 625 - Cosmote Sport 4 HD
+Stream 626 - Cosmote Sport 5 HD
+Stream 627 - Cosmote Sport 6 HD
+Stream 628 - Cosmote Sport 7 HD
+Stream 629 - Cosmote Sport 8 HD
+Stream 630 - Cosmote Sport 9 HD
+Stream 631 -  Nova Sports 1 GR
+Stream 632 -  Nova Sports 2 GR
+Stream 633 -  Nova Sports 3 GR
+Stream 634 -  Nova Sports 4 GR
+Stream 635 -  Nova Sports 5 GR
+Stream 636 -  Nova Sports 6 GR
+Stream 637 -  Nova Sports Start GR
+Stream 638 -  Nova Sports Prime GR
+Stream 639 -  Nova Sports News GR
+Stream 640 -  Sport1+ Germany
+Stream 641 -  Sport1 Germany
+Stream 642 -  TNT Sports HD Chile 
+Stream 670 - S4C UK
+Stream 671 - Sky Cinema Premiere UK
+Stream 672 - Sky Cinema Select UK
+Stream 673 - Sky Cinema Hits UK
+Stream 674 - Sky Cinema Greats UK
+Stream 675 - Sky Cinema Animation UK
+Stream 676 - Sky Cinema Family UK
+Stream 677 - Sky Cinema Action UK
+Stream 678 - Sky Cinema Comedy UK
+Stream 679 - Sky Cinema Thriller UK
+Stream 680 - Sky Cinema Drama UK
+Stream 681 - Sky Cinema Sci-Fi Horror
+Stream 682 - Sky Showcase
+Stream 683 - Sky Arts UK
+Stream 684 - Sky Comedy UK
+Stream 685 - Sky Crime
+Stream 686 - Sky History
+Stream 687 - Gold UK
+Stream 688 - Film4 UK
+
+Stream 716 - Sporting TV Portugal
+Stream 717 - AXN Movies Portugal
+Stream 718 - Porto Canal Portugal
+Stream 719 - RTP 1 Portugal
+Stream 720 - RTP 2 Portugal
+Stream 721 - RTP 3 Portugal
+Stream 722 - SIC Portugal
+Stream 723 - TVI Portugal
+Stream 724 - TVI Reality Portugal
+
+Stream 725 - Arte DE
+Stream 726 - 3sat DE
+Stream 727 - ZDF DE
+Stream 728 - ZDF Info DE
+Stream 729 - SAT.1 DE
+Stream 730 - ProSieben (PRO7) DE
+Stream 731 - Kabel Eins (Kabel 1) DE
+Stream 732 - Sixx DE
+Stream 733 - MDR DE
+Stream 734 - WDR DE
+Stream 735 - SWR DE
+Stream 736 - NDR DE
+Stream 737 - BR Fernsehen DE
+Stream 738 - SUPER RTL DE
+Stream 739 - SR Fernsehen DE
+Stream 740 - HR Fernsehen DE
+
+Stream 741 - Ten Sports PK
+Stream 742 - AXS TV USA
+Stream 743 - Galavisión USA
+Stream 744 - Fashion TV
+Stream 745 - Nat Geo Wild USA
+Stream 756 - Yes Network
+Stream 757 - Fight Network
+Stream 758 - Fox Sports 2 USA
+Stream 759 - SportsNet New York USA (SNY)
+Stream 760 - Globo SP
+Stream 761 - Globo RIO
+Stream 762 - NESN USA (New England Sports Network)
+Stream 763 - YES Network USA
+Stream 764 - Spectrum Sportsnet LA
+Stream 765 - MSG USA (MSG Network)
+Stream 766 - ABCNY USA
+Stream 767 - CBSNY USA
+Stream 768 - FOXNY USA
+Stream 769 - NBCNY USA
+Stream 770 - Marquee Sports Network
+Stream 775 - Fox Weather Channel
+Stream 826 - Liverpool TV (LFC TV)
+Stream 827 - DSTV M-Net
+Stream 828 - DSTV kykNET & kie
+Stream 829 - MASN USA
+Stream 830 - Fox Sports Premium MX
+Stream 369 - FOX Sports 501 AU
+Stream 820 - FOX Sports 502 AU
+Stream 821 - FOX Sports 503 AU
+Stream 822 - FOX Sports 504 AU
+Stream 823 - FOX Sports 505 AU
+Stream 824 - FOX Sports 506 AU
+Stream 825 - FOX Sports 507 AU
+
+Stream 221 - TV2 DK
+Stream 223 - TV 2 Zulu
+Stream 800 - 6'eren DK
+Stream 801 - DR1 DK
+Stream 802 - DR2 DK
+Stream 803 - Kanal 4 DK
+Stream 804 - Kanal 5 DK
+Stream 805 - CANAL9 DK
+Stream 806 - MTV DK
+Stream 807 - TV 2/Bornholm DK
+Stream 808 - TV 2 Sport X DK
+Stream 809 - TV3 Sport DK
+Stream 810 - TV 2 Sport DK
+Stream 811 - C More Stars
+Stream 812 - C More First
+Stream 813 - C More Hits
+Stream 814 - C More Series
+Stream 815 - V Film Premiere
+Stream 816 - V Film Family
+
+
+Stream 373 - SYFY USA
+Stream 374 - Cinemax USA
+Stream 298 - FXX USA
+Stream 299 - Magnolia Network
+Stream 293 - Reelz Channel
+Stream 294 - Science Channel
+Stream 295 - Adult Swim
+Stream 296 - Hallmark Movies & Mysterie
+Stream 289 - Sport TV 4 Poutugal
+Stream 290 - Sport TV 5 Poutugal
+Stream 291 - Sport TV 6 Poutugal
