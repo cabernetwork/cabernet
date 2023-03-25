@@ -114,14 +114,14 @@ class CabernetUpgrade:
 
     def get_next_release(self, release_data_list):
         current_version = self.config['main']['version']
-        x = self.version_re.match(current_version)
-        c_version_float = float(re.findall(r'\d+\.(\d+\.\d+).\d+', current_version)[0])
+        cur_version_float = utils.get_version_index(current_version)
+        next_version_int = (int(cur_version_float/100)+2)*100
         prev_version = release_data_list[0]['tag_name']
         data = None
         for data in release_data_list:
-            numbers = re.findall(r'\d+\.(\d+)\.(\d+).\d+', data['tag_name'])[0]
-            version_float = float('{:01d}.{:02d}'.format(int(numbers[0]), int(numbers[1])))
-            if version_float - 0.101 < c_version_float:
+            version_float = utils.get_version_index(data['tag_name'])
+            print('xxx', version_float, next_version_int)
+            if version_float < next_version_int:
                 break
         prev_version = data['tag_name']
         return prev_version

@@ -78,7 +78,7 @@ def logging_enable(_config_obj, _section, _key):
 
 def set_version(_config_obj, _section, _key):
     _config_obj.data[_section][_key] \
-        = 'v' + utils.get_version_str()
+        = utils.get_version_str()
 
 
 def set_system(_config_obj, _section, _key):

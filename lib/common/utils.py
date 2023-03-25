@@ -49,7 +49,7 @@ def get_version_str():
 
 logger = None
 LOG_LVL_NOTICE = 25
-SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*')
+SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*(?:[\D]+(\d)+)*')
 
 def get_version_index(_ver):
     """
@@ -58,9 +58,11 @@ def get_version_index(_ver):
     format a.b.c.d or a.b.c
     """
     m = re.findall(SEARCH_VERSION, _ver)
-    d1, d2, d3, d4 = m[0]
-    print(d1, d2, d3, d4)
-    v_int = ((((int(d1)*100)+int(d2 or 0))*100)+int(d3 or 0))*100+int(d4 or 0)
+    print(_ver, m)
+    time.sleep(1)
+    d1, d2, d3, d4, d5 = m[0]
+    print(d1, d2, d3, d4, d5)
+    v_int = ((((int(d1)*100)+int(d2 or 0))*100)+int(d3 or 0))*100+int(d4 or 0)+int(d5 or 0)/100 
     return v_int
 
 
