@@ -1,9 +1,13 @@
+## NOTICE: 
+By default this app doesn't provide any video sources, only the plugins access the providers streams for personal use.
 
 ## Installation
 ### 1. Requirements
 - Python 3.7+
 - python cryptography module
-- ffmpeg
+- python requests module
+- (optional) streamlink module
+- ffmpeg and ffprobe
 
 ### 2. Installation
 - Download source
