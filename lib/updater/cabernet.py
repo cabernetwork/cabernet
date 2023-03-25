@@ -120,7 +120,6 @@ class CabernetUpgrade:
         data = None
         for data in release_data_list:
             version_float = utils.get_version_index(data['tag_name'])
-            print('xxx', version_float, next_version_int)
             if version_float < next_version_int:
                 break
         prev_version = data['tag_name']
