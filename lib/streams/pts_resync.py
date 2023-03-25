@@ -134,7 +134,7 @@ class PTSResync:
                 sout, serr = self.ffmpeg_proc.communicate()
                 errcode = self.ffmpeg_proc.returncode
                 if errcode == 1:
-                    self.logger.DEBUG('FFMPEG errcode on exit: {}, unable for pts_resync to process segment in ffmpeg'.format(self.ffmpeg_proc.returncode))
+                    self.logger.debug('FFMPEG errcode on exit: {}, unable for pts_resync to process segment in ffmpeg'.format(self.ffmpeg_proc.returncode))
             except ValueError:
                 pass
 
