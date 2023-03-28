@@ -101,15 +101,14 @@ class M3U8Queue(Thread):
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
                 if queue_item['uri_dt'] == 'terminate':
-                    time.sleep(0.01)
                     break
                 elif queue_item['uri_dt'] == 'status':
                     OUT_QUEUE.put({'uri': 'running',
                                    'data': None,
                                    'stream': None,
                                    'atsc': None})
-                    time.sleep(0.01)
                     continue
+                time.sleep(0.01)
                 self.process_m3u8_item(queue_item)
         except (KeyboardInterrupt, EOFError):
             TERMINATE_REQUESTED = True
@@ -160,7 +159,7 @@ class M3U8Queue(Thread):
         return True
 
     def atsc_processing(self):
-        if self.atsc is None:
+        if not self.atsc:
             p_list = self.atsc_msg.extract_psip(self.video.data)
             if len(p_list) != 0:
                 self.atsc = p_list
@@ -170,17 +169,19 @@ class M3U8Queue(Thread):
 
         elif not self.initialized_psi:
             p_list = self.atsc_msg.extract_psip(self.video.data)
-            if len(self.atsc) != len(p_list):
+            if len(self.atsc) < len(p_list):
                 self.atsc = p_list
                 self.channel_dict['atsc'] = p_list
                 self.initialized_psi = True
                 return p_list
-            for i in range(len(p_list)):
-                if p_list[i][4:] != self.atsc[i][4:]:
-                    self.atsc = p_list
-                    self.channel_dict['atsc'] = p_list
-                    self.initialized_psi = True
-                    return p_list
+            if len(self.atsc) == len(p_list):
+                for i in range(len(p_list)):
+                    if p_list[i][4:] != self.atsc[i][4:]:
+                        self.atsc = p_list
+                        self.channel_dict['atsc'] = p_list
+                        self.initialized_psi = True
+                        is_changed = True
+                        return p_list
         return None
 
     def process_m3u8_item(self, _queue_item):
@@ -249,7 +250,7 @@ class M3U8Queue(Thread):
                            'atsc': atsc_default_msg
                            })
             PLAY_LIST[uri_dt]['played'] = True
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     def is_pts_valid(self):
         if self.pts_validation is None:

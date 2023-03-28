@@ -60,8 +60,6 @@ def get_plugins_form_html(_webserver, _namespace=None, _sort_col=None, _sort_dir
         _webserver.do_mime_response(
             404, 'text/html', web_templates['htmlError']
             .format('404 - Badly formed plugin/repo request'))
-        
-
 
 
 @postrequest.route('/api/pluginsform')
@@ -74,12 +72,16 @@ def post_plugins_html(_webserver):
         pluginid = pluginid[0]
         repoid = repoid[0]
         if action == "deletePlugin":
-            pm = PluginManager(_webserver.config, _webserver.plugins)
+            pm = PluginManager(_webserver.plugins)
             results = pm.delete_plugin(repoid, pluginid, _webserver.sched_queue)
             _webserver.do_mime_response(200, 'text/html', 'STATUS: Deleting plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
         elif action == "installPlugin":
-            pm = PluginManager(_webserver.config, _webserver.plugins)
+            pm = PluginManager(_webserver.plugins)
             results = pm.install_plugin(repoid, pluginid, _webserver.sched_queue)
+            _webserver.do_mime_response(200, 'text/html', 'STATUS: Installing plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
+        elif action == "upgradePlugin":
+            pm = PluginManager(_webserver.plugins)
+            results = pm.upgrade_plugin(repoid, pluginid, _webserver.sched_queue)
             _webserver.do_mime_response(200, 'text/html', 'STATUS: Installing plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
         else:
             _webserver.do_mime_response(200, 'text/html', "doing something else"+str(action[0]))
@@ -89,7 +91,6 @@ def post_plugins_html(_webserver):
             404, 'text/html', web_templates['htmlError']
             .format('404 - Badly formed request'))
 
-       
 
 class PluginsFormHTML:
 
@@ -121,9 +122,67 @@ class PluginsFormHTML:
         plugin_defn = plugin_defn[0]
         return ''.join([self.get_plugin_header(plugin_defn), self.get_menu_section(plugin_defn), self.get_plugin_section(plugin_defn)])
 
+
+    def get_menu_top_section(self, _plugin_defn):
+        return ''.join([
+            '<ul class="menuList">',
+            '<li class="menuItem" style="display: flex;">',
+            '<div style="position: relative; padding-left: 0.5em;">',
+            '<img class="icon-size" src="/api/manifest?plugin=',
+                _plugin_defn['name'], '&key=icon" alt="',
+                _plugin_defn['name'],'">',
+            '</div>',
+            '<div style="position: relative; padding: 0.5em;display: flex; flex-direction: column; justify-content: center;">',
+            _plugin_defn['name'],
+            '</div>',
+
+            '</li>',
+            '</ul>'
+            ])
+
+    def get_menu_items(self, _plugin_defn):
+        if not _plugin_defn['external']:
+            menu_list=''
+        elif _plugin_defn['version']['installed']:
+            # delete and possible upgrade...
+            menu_list = ''
+            if _plugin_defn['version']['latest'] != _plugin_defn['version']['current']:
+                menu_list = ''.join([
+                    '<li class="menuItem">',
+                    '<button type="submit" name="action" value="upgradePlugin" class="menuButton" ',
+                    'title="Download and install latest version of plugin. Restart required">',
+                    '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">upgrade</i>',
+                    'Upgrade Plugin',
+                    '</button>',
+                    '</li>'
+                    ])
+            menu_list += ''.join([
+                '<li class="menuItem">',
+                '<button type="submit" name="action" value="deletePlugin" class="menuButton" ',
+                'title="Deletes the plugin folder and scheduled events">',
+                '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
+                'Delete Plugin',
+                '</button>',
+                '</li>'
+                ])
+        else:
+            # install
+            menu_list = ''.join([
+            '<li class="menuItem">',
+            '<button type="submit" name="action" value="installPlugin" class="menuButton" ',
+            'title="Download and install latest version of plugin, updates handler and schedule events">',
+            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">download</i>',
+            'Install Plugin',
+            '</button>',
+            '</li>'
+            ])
+        return menu_list
+
     def get_menu_section(self, _plugin_defn):
         pluginid = _plugin_defn['id']
         repoid = _plugin_defn['repoid']
+
+
         return ''.join([
             '<div id="menuActionStatus"></div>',
             '<form id="menuForm" action="/api/pluginsform" method="post">'
@@ -134,54 +193,9 @@ class PluginsFormHTML:
             repoid, '">',
             '<div id="pluginActions" class="menuCanvas listItemHide">',
             '<div class="menuPanel">',
+            self.get_menu_top_section(_plugin_defn),
             '<ul class="menuList">',
-            '<li class="menuItem">',
-            '<button type="submit" name="action" value="deletePlugin" class="menuButton" ',
-            'title="Deletes the plugin folder and scheduled events">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
-            'Delete Plugin only',
-            '</button>',
-            '</li>',
-
-            '<li class="menuItem">',
-            '<button type="submit" formtarget="#menuActionStatus" name="action" value="deletePlugin2" class="menuButton">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
-            'Delete Plugin and Data',
-            '</button>',
-            '</li>',
-
-            '</ul>',
-            '<ul class="menuList">',
-
-            '<li class="menuItem">',
-            '<button type="submit" name="action" value="installPlugin" class="menuButton" ',
-            'title="Download and install latest version of plugin, updates handler and schedule events">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">download</i>',
-            'Install Plugin',
-            '</button>',
-            '</li>',
-
-            '<li class="menuItem">',
-            '<button type="submit" name="action" value="upgradePlugin" class="menuButton">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">upgrade</i>',
-            'Upgrade Plugin',
-            '</button>',
-            '</li>',
-
-            '<li class="menuItem">',
-            '<button type="submit" name="action" value="createInstance" class="menuButton">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">add_circle</i>',
-            'Create Instance',
-            '</button>',
-            '</li>',
-
-            '<li class="menuItem">',
-            '<button type="submit" name="action" value="deleteInstance" class="menuButton">',
-            '<i class="md-icon" style="padding-right: 5px; font-size: 1.7em;">delete</i>',
-            'Delete Instance',
-            '</button>',
-            '</li>',
-
+            self.get_menu_items(_plugin_defn),
             '</ul>',
             '</div>',
             '</div></form>'])
@@ -200,7 +214,7 @@ class PluginsFormHTML:
 
         latest_version = _plugin_defn['version']['latest']
         upgrade_available = ''
-        if latest_version != _plugin_defn['version']['current']:
+        if latest_version != _plugin_defn['version']['current'] and _plugin_defn['external']:
             upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
                 .format(latest_version)
 
@@ -213,7 +227,7 @@ class PluginsFormHTML:
 
             '<div>', str(_plugin_defn['summary']), '</div>',
 
-            '<div style="position: relative;">',
+            '<div style="position: relative; padding-left: 0.5em;">',
             '<img class="image-size" src="/api/manifest?plugin=',
                 _plugin_defn['name'], '&key=icon" alt="',
                 _plugin_defn['name'],'">',
@@ -242,7 +256,7 @@ class PluginsFormHTML:
 
         latest_version = _plugin_defn['version']['latest']
         upgrade_available = ''
-        if latest_version != _plugin_defn['version']['current']:
+        if latest_version != _plugin_defn['version']['current'] and _plugin_defn['external']:
             upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
                 .format(latest_version)
 
@@ -252,12 +266,6 @@ class PluginsFormHTML:
             '<i class="md-icon" STYLE="font-size: 1.7em;">menu</i>',
             '</button>',
 
-            '<div class="pluginSection">',
-            '<div class="pluginSectionName">Dependencies: </div>',
-            '<div class="pluginValue">',
-            str(_plugin_defn['dependencies']), 
-            '</div>',
-            '</div>',
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Version Installed: </div>',
@@ -270,6 +278,13 @@ class PluginsFormHTML:
             '<div class="pluginSectionName">Latest Version: </div>',
             '<div class="pluginValue">',
             str(_plugin_defn['version']['latest']),
+            '</div>',
+            '</div>',
+
+            '<div class="pluginSection">',
+            '<div class="pluginSectionName">Dependencies: </div>',
+            '<div class="pluginValue">',
+            str(_plugin_defn['dependencies']), 
             '</div>',
             '</div>',
 
@@ -302,13 +317,6 @@ class PluginsFormHTML:
             '</div>',
 
             '<div class="pluginSection">',
-            '<div class="pluginSectionName">Size: </div>',
-            '<div class="pluginValue">',
-            '256kB',
-            '</div>',
-            '</div>',
-
-            '<div class="pluginSection">',
             '<div class="pluginSectionName">Category: </div>',
             '<div class="pluginValue">',
             str(_plugin_defn['category']),
@@ -330,22 +338,6 @@ class PluginsFormHTML:
             '</div>',
 
             '</div>',
-
-            '<div class="pluginSection">',
-            '<div class="pluginSectionName">Processing Stuff: </div>',
-            '<div class="pluginValue">',
-            'delete instance, install plugin, delete plugin, add instance, ',
-            ' upgrade plugin, install specific version of plugin',
-            '</div>',
-            '</div>',
-
-            '<div class="pluginSection">',
-            '<div class="pluginSectionName">Add Instance',
-            '<button class="pluginIconButton" onclick=\'load_task_url(',
-            '"/api/schedulehtml?task=', '&trigger=1");return false;\'>',
-            '<i class="pluginIcon md-icon" style="padding-left: 1px; text-align: left;">add</i></button>',
-            '</div>',
-            '</div>',
             '</div>'
         ])
         return html
@@ -354,7 +346,10 @@ class PluginsFormHTML:
         plugin_defns = self.plugin_db.get_plugins(
             _is_installed, None, None)
 
-        self.logger.warning(plugin_defns)
+        if not plugin_defns:
+            return ''.join([
+                'All available plugins are installed'
+                ])
 
         plugins_list = ''
         for plugin_defn in sorted(plugin_defns, key=lambda p: p['id']):
@@ -363,23 +358,16 @@ class PluginsFormHTML:
             plugin_name = plugin_defn['name']
 
             img_size = self.lookup_config_size()
-            if not plugin_defn['external']:
-                location = ' (Internal)'
-            else:
-                location = ''
 
             latest_version = plugin_defn['version']['latest']
             upgrade_available = ''
-            if _is_installed:
+            if _is_installed and plugin_defn['external']:
                 if latest_version != plugin_defn['version']['current']:
                     upgrade_available = '<div class="bottom-left">Upgrade to {}</div>' \
                         .format(latest_version)
                 current_version = plugin_defn['version']['current']
             else:
-                current_version = ''
-            
-
-            self.logger.warning('{} {} {} {} {} {} {}'.format(plugin_id, repo_id, plugin_name, img_size, upgrade_available, location, plugin_defn['version']['current']))
+                current_version = 'Internal'
 
             plugins_list += ''.join([
                 '<button class="plugin_item" type="button"',
@@ -394,7 +382,7 @@ class PluginsFormHTML:
                 plugin_name,'">',
                 upgrade_available,
                 
-                '</div><div>', plugin_name, location,
+                '</div><div>', plugin_name,
                 '</div><div class="pluginText-secondary">',
                 str(current_version), '</div></div>',
                 '</button>'

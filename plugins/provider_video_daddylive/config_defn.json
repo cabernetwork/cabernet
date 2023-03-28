@@ -40,6 +40,13 @@
                         "level": 2,
                         "help": "Number of streams active at one time"
                     },
+                    "player-send_atsc_keepalive":{
+                        "label": "Send ATSC Keep-Alive",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "For internalpproxy, when the provider stops sending packets or the stream is being filtered for 15 seconds, will send a ATSC keep-alive msg to client"
+                    },
                     "epg-plugin":{
                         "label": "EPG Plugin to Use",
                         "type": "list",

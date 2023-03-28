@@ -99,7 +99,6 @@ class IndexJS:
             current_version = manifest_list[0]['version']['current']
             next_version = manifest_list[0]['version']['next']
             latest_version = manifest_list[0]['version']['latest']
-            print(current_version, next_version, latest_version)
             if current_version == next_version:
                 upgrade_js = ''
             else:

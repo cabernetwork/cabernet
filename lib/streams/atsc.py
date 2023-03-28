@@ -42,7 +42,6 @@ LEAP_SECONDS_2021 = 37  # this has not changed since 2017
 class ATSCMsg:
     # class that generates most of the ATSC UDP protocol messages
 
-    msg_counter = {}
 
     # UDP msgs for ATSC
     # https://www.atsc.org/wp-content/uploads/2015/03/Program-System-Information-Protocol-for-Terrestrial-Broadcast-and-Cable-1.pdf
@@ -60,6 +59,7 @@ class ATSCMsg:
         self.crc_table_idx_width = 8
         self.atsc_blank_section = b'\x47\x1f\xff\x10\x00'.ljust(ATSC_MSG_LEN, b'\xff')
         self.type_strings = []
+        self.msg_counter = {}
 
     def gen_crc_mpeg(self, _msg):
         alg = Crc(
@@ -482,6 +482,29 @@ class ATSCMsg:
         # search 0x0020.*0001  ...
         return b'\x00\x01\xb0\x09\xff\xff\xc3\x00\x00\xd5\xdc\xfb\x4c'
 
+    def update_continuity_counter(self, section):
+        pid = self.get_pid(section)
+        if pid is None:
+            return section
+
+        if pid not in self.msg_counter.keys():
+            self.msg_counter[pid] = 0
+
+        s_int = section[3]
+        s_top = s_int & 0xf0
+
+        s_int = s_top + self.msg_counter[pid]
+        sect_ba = bytearray(section)
+        sect_ba[3] = s_int
+        sect_bytes = bytes(sect_ba)
+
+        self.msg_counter[pid] += 1
+        if self.msg_counter[pid] > 15:
+            self.msg_counter[pid] = 0
+
+        return sect_bytes
+
+
     def format_video_packets(self, _msgs=None):
         # atsc packets are 1316 in length with 7 188 sections
         # each section has a 471f ff10 00 when no data is present
@@ -497,13 +520,13 @@ class ATSCMsg:
         #       CAT 1
         # 7 sections per packet
         sections = [
-            self.atsc_blank_section,
-            self.atsc_blank_section,
-            self.atsc_blank_section,
-            self.atsc_blank_section,
-            self.atsc_blank_section,
-            self.atsc_blank_section,
-            self.atsc_blank_section,
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
+            self.update_continuity_counter(self.atsc_blank_section),
         ]
 
         if _msgs is None:
@@ -518,7 +541,7 @@ class ATSCMsg:
                 self.logger.error('ATSC: MESSAGE LENGTH TOO LONG={}'.format(len(_msgs[i])))
                 return None
             else:
-                sections[i] = _msgs[i].ljust(ATSC_MSG_LEN, b'\xff')
+                sections[i] = self.update_continuity_counter(_msgs[i].ljust(ATSC_MSG_LEN, b'\xff'))
 
         return b''.join(sections)
         # TBD need to handle large msg and more than 7 msgs
@@ -535,11 +558,6 @@ class ATSCMsg:
         pmt_found = False
         seg_counter = 0
 
-        # print('writing out segment')
-        # f = open('/tmp/data/segment.ts', 'wb')
-        # f.write(_video_data)
-        # f.close()
-
         while True:
             if i + ATSC_MSG_LEN > video_len:
                 break
@@ -551,14 +569,24 @@ class ATSCMsg:
             if seg_counter > 7:
                 # self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
                 break
-            else:
-                packet_list.append(packet)
-                continue
 
             if program_fields is None:
                 continue
             if program_fields['transport_error_indicator']:
                 continue
+
+            # SDT: 17, PAT: 0, Private data: 4096 (audio/video meta)
+            if program_fields['pid'] == 0 \
+                    or program_fields['pid'] == 4096:
+                packet_list.append(packet)
+
+                seg_counter += 1
+                if seg_counter > 7:
+                    # self.logger.debug('###### SENDING BACK {} PACKETS'.format(len(packet_list)))
+                    break
+
+                continue
+
 
             if program_fields['pid'] == 0x0000:
                 pmt_pids = self.decode_pat(program_fields['payload'])
@@ -566,17 +594,17 @@ class ATSCMsg:
                 if not pat_found:
                     packet_list.append(packet)
                     pat_found = True
-            if pmt_pids and program_fields['pid'] in pmt_pids.keys():
-                program = pmt_pids[program_fields['pid']]
-                self.decode_pmt(program_fields['pid'], program, program_fields['payload'])
-                if not pmt_found:
-                    # self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
-                    packet_list.append(packet)
-                    pmt_found = True
-                continue
-            elif program_fields['pid'] == 0x1ffb:
-                self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
-                continue
+            #if pmt_pids and program_fields['pid'] in pmt_pids.keys():
+            #    program = pmt_pids[program_fields['pid']]
+            #    self.decode_pmt(program_fields['pid'], program, program_fields['payload'])
+            #    if not pmt_found:
+            #        # self.logger.debug('###### FOUND PMT PID: {}'.format(program_fields['pid']))
+            #        packet_list.append(packet)
+            #        pmt_found = True
+            #    continue
+            #elif program_fields['pid'] == 0x1ffb:
+            #    self.logger.info('Packet Table indicator 0x1ffb, not implemented {}'.format(i))
+            #    continue
             # elif program_fields['pid'] == 0x0011:
             #    self.logger.info('Service Description Table (SDT) 0x0011, not implemented {}'.format(i))
             #    continue
@@ -658,6 +686,17 @@ class ATSCMsg:
             #    self.logger.info('Unknown PID {}'.format(program_fields['pid']))                
             prev_pid = program_fields['pid']
         return packet_list
+
+
+    def get_pid(self, _packet_188):
+        word = struct.unpack('!I', _packet_188[0:4])[0]
+        sync = (word & 0xff000000) >> 24
+        if sync != 0x47:
+            return None
+
+        # Packet Identifier, describing the payload data.
+        pid = (word & 0x1fff00) >> 8
+        return pid
 
     def decode_ts_packet(self, _packet_188):
         fields = {}
@@ -758,9 +797,6 @@ class ATSCMsg:
         program_count = (section_length - 5) / 4 - 1
 
         if section_length > 20:
-            # print(section_length, program_count, len(payload))
-            # self.logger.warning('{} {} {}'.format(section_length, program_count, len(payload)))
-            # log for corrupted atsc msg
             return program_map_pids
 
         for i in range(0, int(program_count)):
@@ -768,7 +804,6 @@ class ATSCMsg:
             program_number = struct.unpack("!H", payload[at:at + 2])[0]
             if at + 2 > len(payload):
                 break
-            # print(len(payload), at)
             program_map_pid = struct.unpack("!H", payload[at + 2:at + 2 + 2])[0]
 
             # the pid is only 13 bits, upper 3 bits of this field are 'reserved' (I see 0b111)

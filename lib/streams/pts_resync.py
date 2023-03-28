@@ -16,6 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import copy
 import logging
 import os
 import subprocess
@@ -33,6 +34,7 @@ class PTSResync:
         self.config_section = _config_section
         self.empty_packet_count = 0
         self.is_restart_requested = False
+        self.is_looping = False
         self.id = _id
         if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
             self.ffmpeg_proc = self.open_ffmpeg_proc()
@@ -44,30 +46,33 @@ class PTSResync:
                 self.logger.debug('PTS Resync running ffmpeg')
 
     def video_to_stdin(self, _video):
+        video_copy = copy.copy(_video.data)
         i = 3
-        is_looping = False
+        self.is_looping = False
         while i > 0:
             i -= 1
             try:
-                if _video.data:
-                    self.ffmpeg_proc.stdin.write(_video.data)
+                if video_copy:
+                    self.ffmpeg_proc.stdin.write(video_copy)
                 break
             except (BrokenPipeError, TypeError) as ex:
                 # This occurs when the process does not start correctly
                 self.logger.warning('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
                 if not self.is_restart_requested:
                     errcode = self.restart_ffmpeg()
-                    is_looping = True
+                    self.is_looping = True
                 else:
                     time.sleep(0.7)
-        if is_looping:
-            self.is_restart_requested = False
-
+                    
+            except ValueError:
+                # during termination, writing to a closed port, ignore
+                break
+        self.is_looping = False
+        video_copy = None
 
     def restart_ffmpeg(self):
         self.logger.info('Restarting PTSResync ffmpeg due to no ffmpeg processing {}'.format(self.ffmpeg_proc.pid))
         errcode = 0
-        self.is_restart_requested = True
         self.empty_packet_count = 0
         self.stream_queue.terminate()
         while True:
@@ -101,7 +106,7 @@ class PTSResync:
         if _video.data is None:
             return
         if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
-            while self.is_restart_requested:
+            while self.is_looping:
                 time.sleep(0.5)
             t_in = Thread(target=self.video_to_stdin, args=(_video,))
             t_in.start()
@@ -111,11 +116,11 @@ class PTSResync:
                 self.empty_packet_count += 1
                 if self.empty_packet_count > 2:
                     if not self.is_restart_requested:
+                        self.is_restart_requested = True
                         self.restart_ffmpeg()
                         self.is_restart_requested = False
             else:
                 self.empty_packet_count = 0
-            
 
             _video.data = new_video
         elif self.config[self.config_section]['player-pts_resync_type'] == 'internal':

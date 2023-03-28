@@ -47,7 +47,7 @@ textarea, input, select {
     display: table-cell;
 }
 .pluginSection{
-    display: inline-block;
+    display: inline-table;
     border: 3px solid var(--card-background);
     padding-right: 10px;
     padding-left: 10px;
@@ -86,6 +86,9 @@ div.pluginIcon a {
 .image-size{
     width:20vw;
 }
+.icon-size{
+    width:5vw;
+}
 
 .bottom-left {
     position: absolute;
@@ -104,4 +107,8 @@ div.pluginIcon a {
     .image-size{
         width:40vw;
     }
+    .icon-size{
+        width:12vw;
+    }
+    
 }

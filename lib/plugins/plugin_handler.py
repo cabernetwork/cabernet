@@ -66,19 +66,25 @@ class PluginHandler:
             return
         
         for folder in importlib.resources.contents(_plugins_pkg):
-            if folder.startswith('__'):
-                continue
-            try:
-                importlib.resources.read_text(_plugins_pkg, folder)
-            except (IsADirectoryError, PermissionError):
-                try:
-                    plugin = Plugin(self.config_obj, self.plugin_defn, _plugins_pkg, folder, _is_external)
-                    self.plugins[plugin.name] = plugin
-                except (exceptions.CabernetException, AttributeError):
-                    pass
-            except Exception:
-                pass
+            self.collect_plugin(_plugins_pkg, _is_external, folder)
         self.del_missing_plugins()
+
+    def collect_plugin(self, _plugins_pkg, _is_external, _folder):
+        if _folder.startswith('__'):
+            return
+        try:
+            importlib.resources.read_text(_plugins_pkg, _folder)
+        except (IsADirectoryError, PermissionError):
+            try:
+                plugin = Plugin(self.config_obj, self.plugin_defn, _plugins_pkg, _folder, _is_external)
+                self.plugins[plugin.name] = plugin
+            except (exceptions.CabernetException, AttributeError):
+                pass
+        except UnicodeDecodeError:
+            pass
+        except Exception:
+            pass
+        return
 
     def del_missing_plugins(self):
         """

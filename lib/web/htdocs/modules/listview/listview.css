@@ -14,7 +14,7 @@
     background: var(--card-background);
     border: 3px inset var(--docked-drawer-background);
     display: inline-flex;
-    vertical-align: inherit;
+    vertical-align: top;
 }
 
 .menuSection:hover{

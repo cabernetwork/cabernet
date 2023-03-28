@@ -16,6 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import datetime
 import errno
 import os
 import re
@@ -40,8 +41,9 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 60
-IDLE_COUNTER_MAX = 120
-
+IDLE_COUNTER_MAX = 60   # time in seconds beyond any filtered or serving packet to terminate the stream
+STARTUP_IDLE_COUNTER = 40 # time to wait for an initial stream
+# code assumes a timeout response in TVH of 15 or higher.
 
 class InternalProxy(Stream):
     is_m3u8_starting = 0
@@ -66,6 +68,10 @@ class InternalProxy(Stream):
         self.terminate_queue = None
         self.tc_match = re.compile(r'^.+\D+(\d*)\.ts')
         self.idle_counter = 0
+        # last time the idle counter was reset
+        self.last_reset_time = datetime.datetime.now()
+        self.last_atsc_msg = 0
+        self.filter_counter = 0
         self.is_starting = True
         self.cue = False
 
@@ -144,23 +150,44 @@ class InternalProxy(Stream):
         global IDLE_COUNTER_MAX
 
         if not self.cue:
-            self.idle_counter += 1
+            self.update_idle_counter()
+        self.logger.warning('COUNTER: {} {} atsc: {}'.format(self.idle_counter, self.t_m3u8.pid, self.last_atsc_msg))
 
-        if self.idle_counter > IDLE_COUNTER_MAX:
+        if self.is_starting and self.idle_counter > STARTUP_IDLE_COUNTER:
+            # we need to terminate this feed.  Some providers require a 
+            # retry in order to make it work.
             self.idle_counter = 0
+            self.last_reset_time = datetime.datetime.now()
+            self.last_atsc_msg = 0
+            self.logger.info(
+                '1 Provider has not started playing the stream. Terminating the connection {}'
+                .format(self.t_m3u8.pid))
+            raise exceptions.CabernetException(
+                '2 Provider has not started playing the stream. Terminating the connection {}'
+                .format(self.t_m3u8.pid))
+        elif self.idle_counter > self.filter_counter + IDLE_COUNTER_MAX:
+            self.idle_counter = 0
+            self.last_atsc_msg = 0
+            self.last_reset_time = datetime.datetime.now()
+            self.filter_counter = 0
             self.logger.info(
                 '1 Provider has stop playing the stream. Terminating the connection {}'
                 .format(self.t_m3u8.pid))
             raise exceptions.CabernetException(
                 '2 Provider has stop playing the stream. Terminating the connection {}'
                 .format(self.t_m3u8.pid))
-        elif self.idle_counter % 6 == 0:
-            if self.is_starting:
+        elif self.idle_counter > self.last_atsc_msg+6 \
+            and self.is_starting:
+                self.last_atsc_msg = self.idle_counter
                 self.write_atsc_msg()
-        elif self.idle_counter % 12 == 0:
+        elif self.idle_counter > self.last_atsc_msg+14:
+            self.last_atsc_msg = self.idle_counter
             self.logger.debug('1 Requesting status from m3u8_queue {}'.format(self.t_m3u8.pid))
             self.in_queue.put({'uri': 'status'})
-
+            if not self.is_starting \
+                    and self.config[self.channel_dict['namespace'].lower()] \
+                    ['player-send_atsc_keepalive']:
+                self.write_atsc_msg()
         while True:
             try:
                 out_queue_item = self.out_queue.get(timeout=1)
@@ -186,20 +213,23 @@ class InternalProxy(Stream):
                 self.cue = True
                 self.logger.debug('Turning M3U8 cue to True')
             if data['filtered']:
-                self.idle_counter = 0
+                self.filter_counter = self.idle_counter
                 self.logger.info('Filtered Msg {} {}'.format(self.t_m3u8.pid, urllib.parse.unquote(uri)))
                 self.update_tuner_status('Filtered')
                 # self.write_buffer(out_queue_item['stream'])
                 if self.is_starting:
                     self.is_starting = False
                     self.write_atsc_msg()
-                    self.in_queue.put({'uri': 'status'})
                     self.logger.debug('2 Requesting status from m3u8_queue {}'.format(self.t_m3u8.pid))
+                    self.in_queue.put({'uri': 'status'})
                 time.sleep(0.5)
             else:
                 self.video.data = out_queue_item['stream']
                 if self.video.data is not None:
                     self.idle_counter = 0
+                    self.last_atsc_msg = 0
+                    self.last_reset_time = datetime.datetime.now()
+                    self.filter_counter = 0
                     if self.config['stream']['update_sdt']:
                         self.atsc.update_sdt_names(self.video,
                                                    self.channel_dict['namespace'].encode(),
@@ -243,7 +273,8 @@ class InternalProxy(Stream):
         return x
 
     def write_atsc_msg(self):
-        if self.channel_dict['atsc'] is None:
+        self.logger.warning('ATSC: {}'.format(self.channel_dict['atsc']))
+        if not self.channel_dict['atsc']:
             self.logger.debug(
                 'No video data, Sending Empty ATSC Msg {}'
                 .format(self.t_m3u8.pid))
@@ -277,6 +308,16 @@ class InternalProxy(Stream):
         for i, tuner in enumerate(scan_list):
             if type(tuner) == dict and tuner['ch'] == ch_num:
                 WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
+
+    def update_idle_counter(self):
+        """
+        Updates the idle_counter to the nearest int in seconds
+        based on when it was last reset
+        """
+        current_time = datetime.datetime.now()
+        delta_time = current_time - self.last_reset_time
+        self.idle_counter = int(delta_time.total_seconds())
+
 
     def check_ts_counter(self, _uri):
         """
@@ -319,8 +360,8 @@ class InternalProxy(Stream):
             self.t_m3u8 = Process(target=m3u8_queue.start, args=(
                 self.config, self.plugins, self.in_queue, self.out_queue, self.channel_dict,))
             self.t_m3u8.start()
-            self.in_queue.put({'uri': 'status'})
             self.logger.debug('3 Requesting status from m3u8_queue {}'.format(self.t_m3u8.pid))
+            self.in_queue.put({'uri': 'status'})
             time.sleep(0.1)
             tries = 0
             while self.out_queue.empty() and tries < max_tries:

@@ -17,6 +17,10 @@
             "python-lib": {
                 "name": "streamlink",
                 "version": "5.3.1"
+            },
+            "python-lib": {
+                "name": "requests",
+                "version": "2.26.0"
             }
         }],
         "category": ["repository"],

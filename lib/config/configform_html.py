@@ -213,7 +213,11 @@ class ConfigFormHTML:
             elif setting_data['type'] == 'image':
                 if setting != 'plugin_image':
                     input_html = ''.join([
-                        '<img src="" width="128" border="1" alt="',section_data['name'], '-', setting,'">'])
+                        '<img src="" width="128" ', 
+                        'style="border: var(--line-background) solid 1px;" ',
+                        'alt="',
+                        section_data['name'], '-', setting,
+                        '">'])
                 else:
                     input_html = None
                     img_size = self.lookup_config_size()
@@ -222,7 +226,9 @@ class ConfigFormHTML:
                         '<img src="/api/manifest?plugin=',
                         section_data['label'],
                         '&key=icon" width="',
-                        str(img_size), '" border="1" alt="',section_data['name'], '-', setting,'">',
+                        str(img_size), '" ', 
+                        'style="border: var(--line-background) solid 1px;" ',
+                        'alt="',section_data['name'], '-', setting,'">',
                         '</div>'
                         ])
             if is_section_new:

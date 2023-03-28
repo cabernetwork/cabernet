@@ -110,18 +110,19 @@ def handle_url_except(f=None, timeout=None):
                 if isinstance(reason, urllib3.exceptions.NewConnectionError):
                     self.logger.info("ConnectionError:ConnectionRefused in function {}, retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-                    count = 4
-                    while count > 0:
-                        try:
-                            x = f(self, *args, **kwargs)
-                            return x
-                        except requests.exceptions.ConnectionError as ex2:
-                            self.logger.debug("{} ConnectionError:ConnectionRefused in function {} (): {} {} {}"
-                                             .format(count, f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-                            count -= 1
-                            time.sleep(1)
-                        except Exception as ex3:
-                            break
+                    time.sleep(2)
+                    #count = 4
+                    #while count > 0:
+                    #    try:
+                    #        x = f(self, *args, **kwargs)
+                    #        return x
+                    #    except requests.exceptions.ConnectionError as ex2:
+                    #        self.logger.debug("{} ConnectionError:ConnectionRefused in function {} (): {} {} {}"
+                    #                         .format(count, f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+                    #        count -= 1
+                    #        time.sleep(1)
+                    #    except Exception as ex3:
+                    #        break
                 else:
                     self.logger.info("ConnectionError in function {}, retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))

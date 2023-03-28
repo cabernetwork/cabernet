@@ -37,7 +37,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.11.00-RC2'
+VERSION = '0.9.11.01'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0'
@@ -58,7 +58,6 @@ def get_version_index(_ver):
     format a.b.c.d or a.b.c
     """
     m = re.findall(SEARCH_VERSION, _ver)
-    time.sleep(1)
     d1, d2, d3, d4, d5 = m[0]
     v_int = ((((int(d1)*100)+int(d2 or 0))*100)+int(d3 or 0))*100+int(d4 or 0)+int(d5 or 0)/100 
     return v_int

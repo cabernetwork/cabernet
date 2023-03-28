@@ -71,6 +71,7 @@ class Plugin:
         if not self.config_obj.data[self.namespace.lower()].get('enabled'):
             self.enabled = False
             self.logger.debug('2 Plugin disabled in config.ini for {}'.format(self.namespace))
+            self.db_configdefn.add_config(self.config_obj.data)
             return
         self.load_instances()
         self.logger.notice('Plugin created for {}'.format(self.namespace))

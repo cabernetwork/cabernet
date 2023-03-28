@@ -3,12 +3,12 @@
         "id": "provider_video_daddylive",
         "name": "DaddyLive",
         "version": {
-            "current": "0.1.0"
+            "current": "0.1.1"
         },
         "requires": [{
             "cabernet": {
                 "name": "cabernet",
-                "version": "0.9.10.7"
+                "version": "0.9.11.01"
             }
         }],
         "provider-name": "rocky4546",

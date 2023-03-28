@@ -64,10 +64,12 @@ class Channels(PluginChannels):
                         break
 
                 stream_url = channel_dict['stitched']['urls'][0]['url']
-                stream_url = stream_url.replace('&appName=', '&appName=web') \
+                stream_url = stream_url \
+                    .replace('&appName=', '&appName=web') \
                     .replace('&deviceMake=', '&deviceMake=Chrome') \
                     .replace('&deviceModel=', '&deviceModel=Chrome') \
                     .replace('&deviceType=', '&deviceType=web') \
+                    .replace('&includeExtendedEvents=false', '&includeExtendedEvents=true') \
                     .replace('&sid=', '&sid=' +
                              self.config_obj.data['main']['uuid'] +
                              str(counter))
@@ -78,7 +80,7 @@ class Channels(PluginChannels):
                     groups_other = plutotv_groups[channel_dict['category']]
                 else:
                     # Need to replace spaces with "_" and remove special characters.
-                    self.logger.warning(
+                    self.logger.info(
                         'Missing PlutoTV group translation for: {}'
                         .format(channel_dict['category']))
                     groups_other = re.sub('[ +&*%$#@!:;,<>?]', '', channel_dict['category'])

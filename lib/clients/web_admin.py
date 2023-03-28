@@ -139,7 +139,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
             self.content_path = self.path
             # get POST data
             self.content_path, self.query_data = self.get_query_data()
-            self.logger.debug('Receiving POST form {} {}'.format(self.content_path, self.query_data))
+            self.logger.debug('Receiving POST form {}'.format(self.content_path))
             self.plugins.config_obj.refresh_config_data()
             self.config = self.plugins.config_obj.data
             if postrequest.call_url(self, self.content_path):
