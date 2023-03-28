@@ -45,7 +45,7 @@ def upgrade(_webserver):
     v = Updater(_webserver.plugins)
     try:
         if 'id' in _webserver.query_data:
-            if _webserver.query_data['id'] != utils.CABERNET_NAMESPACE:
+            if _webserver.query_data['id'] != utils.CABERNET_ID:
                 _webserver.do_mime_response(501, 'text/html',
                                             web_templates['htmlError'].format('501 - Invalid ID'))
                 return
