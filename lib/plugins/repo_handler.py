@@ -65,7 +65,7 @@ class RepoHandler:
         if settings:
             settings = settings['plugin']
             settings['repo_url'] = utils.CABERNET_REPO
-            self.plugin_db.get_repo(utils.CABERNET_ID)
+            self.plugin_db.get_repos(utils.CABERNET_ID)
         return settings
 
     def save_repo(self, _repo):
