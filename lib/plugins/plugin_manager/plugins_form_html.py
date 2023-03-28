@@ -243,7 +243,6 @@ class PluginsFormHTML:
     def get_plugin_section(self, _plugin_defn):
         pluginid = _plugin_defn['id']
         repoid = _plugin_defn['repoid']
-
         instances = self.plugin_db.get_instances(_namespace=_plugin_defn['name'])
         if instances:
             # array of instance names
@@ -260,20 +259,23 @@ class PluginsFormHTML:
             upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
                 .format(latest_version)
 
+        if _plugin_defn['version']['installed']:
+            version_installed_div = ''.join([
+                '<div class="pluginSection">',
+                '<div class="pluginSectionName">Version Installed: </div>',
+                '<div style="float:left; margin-top:3px;" class="pluginValue">',
+                str(_plugin_defn['version']['current']), '</div>',
+                upgrade_available,
+                '</div>',
+                ])
+        else:
+            version_installed_div = ''
 
         html = ''.join([
             '<button class="menuIconButton menuSection" type="button" onclick="show_menu(this, \'pluginActions\');">',
             '<i class="md-icon" STYLE="font-size: 1.7em;">menu</i>',
             '</button>',
-
-
-            '<div class="pluginSection">',
-            '<div class="pluginSectionName">Version Installed: </div>',
-            '<div style="float:left; margin-top:3px;" class="pluginValue">',
-            str(_plugin_defn['version']['current']), '</div>',
-            upgrade_available,
-            '</div>',
-
+            version_installed_div,
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Latest Version: </div>',
             '<div class="pluginValue">',
@@ -366,6 +368,8 @@ class PluginsFormHTML:
                     upgrade_available = '<div class="bottom-left">Upgrade to {}</div>' \
                         .format(latest_version)
                 current_version = plugin_defn['version']['current']
+            elif not _is_installed:
+                current_version = plugin_defn['version']['latest']
             else:
                 current_version = 'Internal'
 

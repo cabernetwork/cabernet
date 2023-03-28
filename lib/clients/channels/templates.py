@@ -24,7 +24,7 @@ ch_templates = {
             "CallSign": "{}",
             "GuideNumber": "{}",
             "GuideName": "{}",
-            "URL": "http://{}",
+            "URL": "{}",
             "HD": {}
         }}""",
 
@@ -32,7 +32,7 @@ ch_templates = {
         """<Program>
             <GuideNumber>{}</GuideNumber>
             <GuideName>{}</GuideName>
-            <URL>http://{}</URL>
+            <URL>{}</URL>
             <HD>{}</HD>
         </Program>"""
 

@@ -169,7 +169,8 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
             else:
-                uri = _base_url + '/' + sid_data['namespace'] + '/watch/' + sid
+                uri = '{}{}/{}/watch/{}'.format(
+                    'http://', _base_url, sid_data['namespace'], str(sid))
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
@@ -207,8 +208,10 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
             stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
+                uri = escape(uri)
             else:
-                uri = _base_url + '/' + sid_data['namespace'] + '/watch/' + sid
+                uri = '{}{}/{}/watch/{}'.format(
+                    'http://', _base_url, sid_data['namespace'], str(sid)).encode()
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)

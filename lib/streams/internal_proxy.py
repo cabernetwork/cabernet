@@ -151,8 +151,6 @@ class InternalProxy(Stream):
 
         if not self.cue:
             self.update_idle_counter()
-        self.logger.warning('COUNTER: {} {} atsc: {}'.format(self.idle_counter, self.t_m3u8.pid, self.last_atsc_msg))
-
         if self.is_starting and self.idle_counter > STARTUP_IDLE_COUNTER:
             # we need to terminate this feed.  Some providers require a 
             # retry in order to make it work.
@@ -273,7 +271,6 @@ class InternalProxy(Stream):
         return x
 
     def write_atsc_msg(self):
-        self.logger.warning('ATSC: {}'.format(self.channel_dict['atsc']))
         if not self.channel_dict['atsc']:
             self.logger.debug(
                 'No video data, Sending Empty ATSC Msg {}'
