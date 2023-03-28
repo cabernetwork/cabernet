@@ -36,7 +36,6 @@ from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.common.tmp_mgmt import TMPMgmt
 
-MANIFEST_FILE = 'manifest.json'
 TMP_ZIPFILE = utils.CABERNET_ID + '.zip'
 
 class CabernetUpgrade:
@@ -83,7 +82,7 @@ class CabernetUpgrade:
         """
         Loads the cabernet manifest from DB
         """
-        manifest_list = self.plugin_db.get_plugins(_installed=True, _namespace=utils.CABERNET_ID)
+        manifest_list = self.plugin_db.get_repos(utils.CABERNET_ID)
         if manifest_list is None:
             return None
         else:
@@ -141,8 +140,10 @@ class CabernetUpgrade:
         """
         c_manifest = self.load_manifest()
         if c_manifest is None:
+            self.logger.info('Cabernet manifest not found, aborting')
+            _web_status.data += 'Cabernet manifest not found, aborting<br>\r\n'
             return False
-        if c_manifest['next'] == c_manifest['version']:
+        if c_manifest['version']['next'] == c_manifest['version']['current']:
             self.logger.info('Cabernet is on the current version, not upgrading')
             _web_status.data += 'Cabernet is on the current version, not upgrading<br>\r\n'
             return False
@@ -172,8 +173,8 @@ class CabernetUpgrade:
 
         _web_status.data += 'Downloading new version from website...<br>\r\n'
         if not self.download_zip('/'.join([
-            c_manifest['github_repo_' + self.config['main']['upgrade_quality']],
-            'zipball', c_manifest['next']
+            c_manifest['dir']['github_repo_' + self.config['main']['upgrade_quality']],
+            'zipball', c_manifest['version']['next']
         ])):
             _web_status.data += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False

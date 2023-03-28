@@ -108,7 +108,7 @@ class IndexJS:
                     '<a style=\"border: 1px; border-radius: 0.5em;',
                     ' padding-bottom: 5px; padding-top: 5px; text-decoration: none;',
                     ' color: inherit; background: var(--theme-button-hover-color);\" ',
-                    ' href=\"#\" onClick=\"load_status_url(\\\'/api/upgrade?id=Cabernet\\\'',
+                    ' href=\"#\" onClick=\"load_status_url(\\\'/api/upgrade?id=cabernet\\\'',
                     ');\" title=\"Upgrade Cabernet\">',
                     '<i style=\"font-size: 150%;\" class=\"md-icon\">upgrade</i>',
                     '<b>Upgrade to ', next_version, '</b> &nbsp; </a> '

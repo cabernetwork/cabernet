@@ -31,8 +31,6 @@ from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 
-CABERNET_REPO = 'manifest.json'
-
 
 class RepoHandler:
 
@@ -62,11 +60,12 @@ class RepoHandler:
         """
         Loads the manifest for cabernet repo
         """
-        json_settings = importlib.resources.read_text(self.config_obj.data['paths']['resources_pkg'], CABERNET_REPO)
+        json_settings = importlib.resources.read_text(self.config_obj.data['paths']['resources_pkg'], utils.CABERNET_REPO)
         settings = json.loads(json_settings)
         if settings:
             settings = settings['plugin']
-            settings['repo_url'] = CABERNET_REPO
+            settings['repo_url'] = utils.CABERNET_REPO
+            self.plugin_db.get_repo(utils.CABERNET_ID)
         return settings
 
     def save_repo(self, _repo):
