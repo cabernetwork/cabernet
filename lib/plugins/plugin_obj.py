@@ -163,13 +163,13 @@ class PluginObj:
                               .format(_namespace, self.namespace))
             raise exceptions.CabernetException('Requested Plugin {} by {} Missing'
                                                .format(_namespace, self.namespace))
-        if _namespace not in self.plugins:
+        if _namespace not in self.plugins.keys():
             self.logger.notice('{}:{} not installed and requested by {} settings. Restart Required'
                                .format(_namespace, _instance, self.namespace))
             raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
                                                .format(_namespace, _instance, self.namespace))
 
-        if self.plugins[_namespace].enabled:
+        if not self.plugins[_namespace].enabled:
             self.logger.notice('{}:{} not enabled and requested by {} settings. Restart Required'
                                .format(_namespace, _instance, self.namespace))
             raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
