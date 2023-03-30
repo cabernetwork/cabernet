@@ -108,7 +108,8 @@ class EPG(PluginEPG):
                     for prog in ch['schedule']:
                         start = prog['start']
                         end = prog['end']
-                        start_sec = int(datetime.datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z').strftime('%s'))
+                        dt = datetime.datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z')
+                        start_sec = int(dt.timestamp())
                         end_sec = int(datetime.datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z').strftime('%s'))
                         prog_id = prog['assetId']
                         prog_ids[prog_id] = None
@@ -212,7 +213,7 @@ class EPG(PluginEPG):
 
         icon = self.plugin_obj.unc_xumo_icons \
             .format(sid)
-        if prog_details['genres']:
+        if prog_details.get('genres'):
             if prog_details['genres'][0] in xumo_tv_genres:
                 genres = xumo_tv_genres[prog_details['genres'][0]]
             else:
@@ -231,8 +232,8 @@ class EPG(PluginEPG):
                     .format(_ch_data['json']['groups_other']))
                 genres = [_ch_data['json']['groups_other']]
 
-        season = prog_details['season']
-        episode = prog_details['episode']
+        season = prog_details.get('season')
+        episode = prog_details.get('episode')
         if (season is None) and (episode is None):
             se_common = None
             se_xmltv_ns = None
@@ -256,7 +257,7 @@ class EPG(PluginEPG):
             subtitle = 'E%02d ' % episode
         else:
             subtitle = ''
-        if prog_details['subtitle']:
+        if prog_details.get('subtitle'):
             subtitle += prog_details['subtitle']
         else:
             subtitle = None
