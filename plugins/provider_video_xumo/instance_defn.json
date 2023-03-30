@@ -155,6 +155,14 @@
                         "level": 1,
                         "help": "Will append to the channel number as a string"
                     },
+                    "epg-days":{
+                        "label": "EPG days to load",
+                        "type": "list",
+                        "default": "2",
+                        "values": ["2", "4", "6", "7"],
+                        "level": 1,
+                        "help": "Number of days to retrieve from today"
+                    },
                     "epg-episode_adjustment":{
                         "label": "Adjusts Episode number",
                         "type": "list",

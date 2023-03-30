@@ -40,26 +40,38 @@ class EPG(PluginEPG):
         Since epg is less than one day, return a forced day item with no
         aging items        
         """
-        return [1], []
+        
+        days_to_pull = int(self.config_obj.data[self.instance_obj.config_section]['epg-days'])            
+        forced_days = []
+        aging_days = []
+        for x in range(0, days_to_pull):
+            if x < 2:
+                forced_days.append(x)
+            else:
+                aging_days.append(x)
+        return forced_days, aging_days
 
     def refresh_programs(self, _epg_day, use_cache=True):
         timeslot_list = {}
         program_list = []
         todaydate = datetime.datetime.utcnow().date()
+        date_to_process = todaydate + datetime.timedelta(days=_epg_day)
+        
         if use_cache:
-            program_list = self.db.get_epg_one(self.plugin_obj.name, self.instance_key, todaydate)
+            program_list = self.db.get_epg_one(self.plugin_obj.name, self.instance_key, date_to_process)
             if len(program_list) != 0:
-                program_list = json.loads(program_list[0]['json'])
-                for program in program_list:
-                    ts = (program['channel'], program['start'])
-                    if ts not in timeslot_list.keys():
-                        timeslot_list[ts] = program
-        program_list = self.get_fullday_programs(program_list, timeslot_list)
-        self.db.save_program_list(self.plugin_obj.name, self.instance_key, todaydate, program_list)
-        self.logger.debug('Refreshed EPG data for {}:{} day {}'
-                          .format(self.plugin_obj.name, self.instance_key, todaydate))
+                self.logger.debug('{}:{} Reusing EPG database data for date {}'.format(
+                    self.plugin_obj.name, self.instance_key, date_to_process))
+                return
 
-    def get_fullday_programs(self, _program_list, _timeslot_list):
+
+        program_list = self.get_fullday_programs(date_to_process)
+        self.db.save_program_list(self.plugin_obj.name, self.instance_key, date_to_process, program_list)
+        self.logger.debug('Refreshed EPG data for {}:{} day {}'
+                          .format(self.plugin_obj.name, self.instance_key, date_to_process))
+
+    
+    def get_fullday_programs(self, _date_to_process):
         """
         Returns a days (from midnight to midnight UTC) of programs
         """
@@ -67,97 +79,87 @@ class EPG(PluginEPG):
         ch_list = ch_db.get_channels(self.plugin_obj.name, self.instance_key)
         prog_list = {}
         prog_ids = {}
-        time_sec_now = time.time()
-        start_hour = datetime.datetime.utcnow().hour - 2
-        if start_hour < 0:
-            start_hour = 0
+        program_list = []
+
+        day_part_url = ''.join([
+            self.plugin_obj.unc_xumo_base,
+            self.plugin_obj.unc_xumo_epg
+            ])
+        
+        for offset in range(0, 301, 50):
+            for i in range(0,4):
+                url = day_part_url.format(
+                    self.plugin_obj.geo.channelListId,
+                    datetime.datetime.strftime(_date_to_process, '%Y%m%d'),
+                    i, offset
+                    )
+                listing = self.get_uri_data(url)
+                for ch in listing['channels']:
+                    chid = ch['channelId']
+                    if str(chid) not in ch_list.keys():
+                        self.logger.warning('Channel {} not in current list {}, ignoring'.format(chid, ch_list.keys()))
+                        continue
+                    if chid in prog_list.keys():
+                        ch_data = prog_list[chid]
+                    else:
+                        ch_data = []
+                    chno = ch['number']
+                    ch_prog_list = []
+                    for prog in ch['schedule']:
+                        start = prog['start']
+                        end = prog['end']
+                        start_sec = int(datetime.datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z').strftime('%s'))
+                        end_sec = int(datetime.datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z').strftime('%s'))
+                        prog_id = prog['assetId']
+                        prog_ids[prog_id] = None
+                        ch_prog_list.append({
+                            'prog_id': prog_id,
+                            'start': start,
+                            'end': end,
+                            'start_sec': start_sec,
+                            'end_sec': end_sec
+                            })
+                    if chid in prog_list.keys():
+                        prog_list[chid].extend(ch_prog_list)
+                    else:
+                        prog_list[chid] = ch_prog_list
+
+
         self.logger.info(
-            '{}:{} Processing {} EPG Channels from hour {}:00 to hour 23:00 UTC'
-            .format(self.plugin_obj.name, self.instance_key, len(ch_list.keys()), start_hour))
+            '{}:{} Processing {} EPG Channels for day {}'
+            .format(self.plugin_obj.name, self.instance_key, len(ch_list.keys()), _date_to_process))
         for ch in ch_list.keys():
             if not ch_list[ch][0]['enabled']:
                 continue
-            self.logger.debug(
-                '{}:{} Processing EPG Channel {} '
-                .format(self.plugin_obj.name, self.instance_key, ch, ch_list[ch][0]['display_name']))
-            for hr in range(start_hour, 24):
-                url = ''.join([self.plugin_obj.unc_xumo_base,
-                               self.plugin_obj.unc_xumo_channel
-                              .format(ch, hr)])
-                listing = self.get_uri_data(url)
-                if listing is None:
-                    continue
-                for prog in listing['assets']:
-                    start_time = utils.tm_local_parse(prog['timestamps']['start'] * 1000)
-                    key = (ch, start_time)
-                    if 'live' not in prog:
-                        prog['live'] = False
-                    if key not in prog_list.keys():
-                        prog_list[key] = {
-                            'id': prog['id'],
-                            'channelId': ch,
-                            'start': prog['timestamps']['start'],
-                            'end': prog['timestamps']['end'],
-                            'is_live': prog['live']}
-                        prog_ids[prog['id']] = None
 
+        program_count = self.sublist_len(prog_list)
         self.logger.info(
-            '{}:{} Processing {} Programs'
-            .format(self.plugin_obj.name, self.instance_key, len(prog_list.keys())))
+            '{}:{} Processing {} Programs {}'
+            .format(self.plugin_obj.name, self.instance_key, program_count, _date_to_process))
+
         for prog in prog_ids.keys():
             program = self.db_programs.get_program(self.plugin_obj.name, prog)
             if len(program) == 0:
                 self.update_program_info(prog)
-            # else:
-            #    self.logger.debug('{}:{} Processing Program {} from cache' \
-            #        .format(self.plugin_obj.name, self.instance_key, prog))
+
         program = None  # helps with garbage collection
 
-        self.logger.debug(
-            '{}:{} Finalizing EPG updates'
-            .format(self.plugin_obj.name, self.instance_key))
-        for key, listing_data in prog_list.items():
-            if time_sec_now - listing_data['start'] > 86400:
-                for hr in range(start_hour, 24):
-                    dt_start_day = datetime.datetime.utcnow()
-                    dt_start_time = dt_start_day.replace(tzinfo=datetime.timezone.utc, hour=hr, minute=0, second=0,
-                                                         microsecond=0)
-                    listing_data['start'] = round(dt_start_time.timestamp())
-                    listing_data['end'] = round(dt_start_time.timestamp() + 3600)
-                    try:
-                        ch_data = ch_list[str(listing_data['channelId'])][0]
-                        key_ts = (listing_data['channelId'], utils.tm_local_parse(listing_data['start'] * 1000))
-                        if key_ts in _timeslot_list:
-                            program_json = self.get_program(ch_data,
-                                                            listing_data, _timeslot_list[key_ts])
-                        else:
-                            program_json = self.get_program(ch_data,
-                                                            listing_data, None)
-                        if program_json is not None:
-                            _program_list.append(program_json)
-                    except KeyError as e:
-                        self.logger.info('1 Missing Channel: {} {}'.format(str(listing_data['channelId']), e))
-                        continue
-                self.logger.debug(
-                    'Channel has no programs, adding default programming for {}'
-                    .format(listing_data['channelId']))
-                continue
-            try:
-                ch_data = ch_list[str(listing_data['channelId'])][0]
-                key_ts = (listing_data['channelId'], utils.tm_local_parse(listing_data['start'] * 1000))
-                if key_ts in _timeslot_list:
-                    program_json = self.get_program(ch_data,
-                                                    listing_data, _timeslot_list[key_ts])
-                else:
-                    program_json = self.get_program(ch_data,
-                                                    listing_data, None)
-            except KeyError as e:
-                self.logger.info('2 Missing Channel: {} {}'.format(str(listing_data['channelId']), e))
-                continue
-            if program_json is not None:
-                _program_list.append(program_json)
-        return _program_list
 
+        self.logger.debug(
+            '{}:{} Finalizing EPG updates {}'
+            .format(self.plugin_obj.name, self.instance_key, _date_to_process))
+
+
+        for chid, listing_data in prog_list.items():
+            ch_data = ch_list[str(chid)][0]
+            for prog in listing_data:
+                program_json = self.get_program(
+                    ch_data,
+                    prog)
+                if program_json is not None:
+                    program_list.append(program_json)
+        return program_list
+        
     def get_program_uri(self, _listing):
         uri = None
         if 'providers' in _listing:
@@ -166,34 +168,30 @@ class EPG(PluginEPG):
                     uri = source['uri']
         return uri
 
-    def get_program(self, _ch_data, _program_data, _timeslot_list):
+    def get_program(self, _ch_data, _program_data):
         if not _ch_data['enabled']:
             return None
-        prog_id = _program_data['id']
-        key = (_ch_data['uid'], _program_data['start'])
-
-        if _timeslot_list is not None and key in _timeslot_list:
-            return None
+        prog_id = _program_data['prog_id']
 
         prog_details = self.db_programs.get_program(self.plugin_obj.name, prog_id)
         if len(prog_details) == 0:
             self.logger.warning(
-                'Program error: EPG program details missing {} {}'
+                'EPG program details missing {} {}'
                 .format(self.plugin_obj.name, prog_id))
             return None
 
         prog_details = json.loads(prog_details[0]['json'])
 
         start_time = utils.tm_local_parse(
-            (_program_data['start']
+            (_program_data['start_sec']
              + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
         end_time = utils.tm_local_parse(
-            (_program_data['end']
+            (_program_data['end_sec']
              + self.config_obj.data[self.config_section]['epg-start_adjustment'])
             * 1000)
-        dur_min = int((_program_data['end'] - _program_data['start']) / 60)
-        sid = str(_program_data['channelId'])
+        dur_min = int((_program_data['end_sec'] - _program_data['start_sec']) / 60)
+        sid = str(_ch_data['uid'])
         title = prog_details['title']
         entity_type = None
 
@@ -204,8 +202,8 @@ class EPG(PluginEPG):
         short_desc = description
         video_quality = None
         cc = False
-        live = _program_data['is_live']
-        is_new = _program_data['is_live']
+        live = None
+        is_new = None
         finale = False
         premiere = False
         air_date = None
@@ -214,25 +212,57 @@ class EPG(PluginEPG):
 
         icon = self.plugin_obj.unc_xumo_icons \
             .format(sid)
-
-        if _ch_data['json']['groups_other'] is None:
-            genres = None
-        elif _ch_data['json']['groups_other'] in xumo_tv_genres:
-            genres = xumo_tv_genres[_ch_data['json']['groups_other']]
+        if prog_details['genres']:
+            if prog_details['genres'][0] in xumo_tv_genres:
+                genres = xumo_tv_genres[prog_details['genres'][0]]
+            else:
+                self.logger.info(
+                    '1 Missing XUMO genre translation for: {}'
+                    .format(prog_details['genres'][0]))
+                genres = prog_details['genres']                
         else:
-            self.logger.info(
-                'Missing XUMO genre translation for: {}'
-                .format(_ch_data['json']['groups_other']))
-            genres = [_ch_data['json']['groups_other']]
+            if _ch_data['json']['groups_other'] is None:
+                genres = None
+            elif _ch_data['json']['groups_other'] in xumo_tv_genres:
+                genres = xumo_tv_genres[_ch_data['json']['groups_other']]
+            else:
+                self.logger.info(
+                    '2 Missing XUMO genre translation for: {}'
+                    .format(_ch_data['json']['groups_other']))
+                genres = [_ch_data['json']['groups_other']]
+
+        season = prog_details['season']
+        episode = prog_details['episode']
+        if (season is None) and (episode is None):
+            se_common = None
+            se_xmltv_ns = None
+            se_prog_id = None
+        elif (season is not None) and (episode is not None):
+            se_common = 'S%02dE%02d' % (season, episode)
+            se_xmltv_ns = ''.join([str(season - 1), '.', str(episode - 1), '.0/1'])
+            se_prog_id = None
+        elif (season is None) and (episode is not None):
+            se_common = None
+            se_xmltv_ns = None
+            se_prog_id = None
+        else:  # (season is not None) and (episode is None):
+            se_common = 'S%02dE%02d' % (season, 0)
+            se_xmltv_ns = ''.join([str(season - 1), '.', '0', '.0/1'])
+            se_prog_id = None
+
+        if season is not None and episode is not None:
+            subtitle = 'S%02dE%02d ' % (season, episode)
+        elif episode is not None:
+            subtitle = 'E%02d ' % episode
+        else:
+            subtitle = ''
+        if prog_details['subtitle']:
+            subtitle += prog_details['subtitle']
+        else:
+            subtitle = None
 
         directors = None
         actors = None
-        season = None
-        episode = None
-        se_common = None
-        se_xmltv_ns = None
-        se_prog_id = None
-        subtitle = None
 
         json_result = {'channel': sid, 'progid': prog_id, 'start': start_time, 'stop': end_time,
                        'length': dur_min, 'title': title, 'subtitle': subtitle, 'entity_type': entity_type,
@@ -247,9 +277,10 @@ class EPG(PluginEPG):
 
     def update_program_info(self, _prog):
         self.logger.debug(
-            '{}:{} Processing Program {} from XUMO'
+            '{}:{} Processing New Program {} from XUMO'
             .format(self.plugin_obj.name, self.instance_key, _prog))
         program = {}
+
         url = ''.join([self.plugin_obj.unc_xumo_base,
                        self.plugin_obj.unc_xumo_program
                       .format(_prog)])
@@ -257,6 +288,28 @@ class EPG(PluginEPG):
         if listing is None:
             return program
         program['title'] = listing['title']
+        if 'episodeTitle' in listing:
+            program['subtitle'] = listing['episodeTitle']
+        else:
+            program['subtitle'] = None
+
+        if 'episode' in listing:
+            program['episode'] = listing['episode']
+        else:
+            program['episode'] = None
+        if 'season' in listing:
+            program['season'] = listing['season']
+        else:
+            program['season'] = None
+
+        if 'genres' in listing and listing['genres']:
+            program['genres'] = [ listing['genres'][0]['value'] ]
+        else:
+            program['genres'] = None
+
+
+        # TBD NEED SHORT DESCR
+        
         if 'descriptions' in listing:
             if 'large' in listing['descriptions'].keys():
                 key = 'large'
@@ -267,15 +320,32 @@ class EPG(PluginEPG):
             else:
                 key = list(listing['descriptions'].keys())[0]
             program['description'] = listing['descriptions'][key]
+
+            if 'small' in listing['descriptions'].keys():
+                key = 'small'
+            elif 'medium' in listing['descriptions'].keys():
+                key = 'medium'
+            elif 'large' in listing['descriptions'].keys():
+                key = 'large'
+            else:
+                key = list(listing['descriptions'].keys())[0]
+            program['short_desc'] = listing['descriptions'][key]
+
         program['stream_url'] = None
-        for source in listing['providers'][0]['sources']:
-            if 'drm' not in source:
-                if source['produces'] == 'application/x-mpegURL':
-                    program['stream_url'] = source['uri']
-                    break
-                elif source['produces'] == 'application/x-mpegURL;type=tv':
-                    program['stream_url'] = source['uri']
-        if program['stream_url'] is None:
-            self.logger.info('No stream available for program {}'.format(_prog))
+        if 'providers' in listing:
+            for source in listing['providers'][0]['sources']:
+                if 'drm' not in source:
+                    if source['produces'] == 'application/x-mpegURL':
+                        program['stream_url'] = source['uri']
+                        break
+                    elif source['produces'] == 'application/x-mpegURL;type=tv':
+                        program['stream_url'] = source['uri']
         self.db_programs.save_program(self.plugin_obj.name, _prog, program)
         return program
+
+    def sublist_len(self, _list):
+        length = 0
+        for pid, progs in _list.items():
+            l = len(progs)
+            length += l
+        return length

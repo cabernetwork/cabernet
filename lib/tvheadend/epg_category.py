@@ -181,7 +181,7 @@ TVHEADEND = {
     'Educational':            tvh_genres['EDUCATIONAL'],
     'Entertainment':          tvh_genres['GAME'],
     'Exercise':               tvh_genres['FITNESS'],
-    # 'Fantasy':
+    'Fantasy':                tvh_genres['SF'],
     'financial':              tvh_genres['ECONOMIC'],
     'Football':               tvh_genres['FOOTBALL'],
     'Game show':              tvh_genres['GAME'],
@@ -219,7 +219,7 @@ TVHEADEND = {
     'Sitcom':                 tvh_genres['COMEDY'],
     'Soap':                   tvh_genres['SOAP'],
     'Soccer':                 tvh_genres['FOOTBALL'],
-    # 'Special':
+    'Special':                tvh_genres['NEW_MEDIA'],
     'Sports talk':            tvh_genres['SPORT'],
     'Talk':                   tvh_genres['TALK_SHOW'],
     'Thriller':               tvh_genres['THRILLER'],

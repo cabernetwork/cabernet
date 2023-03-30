@@ -37,7 +37,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.11.02'
+VERSION = '0.9.11.03'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
