@@ -28,12 +28,43 @@ def pages_index_js(_webserver):
     return True
 
 
+
 class IndexJS:
+
 
     @staticmethod
     def get(_config):
         js = ''.join([
             'var upgrading = "running"; ',
+            'var lookup_title = new Map(); ',
+            'lookup_title.set("/html/links.html", "Cabernet Links"); ',
+            'lookup_title.set("/api/configform?area=general", "Cabernet Settings:Internal"); ',
+            'lookup_title.set("/api/configform?area=streams", "Cabernet Settings:Streams"); ',
+            'lookup_title.set("/api/configform?area=epg", "Cabernet Settings:EPG"); ',
+            'lookup_title.set("/api/configform?area=clients", "Cabernet Settings:Clients"); ',
+            'lookup_title.set("/api/configform?area=logging", "Cabernet Settings:Logging"); ',
+            'lookup_title.set("/api/channels", "Cabernet Channel Editor"); ',
+            'lookup_title.set("/api/schedulehtml", "Cabernet Scheduler"); ',
+            'lookup_title.set("/api/datamgmt", "Cabernet Data Management"); ',
+            'lookup_title.set("/api/plugins", "Cabernet Plugins"); ',
+            'function load_url(url, title) {',
+            '$(\"#content\").load(url);',
+            'document.title = title;',
+            'newurl = window.location.pathname+"?content="+encodeURIComponent(url);',
+            'window.history.pushState({}, null, newurl);',
+            '}',
+
+            'function load_status_url(url) {',
+            'if ( upgrading == "running" ) { ',
+            '$(\"#status\").load(url, function( resp, s, xhr ) {',
+            'if ( s == \"error\" ) {',
+            '$(\"#status\").text( xhr.status + \" \" + xhr.statusText ); ',
+            '} else {setTimeout(function(){',
+            'load_status_url(url);}, 700);',
+            '}});} else if ( upgrading == "success" ) {$(\"#status\").append(\"Upgrade complete, reload page\");',
+            ' upgrading = "running";',
+            '} else {$(\"#status\").append(\"Upgrade aborted\"); upgrading = "running";}};',
+
             '$(document).ready(setTimeout(function(){',
             '$(\'head\').append(\'<link rel="stylesheet"',
             ' href="/modules/themes/',
@@ -46,6 +77,7 @@ class IndexJS:
             '/theme.js"></script>',
             '\');',
 
+            'if ( !window.location.search ) {',
             '$(\'#content\').html(\'<!DOCTYPE html><html><head>'
             '<title>Dashboard</title>',
             '<meta name="viewport" content="width=device-width, ',
@@ -59,6 +91,14 @@ class IndexJS:
             IndexJS.get_version_div(_config),
             '<div id=\"dashboard\"></div>',
             '\');',
+            '} else {',
+            'const urlSearchParams = new URLSearchParams(window.location.search);',
+            'const params = Object.fromEntries(urlSearchParams.entries());',
+            'if (params.content) {'
+            'load_url.call(this, params.content, ',
+            'lookup_title.get(params.content));', 
+            '}',
+            '}',
             'logo = getComputedStyle(document.documentElement)',
             '.getPropertyValue("--logo-url");',
             'if ( logo == \"\" ) { ',
@@ -72,19 +112,7 @@ class IndexJS:
             '$(\'#logo\').html(\'<img class=\"splash\" src=\"\'+logo+\'\">',
             '\');',
             '}',
-            '}, 1000));',
-            'function load_url(url) {',
-            '$(\"#content\").load(url);}',
-            'function load_status_url(url) {',
-            'if ( upgrading == "running" ) { ',
-            '$(\"#status\").load(url, function( resp, s, xhr ) {',
-            'if ( s == \"error\" ) {',
-            '$(\"#status\").text( xhr.status + \" \" + xhr.statusText ); ',
-            '} else {setTimeout(function(){',
-            'load_status_url(url);}, 700);',
-            '}});} else if ( upgrading == "success" ) {$(\"#status\").append(\"Upgrade complete, reload page\");',
-            ' upgrading = "running";',
-            '} else {$(\"#status\").append(\"Upgrade aborted\"); upgrading = "running";}};'
+            '}, 1000));'
         ])
         return js
 
