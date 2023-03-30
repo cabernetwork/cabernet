@@ -97,8 +97,11 @@ class EPG(PluginEPG):
                 for ch in listing['channels']:
                     chid = ch['channelId']
                     if str(chid) not in ch_list.keys():
-                        self.logger.warning('Channel {} not in current list {}, ignoring'.format(chid, ch_list.keys()))
+                        self.logger.info('New Channel {} not in current list during EPG generation {}, ignoring'.format(chid, ch_list.keys()))
                         continue
+                    if not ch_list[str(chid)][0]['enabled']:
+                        continue
+
                     if chid in prog_list.keys():
                         ch_data = prog_list[chid]
                     else:
