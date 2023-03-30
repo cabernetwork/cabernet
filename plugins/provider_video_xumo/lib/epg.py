@@ -110,7 +110,8 @@ class EPG(PluginEPG):
                         end = prog['end']
                         dt = datetime.datetime.strptime(start, '%Y-%m-%dT%H:%M:%S%z')
                         start_sec = int(dt.timestamp())
-                        end_sec = int(datetime.datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z').strftime('%s'))
+                        dt = datetime.datetime.strptime(end, '%Y-%m-%dT%H:%M:%S%z')
+                        end_sec = int(dt.timestamp())
                         prog_id = prog['assetId']
                         prog_ids[prog_id] = None
                         ch_prog_list.append({
