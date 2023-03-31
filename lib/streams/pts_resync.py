@@ -36,12 +36,11 @@ class PTSResync:
         self.is_restart_requested = False
         self.is_looping = False
         self.id = _id
-        if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
-            self.ffmpeg_proc = self.open_ffmpeg_proc()
-        else:
-            self.ffmpeg_proc = None
-        self.stream_queue = StreamQueue(188, self.ffmpeg_proc, _id)
+        self.ffmpeg_proc = None
         if self.config[self.config_section]['player-enable_pts_resync']:
+            if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
+                self.ffmpeg_proc = self.open_ffmpeg_proc()
+            self.stream_queue = StreamQueue(188, self.ffmpeg_proc, _id)
             if self.config[self.config_section]['player-pts_resync_type'] == 'ffmpeg':
                 self.logger.debug('PTS Resync running ffmpeg')
 
@@ -57,7 +56,7 @@ class PTSResync:
                 break
             except (BrokenPipeError, TypeError) as ex:
                 # This occurs when the process does not start correctly
-                self.logger.warning('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
+                self.logger.notice('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
                 if not self.is_restart_requested:
                     errcode = self.restart_ffmpeg()
                     self.is_looping = True

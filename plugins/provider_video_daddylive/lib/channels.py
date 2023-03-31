@@ -93,6 +93,8 @@ class Channels(PluginChannels):
             return
         stream_url = m[1].decode('utf8')
         m3u8_uri = self.get_best_stream(stream_url, _channel_id, ch_url)
+        if not m3u8_uri:
+            return stream_url
         return m3u8_uri
 
     def get_channel_list(self):

@@ -299,7 +299,8 @@ class TVHUserConfig:
             self.config_handler.set(_section, _key, str(_value))
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
-        self.db.add_config(self.data)
+        if self.db:
+            self.db.add_config(self.data)
 
 
 class BackupConfig:
