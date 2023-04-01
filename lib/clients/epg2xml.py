@@ -183,7 +183,15 @@ class EPG:
                 updated_chnum = utils.wrap_chnum(
                     ch_data['display_number'], ch_data['namespace'],
                     ch_data['instance'], self.config)
-                c_out = EPG.sub_el(_et_root, 'channel', id=sid)
+                if self.config['epg'].get('epg_add_plugin_to_channel_id'):
+                    ch_ref = ch_data['namespace'] + '-'
+                else:
+                    ch_ref = ''
+                if self.config['epg'].get('epg_use_channel_number'):
+                    ch_ref += updated_chnum
+                else:
+                    ch_ref += sid
+                c_out = EPG.sub_el(_et_root, 'channel', id=ch_ref)
 
                 EPG.sub_el(c_out, 'display-name', _text='%s %s' %
                                                         (updated_chnum, ch_data['display_name']))
@@ -225,10 +233,23 @@ class EPG:
             if skip:
                 continue
             self.prog_processed.append(proginfo)
+
+            if self.config['epg'].get('epg_add_plugin_to_channel_id'):
+                ch_ref = ch_data['namespace'] + '-'
+            else:
+                ch_ref = ''
+            if self.config['epg'].get('epg_use_channel_number'):
+                ch_data = _channel_list[prog_data['channel']][0]
+                updated_chnum = utils.wrap_chnum(
+                    ch_data['display_number'], ch_data['namespace'],
+                    ch_data['instance'], self.config)
+                ch_ref += updated_chnum
+            else:
+                ch_ref += prog_data['channel']
             prog_out = EPG.sub_el(_et_root, 'programme',
                                   start=prog_data['start'],
                                   stop=prog_data['stop'],
-                                  channel=prog_data['channel'])
+                                  channel=ch_ref)
             if prog_data['title']:
                 EPG.sub_el(prog_out, 'title', lang='en', _text=prog_data['title'])
             if prog_data['subtitle']:

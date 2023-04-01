@@ -108,6 +108,20 @@
                         "level": 2,
                         "help": "When true will include the channel number in the channel name for the channel list and EPG"
                     },
+                    "epg_use_channel_number":{
+                        "label": "Use Channel # for Channel ID",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "For clients like Plex, they use the channel id field in the xmltv.xml as the channel number"
+                    },
+                    "epg_add_plugin_to_channel_id":{
+                        "label": "Add Plugin name to Channel ID",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "For cases where the different provider have the same UID for channels"
+                    },
                     "epg_channel_icon":{
                         "label": "EPG Channel Icon",
                         "type": "boolean",
@@ -125,7 +139,7 @@
                     "epg_prettyprint":{
                         "label": "EPG Pretty Print",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 1,
                         "help": "If you are having memory issues, try turning this to false"
                     }

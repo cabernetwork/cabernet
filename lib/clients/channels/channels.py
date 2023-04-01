@@ -175,7 +175,6 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
             return_json = return_json + ch_templates['jsonLineup'].format(
-                sid,
                 sid_data['json']['callsign'],
                 updated_chnum,
                 sid_data['display_name'],
