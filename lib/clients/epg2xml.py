@@ -107,6 +107,7 @@ class EPG:
                 day_data, ns, inst, day = self.get_next_epg_day()
                 self.logger.debug('Processing EPG data {}:{} {}'
                                   .format(ns, inst, day))
+            day_data = None
             self.epg_db.close_query()
             self.webserver.wfile.write(b'</tv>\r\n')
             self.webserver.wfile.flush()

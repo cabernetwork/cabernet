@@ -37,7 +37,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.11.05'
+VERSION = '0.9.11.05-RC1'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
@@ -242,7 +242,7 @@ def instance_config_section(_namespace, _instance):
 
 def process_image_url(_config, _thumbnail_url):
     global logger
-    if _thumbnail_url.startswith('file://'):
+    if _thumbnail_url is not None and _thumbnail_url.startswith('file://'):
         filename = ntpath.basename(_thumbnail_url)
         mime_lookup = mimetypes.guess_type(filename)
         new_filename = filename.replace(' ','')

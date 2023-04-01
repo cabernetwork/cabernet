@@ -312,16 +312,20 @@ class ChannelsFormHTML:
             if sid_data['thumbnail_size'] is not None:
                 image_size = sid_data['thumbnail_size']
                 thumbnail_url = utils.process_image_url(self.config, sid_data['thumbnail'])
-                if max_image_size is None:
-                    display_image = ''.join(['<img border=1 src="', thumbnail_url, '">'])
-                elif max_image_size == 0:
-                    display_image = ''
-                else:
-                    if image_size[0] < max_image_size:
-                        img_width = str(image_size[0])
+                if thumbnail_url:
+                    if max_image_size is None:
+                        display_image = ''.join(['<img border=1 src="', thumbnail_url, '">'])
+                    elif max_image_size == 0:
+                        display_image = ''
                     else:
-                        img_width = str(max_image_size)
-                    display_image = ''.join(['<img width="', img_width, '" border=1 src="', thumbnail_url, '">'])
+                        if image_size[0] < max_image_size:
+                            img_width = str(image_size[0])
+                        else:
+                            img_width = str(max_image_size)
+                        display_image = ''.join(['<img width="', img_width, '" border=1 src="', str(thumbnail_url), '">'])
+                else:
+                    display_image = ''
+                    image_size = 'UNK'
             else:
                 display_image = ''
                 image_size = 'UNK'

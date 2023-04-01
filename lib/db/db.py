@@ -129,7 +129,7 @@ class DB:
                 cur.close()
                 return lastrow
             except sqlite3.OperationalError as e:
-                self.logger.warning('{} Update request ignored, retrying {}, {}'
+                self.logger.notice('{} Update request ignored, retrying {}, {}'
                                     .format(self.db_name, i, e))
                 DB.conn[self.db_name][threading.get_ident()].rollback()
                 if cur is not None:
@@ -204,6 +204,79 @@ class DB:
             return None
         row = records[0]
         return dict(zip([c[0] for c in self.cur.description], row))
+
+    def save_file(self, _keys, _blob):
+        """
+        Stores the blob in the folder with the db name with
+        the filename of concatenated _keys
+        _keys is the list of unique keys for the table
+        Returns the filepath to the file generated
+        """
+        folder_path = pathlib.Path(self.config['paths']['db_dir']) \
+            .joinpath(self.db_name)
+        os.makedirs(folder_path, exist_ok=True)
+        filename = '_'.join(str(x) for x in _keys) + '.txt'
+        file_rel_path = pathlib.Path(self.db_name).joinpath(filename)
+        filepath = folder_path.joinpath(filename)
+        try:
+            with open(filepath, mode='wb') as f:
+                if isinstance(_blob, str):
+                    f.write(_blob.encode())
+                else:
+                    f.write(_blob)
+                f.flush()
+                f.close()
+        except PermissionError as ex:
+            self.logger.warning('Unable to create linked database file {}'
+                .format(file_rel_path))
+            return None
+        return file_rel_path
+
+    def delete_file(self, _filepath):
+        """
+        _filepath is relative to the database path
+        """
+        fullpath = pathlib.Path(self.config['paths']['db_dir']) \
+            .joinpath(_filepath)
+        try:
+            os.remove(fullpath)
+            return True
+        except PermissionError as ex:
+            self.logger.warning('Unable to delete linked database file {}'
+                .format(_filepath))
+            return False
+        except FileNotFoundError as ex:
+            self.logger.warning('File missing, unable to delete linked database file {}'
+                .format(_filepath))
+            return False
+
+    def get_file(self, _filepath):
+        """
+        _filepath is relative to the database path
+        return the blob
+        """
+        fullpath = pathlib.Path(self.config['paths']['db_dir']) \
+            .joinpath(_filepath)
+
+        if not fullpath.exists():
+            self.logger.warning('Linked database file Missing {}'.format(_filepath))
+            return None
+        try:
+            with open(fullpath, mode='rb') as f:
+                blob = f.read()
+                f.close()
+            return blob
+        except PermissionError as ex:
+            self.logger.warning('Unable to read linked database file {}'
+                .format(_filepath))
+            return None
+
+    def get_file_by_key(self, _keys):
+        filename = '_'.join(str(x) for x in _keys) + '.txt'
+        file_rel_path = pathlib.Path(self.db_name).joinpath(filename)
+        return self.get_file(file_rel_path)
+    
+    
 
     def reinitialize_tables(self):
         self.drop_tables()

@@ -92,6 +92,11 @@ class Channels(PluginChannels):
                                .format(self.plugin_obj.name, _channel_id))
             return
         stream_url = m[1].decode('utf8')
+
+        if self.config_obj.data[self.config_section]['player-stream_type'] == 'm3u8redirect':
+            self.logger.warning('Stream Type of m3u8redirect not available with this plugin')
+            return stream_url
+
         m3u8_uri = self.get_best_stream(stream_url, _channel_id, ch_url)
         if not m3u8_uri:
             return stream_url

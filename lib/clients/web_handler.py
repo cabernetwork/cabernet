@@ -142,10 +142,15 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
 
 
 
+
     def do_response(self, _code, _mime, _reply_str=None):
-        self.send_response(_code)
-        self.send_header('Content-type', _mime)
-        self.end_headers()
+        try:
+            self.send_response(_code)
+            self.send_header('Content-type', _mime)
+            self.end_headers()
+        except BrokenPipeError as ex:
+            self.logger.notice('BrokenPipeError on do_response(), ignoring {}'.format(str(ex)))
+            pass
         if _reply_str:
             self.do_write(_reply_str.encode('utf-8'))
         

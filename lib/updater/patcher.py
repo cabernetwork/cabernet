@@ -18,10 +18,10 @@ substantial portions of the Software.
 
 import logging
 
-from lib.db.db_plugins import DBPlugins
+from lib.db.db_epg import DBepg
 
-REQUIRED_VERSION = '0.9.10'
-LOGGER = logging.getLogger(__name__)
+REQUIRED_VERSION = '0.9.11'
+LOGGER = None
 
 
 def patch_upgrade(_config_obj, _new_version):
@@ -34,14 +34,19 @@ def patch_upgrade(_config_obj, _new_version):
     it is associated is tested with this new version.
     """
     global LOGGER
+    if not LOGGER:
+        LOGGER = logging.getLogger(__name__)
+
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
         LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
-        results = 'Patch: Updating Channels database...'
 
-    dbplugins = DBPlugins(_config_obj.data)
-    dbplugins.reinitialize_tables()
-
+        dbepg = DBepg(_config_obj.data)
+        names = dbepg.get_col_names()
+        if ('file',) not in names:
+            dbepg.reinitialize_tables()
+            results = 'Patch: Upgrading EPG database...'
+            LOGGER.warning('Patch: Upgrading EPG database...')
     return results
 
 
@@ -52,6 +57,8 @@ def move_key(_config_obj, _key):
 
 def find_key_by_section(_config_obj, _key, _section):
     global LOGGER
+    if not LOGGER:
+        LOGGER = logging.getLogger(__name__)
     if _section in _config_obj.data:
         if _key in _config_obj.data[_section]:
             LOGGER.info('Moving setting {}:{} to instance'.format(_section, _key))

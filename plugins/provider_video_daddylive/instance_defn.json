@@ -59,7 +59,7 @@
                         "label": "stream_type",
                         "type": "list",
                         "default": "internalproxy",
-                        "values": ["m3u8redirect", "internalproxy", "streamlinkproxy", "ffmpegproxy"],
+                        "values": ["internalproxy", "streamlinkproxy", "ffmpegproxy"],
                         "level": 1,
                         "help": "M3U8 send m3u8 file directly to client.  ffmpeg uses ffmpeg for m3u8 urls. streamlink uses the python module streamlink. internal uses internally coded modules."
                     },
