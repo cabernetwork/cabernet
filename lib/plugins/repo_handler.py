@@ -140,6 +140,7 @@ class RepoHandler:
                     plugin['version']['installed'] = False
                     plugin['version']['latest'] = plugin['version']['current']
                     plugin['version']['current'] = None
+                    plugin['external'] = True
                 self.cache_thumbnails(plugin)
                 self.plugin_db.save_plugin(plugin)
 

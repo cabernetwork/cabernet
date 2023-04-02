@@ -143,14 +143,14 @@ class PluginObj:
         if self.config_obj.data.get(name_config):
             if self.config_obj.data.get(instance_config):
                 if not self.config_obj.data[instance_config]['enabled']:
-                    self.logger.notice('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                    self.logger.warning('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
                                        .format(_namespace, _instance, self.namespace))
                     self.config_obj.write(
                         instance_config, 'enabled', True)
                     raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
                                                        .format(_namespace, self.namespace))
             else:
-                self.logger.notice('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                self.logger.warning('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
                                    .format(_namespace, _instance, self.namespace))
                 self.config_obj.write(
                     instance_config, 'Label', _namespace + ' Instance')
@@ -164,13 +164,13 @@ class PluginObj:
             raise exceptions.CabernetException('Requested Plugin {} by {} Missing'
                                                .format(_namespace, self.namespace))
         if _namespace not in self.plugins.keys():
-            self.logger.notice('{}:{} not installed and requested by {} settings. Restart Required'
+            self.logger.warning('{}:{} not installed and requested by {} settings. Restart Required'
                                .format(_namespace, _instance, self.namespace))
             raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
                                                .format(_namespace, _instance, self.namespace))
 
         if not self.plugins[_namespace].enabled:
-            self.logger.notice('{}:{} not enabled and requested by {} settings. Restart Required'
+            self.logger.warning('{}:{} not enabled and requested by {} settings. Restart Required'
                                .format(_namespace, _instance, self.namespace))
             raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
                                                .format(_namespace, _instance, self.namespace))
