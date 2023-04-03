@@ -18,9 +18,11 @@ substantial portions of the Software.
 
 import logging
 
-from lib.db.db_epg import DBepg
+from lib.plugins.plugin_manager.plugin_manager import PluginManager
+from lib.db.db_plugins import DBPlugins
 
-REQUIRED_VERSION = '0.9.11'
+
+REQUIRED_VERSION = '0.9.12'
 LOGGER = None
 
 
@@ -39,14 +41,20 @@ def patch_upgrade(_config_obj, _new_version):
 
     results = ''
     if _new_version.startswith(REQUIRED_VERSION):
-        LOGGER.info('Applying the patch to version: {}'.format(REQUIRED_VERSION))
+        LOGGER.info('Applying patches to version: {}'.format(REQUIRED_VERSION))
 
-        dbepg = DBepg(_config_obj.data)
-        names = dbepg.get_col_names()
-        if ('file',) not in names:
-            dbepg.reinitialize_tables()
-            results = 'Patch: Upgrading EPG database...'
-            LOGGER.warning('Patch: Upgrading EPG database...')
+        plugin_db = DBPlugins(_config_obj.data)
+        pm = PluginManager(None, _config_obj)
+
+        # get list of all installed plugins
+        plugin_list = plugin_db.get_plugins(True)
+
+        for plugin in plugin_list:
+            if plugin.get('external') is False:
+                results = pm.delete_plugin(plugin['repoid'], plugin['id'])
+                results = pm.install_plugin(plugin['repoid'], plugin['id'])
+                results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
+                LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
     return results
 
 

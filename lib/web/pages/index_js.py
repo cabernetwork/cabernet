@@ -23,17 +23,28 @@ from lib.db.db_plugins import DBPlugins
 
 @getrequest.route('/api/index.js')
 def pages_index_js(_webserver):
-    indexjs = IndexJS()
-    _webserver.do_mime_response(200, 'text/javascript', indexjs.get(_webserver.config))
+    indexjs = IndexJS(_webserver.config)
+    _webserver.do_mime_response(200, 'text/javascript', indexjs.get())
     return True
-
 
 
 class IndexJS:
 
+    def __init__(self, _config):
+        self.config = _config
+        self.plugin_db = DBPlugins(_config)
 
-    @staticmethod
-    def get(_config):
+    def check_upgrade_status(self):
+        plugin_defns = self.plugin_db.get_plugins(
+            True, None, None)
+        for plugin_defn in plugin_defns:
+            latest_version = plugin_defn['version']['latest']
+            upgrade_available = ''
+            if plugin_defn['external'] and latest_version != plugin_defn['version']['current']:
+                return '$(\"#pluginStatus\").text("Upgrade");'
+        return ''
+
+    def get(self):
         js = ''.join([
             'var upgrading = "running"; ',
             'var lookup_title = new Map(); ',
@@ -68,12 +79,12 @@ class IndexJS:
             '$(document).ready(setTimeout(function(){',
             '$(\'head\').append(\'<link rel="stylesheet"',
             ' href="/modules/themes/',
-            _config['display']['theme'],
+            self.config['display']['theme'],
             '/theme.css"',
             ' type="text/css" />',
             '<script type="text/javascript"',
             ' src="/modules/themes/',
-            _config['display']['theme'],
+            self.config['display']['theme'],
             '/theme.js"></script>',
             '\');',
 
@@ -88,7 +99,7 @@ class IndexJS:
             '</head>\');',
 
             '$(\'#content\').append(\'<div id=\"logo\"></div>',
-            IndexJS.get_version_div(_config),
+            self.get_version_div(),
             '<div id=\"dashboard\"></div>',
             '\');',
             '} else {',
@@ -112,14 +123,13 @@ class IndexJS:
             '$(\'#logo\').html(\'<img class=\"splash\" src=\"\'+logo+\'\">',
             '\');',
             '}',
+            self.check_upgrade_status(),
             '}, 1000));'
         ])
         return js
 
-    @staticmethod
-    def get_version_div(_config):
-        plugin_db = DBPlugins(_config)
-        manifest_list = plugin_db.get_repos(utils.CABERNET_ID)
+    def get_version_div(self):
+        manifest_list = self.plugin_db.get_repos(utils.CABERNET_ID)
         if not manifest_list:
             current_version = utils.VERSION
             upgrade_js = ''

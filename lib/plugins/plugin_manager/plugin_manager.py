@@ -35,12 +35,22 @@ from lib.common.decorators import handle_url_except
 class PluginManager:
     logger = None
 
-    def __init__(self, _plugins):
+    def __init__(self, _plugins, _config_obj=None):
+        """
+        If called during a patch update, the plugins is unknown,
+        so it should be set to None and the config object passed in instead
+        Otherwise, pass in the plugins and set the config object to None
+        """
         if PluginManager.logger is None:
             PluginManager.logger = logging.getLogger(__name__)
         self.plugin_handler = _plugins
-        self.config = _plugins.config_obj.data
-        self.config_obj = _plugins.config_obj
+        if self.plugin_handler:
+            self.config = _plugins.config_obj.data
+            self.config_obj = _plugins.config_obj
+        else:
+            self.config = _config_obj.data
+            self.config_obj = _config_obj
+        
         self.plugin_db = DBPlugins(self.config)
         self.db_scheduler = DBScheduler(self.config)
         self.plugin_rec = None
@@ -182,7 +192,7 @@ class PluginManager:
         results += '<br>A restart is required to finish cleaning up plugin'
         return results
 
-    def install_plugin(self, _repo_id, _plugin_id, _sched_queue):
+    def install_plugin(self, _repo_id, _plugin_id, _sched_queue=None):
         results = self.check_plugin_status(_repo_id, _plugin_id)
         if results:
             return results
@@ -200,12 +210,13 @@ class PluginManager:
             return results
 
         # next inform cabernet that there is a new plugin
-        try:
-            self.plugin_handler.collect_plugin(self.config['paths']['external_plugins_pkg'], True, self.plugin_rec['id'])
-        except FileNotFoundError:
-            self.logger.notice('Plugin folder not in external plugin folder: {}'.format(str(ex)))
-            results += '<br>Error: Plugin folder not in external plugin folder {}'.format(str(ex))
-            return results
+        if self.plugin_handler:
+            try:
+                self.plugin_handler.collect_plugin(self.config['paths']['external_plugins_pkg'], True, self.plugin_rec['id'])
+            except FileNotFoundError:
+                self.logger.notice('Plugin folder not in external plugin folder: {}'.format(str(ex)))
+                results += '<br>Error: Plugin folder not in external plugin folder {}'.format(str(ex))
+                return results
 
         # update the database to say plugin is installed and what version
         # Enable plugin?
@@ -215,7 +226,7 @@ class PluginManager:
         results += '<br>A restart is suggested to finish cleaning up plugin'
         return results
 
-    def delete_plugin(self, _repo_id, _plugin_id, _sched_queue):
+    def delete_plugin(self, _repo_id, _plugin_id, _sched_queue=None):
         plugin_rec = self.plugin_db.get_plugins(None, _repo_id, _plugin_id)
         if not plugin_rec:
             self.logger.notice('No plugin found, aborting')
@@ -245,11 +256,13 @@ class PluginManager:
 
         results = 'Deleting all {} scheduled tasks'.format(namespace)
         tasks = self.db_scheduler.get_tasks_by_name(plugin_rec['name'], None)
-        for task in tasks:
-            _sched_queue.put({'cmd': 'delinstance', 'name': plugin_rec['name'], 'instance': None})
+        if _sched_queue:
+            for task in tasks:
+                _sched_queue.put({'cmd': 'delinstance', 'name': plugin_rec['name'], 'instance': None})
 
         results += '<br>Deleting plugin objects'
-        self.plugin_handler.terminate(namespace)
+        if self.plugin_handler:
+            self.plugin_handler.terminate(namespace)
 
         results += '<br>Deleting plugin folder {}'.format(plugin_path)
         try:
