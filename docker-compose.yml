@@ -1,22 +1,16 @@
 version: '2.4'
 services:
     cabernet:
-        build:
-          context: ./source/cabernet
-          dockerfile: Dockerfile_tvh_crypt.alpine
-        image: cabernet
-        ports:
-          - "5004:5004"    # Port used to stream
-          - "6077:6077"    # Web Interface Port
         container_name: cabernet
-        network_mode: host
+        image: ghcr.io/cabernetwork/cabernet:latest
         environment:
           - TZ="America/New_York"
           - PUID=1000
           - PGID=1000
-        cpu_shares: 2048
+        ports:
+          - "5004:5004"    # Port used to stream
+          - "6077:6077"    # Web Interface Port
         restart: unless-stopped
         volumes:
-          - ./docker/cabernet/config/data:/app/data
-          - ./docker/cabernet/plugins_ext:/app/plugins_ext
+          - ./docker/cabernet/config/app:/app
           - ./.cabernet/key.txt:/root/.cabernet/key.txt
