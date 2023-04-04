@@ -20,6 +20,7 @@ substantial portions of the Software.
 import logging
 
 from lib.db.db_plugins import DBPlugins
+from lib.plugins.plugin_manager.plugin_manager import PluginManager
 
 
 class PluginsUpgrade:
@@ -29,6 +30,8 @@ class PluginsUpgrade:
         self.config_obj = _plugins.config_obj
         self.config = _plugins.config_obj.data
         self.plugin_db = DBPlugins(self.config)
+        self.pm = PluginManager(None, self.config_obj)
+
 
     def upgrade_plugins(self, _web_status):
         _web_status.data += '#### Checking Plugins ####<br>\r\n'
@@ -42,7 +45,7 @@ class PluginsUpgrade:
             if p_defn['version']['current'] == p_defn['version']['latest']:
                 continue
             # upgrade available
-            _web_status.data += pm.install_plugin(p_defn['repoid'], p_defn['id'])
+            _web_status.data += self.pm.install_plugin(p_defn['repoid'], p_defn['id'])
         _web_status.data += '#### Plugin Upgrades Finished ####<br>\r\n'
 
         return True

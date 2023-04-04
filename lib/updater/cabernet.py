@@ -143,7 +143,9 @@ class CabernetUpgrade:
             self.logger.info('Cabernet manifest not found, aborting')
             _web_status.data += 'Cabernet manifest not found, aborting<br>\r\n'
             return False
-        if c_manifest['version']['next'] == c_manifest['version']['current']:
+        if not c_manifest['version'].get('next'):
+            return False
+        if c_manifest['version'].get('next') == c_manifest['version'].get('current'):
             self.logger.info('Cabernet is on the current version, not upgrading')
             _web_status.data += 'Cabernet is on the current version, not upgrading<br>\r\n'
             return False
