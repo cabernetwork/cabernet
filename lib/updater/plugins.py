@@ -17,6 +17,8 @@ substantial portions of the Software.
 """
 
 
+import logging
+
 from lib.db.db_plugins import DBPlugins
 
 
