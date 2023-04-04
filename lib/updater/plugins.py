@@ -45,8 +45,9 @@ class PluginsUpgrade:
             if p_defn['version']['current'] == p_defn['version']['latest']:
                 continue
             # upgrade available
+            _web_status.data += self.pm.delete_plugin(p_defn['repoid'], p_defn['id'])
             _web_status.data += self.pm.install_plugin(p_defn['repoid'], p_defn['id'])
-        _web_status.data += '#### Plugin Upgrades Finished ####<br>\r\n'
+        _web_status.data += '<br>\r\n#### Plugin Upgrades Finished ####<br>\r\n'
 
         return True
 
