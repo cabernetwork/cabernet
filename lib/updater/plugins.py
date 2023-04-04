@@ -17,7 +17,31 @@ substantial portions of the Software.
 """
 
 
+from lib.db.db_plugins import DBPlugins
+
+
 class PluginsUpgrade:
 
-    def __init__(self):
-        pass
+    def __init__(self, _plugins):
+        self.logger = logging.getLogger(__name__)
+        self.config_obj = _plugins.config_obj
+        self.config = _plugins.config_obj.data
+        self.plugin_db = DBPlugins(self.config)
+
+    def upgrade_plugins(self, _web_status):
+        _web_status.data += '#### Checking Plugins ####<br>\r\n'
+        plugin_defns = self.plugin_db.get_plugins(True)
+        if not plugin_defns:
+            return True
+
+        for p_defn in plugin_defns:
+            if not p_defn.get('external'):
+                continue
+            if p_defn['version']['current'] == p_defn['version']['latest']:
+                continue
+            # upgrade available
+            _web_status.data += pm.install_plugin(p_defn['repoid'], p_defn['id'])
+        _web_status.data += '#### Plugin Upgrades Finished ####<br>\r\n'
+
+        return True
+

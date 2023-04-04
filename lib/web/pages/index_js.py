@@ -37,11 +37,12 @@ class IndexJS:
     def check_upgrade_status(self):
         plugin_defns = self.plugin_db.get_plugins(
             True, None, None)
-        for plugin_defn in plugin_defns:
-            latest_version = plugin_defn['version']['latest']
-            upgrade_available = ''
-            if plugin_defn['external'] and latest_version != plugin_defn['version']['current']:
-                return '$(\"#pluginStatus\").text("Upgrade");'
+        if plugin_defns:
+            for plugin_defn in plugin_defns:
+                latest_version = plugin_defn['version']['latest']
+                upgrade_available = ''
+                if plugin_defn['external'] and latest_version != plugin_defn['version']['current']:
+                    return '$(\"#pluginStatus\").text("Upgrade");'
         return ''
 
     def get(self):

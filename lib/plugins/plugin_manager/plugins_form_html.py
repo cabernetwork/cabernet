@@ -85,7 +85,6 @@ def post_plugins_html(_webserver):
             _webserver.do_mime_response(200, 'text/html', 'STATUS: Installing plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
         else:
             _webserver.do_mime_response(200, 'text/html', "doing something else"+str(action[0]))
-        
     else:
         _webserver.do_mime_response(
             404, 'text/html', web_templates['htmlError']
@@ -121,7 +120,6 @@ class PluginsFormHTML:
                 .format(_plugin_id))
         plugin_defn = plugin_defn[0]
         return ''.join([self.get_plugin_header(plugin_defn), self.get_menu_section(plugin_defn), self.get_plugin_section(plugin_defn)])
-
 
     def get_menu_top_section(self, _plugin_defn):
         return ''.join([
@@ -182,10 +180,9 @@ class PluginsFormHTML:
         pluginid = _plugin_defn['id']
         repoid = _plugin_defn['repoid']
 
-
         return ''.join([
             '<div id="menuActionStatus"></div>',
-            '<form id="menuForm" action="/api/pluginsform" method="post">'
+            '<form action="/api/pluginsform" method="post">'
             '<input type="hidden" name="action" value="">',
             '<input type="hidden" name="pluginId" value="',
             pluginid, '">',
@@ -200,7 +197,6 @@ class PluginsFormHTML:
             '</div>',
             '</div></form>'])
 
-    
     def get_plugin_header(self, _plugin_defn):
         instances = self.plugin_db.get_instances(_namespace=_plugin_defn['name'])
         if instances:
@@ -211,12 +207,6 @@ class PluginsFormHTML:
         
         if not _plugin_defn['version'].get('latest'):
             _plugin_defn['version']['latest'] = None
-
-        latest_version = _plugin_defn['version']['latest']
-        upgrade_available = ''
-        if latest_version != _plugin_defn['version']['current'] and _plugin_defn['external']:
-            upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
-                .format(latest_version)
 
         html = ''.join([
             '<div><div style="display: flex;"><div class="pluginIcon">',
@@ -256,8 +246,18 @@ class PluginsFormHTML:
         latest_version = _plugin_defn['version']['latest']
         upgrade_available = ''
         if latest_version != _plugin_defn['version']['current'] and _plugin_defn['external']:
-            upgrade_available = '<button class="menuIconButton" type="button" style="margin-left:10px;">Upgrade to {}</button>' \
-                .format(latest_version)
+            upgrade_available = ''.join([
+            
+                '<form action="/api/pluginsform" method="post">'
+                '<input type="hidden" name="action" value="">',
+                '<input type="hidden" name="pluginId" value="',
+                pluginid, '">',
+                '<input type="hidden" name="repoId" value="',
+                repoid, '">',
+                '<button class="menuIconButton" type="submit" name="action" value="upgradePlugin" style="margin-left:10px;">Upgrade to {}</button>' \
+                .format(latest_version),
+                '</form>'
+                ])
 
         if _plugin_defn['version']['installed']:
             version_installed_div = ''.join([

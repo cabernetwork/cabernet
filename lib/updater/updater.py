@@ -30,9 +30,11 @@ from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
 from lib.updater.cabernet import CabernetUpgrade
+from lib.updater.plugins import PluginsUpgrade
 from lib.common.string_obj import StringObj
 from lib.common.tmp_mgmt import TMPMgmt
 from lib.updater import cabernet
+from lib.plugins.repo_handler import RepoHandler
 
 STATUS = StringObj()
 IS_UPGRADING = False
@@ -108,6 +110,10 @@ class Updater:
                 'startup')
 
     def update_version_info(self):
+        self.logger.info('Updating Repo Cabernet-Repository versions')
+        self.repos = RepoHandler(self.config_obj)
+        self.repos.load_cabernet_repo()
+        self.logger.info('Updating Cabernet versions')
         c = CabernetUpgrade(self.plugins)
         c.update_version_info()
 
@@ -140,6 +146,7 @@ class Updater:
 
         STATUS.data = 'Starting upgrade...<br>\r\n'
 
+        # upgrade the main cabernet app
         app = CabernetUpgrade(self.plugins)
         if not app.upgrade_app(STATUS):
             STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'
@@ -147,8 +154,14 @@ class Updater:
             IS_UPGRADING = False
             return
 
-        # what do we do with plugins?  They go here if necessary
+        # upgrade the installed external plugins
         STATUS.data += '(TBD) Upgrading plugins...<br>\r\n'
+        p = PluginsUpgrade(self.plugins)
+        if not p.upgrade_plugins(STATUS):
+            STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'
+            time.sleep(1)
+            IS_UPGRADING = False
+            return
 
         STATUS.data += 'Entering Maintenance Mode...<br>\r\n'
         # make sure the config_handler really has the config data uploaded
