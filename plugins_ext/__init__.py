@@ -1,1 +1,0 @@
-# location to install plugins
