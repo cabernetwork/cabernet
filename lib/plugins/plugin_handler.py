@@ -21,6 +21,8 @@ import logging
 import json
 import importlib
 import importlib.resources
+import os
+import pathlib
 
 import lib.common.exceptions as exceptions
 import lib.common.utils as utils
@@ -44,6 +46,7 @@ class PluginHandler:
         if PluginHandler.logger is None:
             PluginHandler.logger = logging.getLogger(__name__)
         self.plugin_defn = self.load_plugin_defn()
+        self.check_external_plugin_folder()
         self.repos = RepoHandler(self.config_obj)
         self.repos.load_cabernet_repo()
         self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'], False)
@@ -59,6 +62,24 @@ class PluginHandler:
         """
         self.plugins[_plugin_name].terminate()
         del self.plugins[_plugin_name]
+
+    def check_external_plugin_folder(self):
+        """
+        If the folder does not exists, then create it and place the 
+        __init__.py file in it.
+        """
+        ext_folder = pathlib.Path(self.config_obj.data['paths']['main_dir']) \
+            .joinpath(self.config_obj.data['paths']['external_plugins_pkg'])
+        init_file = ext_folder.joinpath('__init__.py')
+        if not init_file.exists():
+            self.logger.notice('Creating external plugin folder for use by Cabernet')
+            try:
+                if not ext_folder.exists():
+                    os.makedirs(ext_folder)
+                f = open(init_file, 'wb')
+                f.close()
+            except PermissionError as e:
+                print('ERROR: {} unable to create {}'.format(str(e), init_file))
 
     def collect_plugins(self, _plugins_pkg, _is_external):
         pkg = importlib.util.find_spec(_plugins_pkg)

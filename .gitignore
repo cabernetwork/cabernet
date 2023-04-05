@@ -15,11 +15,11 @@ config_future.ini
 dev/
 data/
 cache/
+plugins_ext/
 *.ts
 lib/tvheadend/development/
 lib/web/htdocs/temp/*
 !lib/web/htdocs/temp/__init__.py
-plugins_ext/provider*
 build/*/cabernet*.exe
 ffmpeg/
 misc/

@@ -76,7 +76,7 @@ class EPG:
                     or not self.config[ns.lower()]['enabled'] \
                     or not self.config.get(config_section) \
                     or not self.config[config_section]['enabled'] \
-                    or not self.config[config_section]['epg-enabled']:
+                    or not self.config[config_section].get('epg-enabled'):
                 continue
             is_enabled = True
         return day_data, ns, inst, day
@@ -186,7 +186,7 @@ class EPG:
                         or not self.config[ch_data['namespace'].lower()]['enabled'] \
                         or not self.config.get(config_section) \
                         or not self.config[config_section]['enabled'] \
-                        or not self.config[config_section]['epg-enabled']:
+                        or not self.config[config_section].get('epg-enabled'):
                     continue
 
                 updated_chnum = utils.wrap_chnum(

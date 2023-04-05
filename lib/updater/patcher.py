@@ -16,7 +16,9 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+
 import logging
+import traceback
 
 from lib.plugins.plugin_manager.plugin_manager import PluginManager
 from lib.db.db_plugins import DBPlugins
@@ -43,18 +45,22 @@ def patch_upgrade(_config_obj, _new_version):
     if _new_version.startswith(REQUIRED_VERSION):
         LOGGER.info('Applying patches to version: {}'.format(REQUIRED_VERSION))
 
-        plugin_db = DBPlugins(_config_obj.data)
-        pm = PluginManager(None, _config_obj)
+        try:
+            plugin_db = DBPlugins(_config_obj.data)
+            pm = PluginManager(None, _config_obj)
 
-        # get list of all installed plugins
-        plugin_list = plugin_db.get_plugins(True)
-        if plugin_list:
-            for plugin in plugin_list:
-                if plugin.get('external') is False:
-                    results = pm.delete_plugin(plugin['repoid'], plugin['id'])
-                    results = pm.install_plugin(plugin['repoid'], plugin['id'])
-                    results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
-                    LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
+            # get list of all installed plugins
+            plugin_list = plugin_db.get_plugins(True)
+            if plugin_list:
+                for plugin in plugin_list:
+                    if plugin.get('external') is False:
+                        results = pm.delete_plugin(plugin['repoid'], plugin['id'])
+                        results = pm.install_plugin(plugin['repoid'], plugin['id'])
+                        results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
+                        LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
+        except Exception:
+            # Make sure that the patcher exits normally so the maintenance flag is removed
+            LOGGER.warning(traceback.format_exc())
     return results
 
 
