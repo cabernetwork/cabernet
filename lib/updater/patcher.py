@@ -48,13 +48,13 @@ def patch_upgrade(_config_obj, _new_version):
 
         # get list of all installed plugins
         plugin_list = plugin_db.get_plugins(True)
-
-        for plugin in plugin_list:
-            if plugin.get('external') is False:
-                results = pm.delete_plugin(plugin['repoid'], plugin['id'])
-                results = pm.install_plugin(plugin['repoid'], plugin['id'])
-                results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
-                LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
+        if plugin_list:
+            for plugin in plugin_list:
+                if plugin.get('external') is False:
+                    results = pm.delete_plugin(plugin['repoid'], plugin['id'])
+                    results = pm.install_plugin(plugin['repoid'], plugin['id'])
+                    results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
+                    LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
     return results
 
 
