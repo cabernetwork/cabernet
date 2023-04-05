@@ -188,42 +188,45 @@ class XMLTV:
                     return True
                 elif elem.tag == 'credits':
                     credits = self.get_p_credits(elem)
-                    if len(credits['actors']) != 0:
-                        _program['actors'] = credits['actors']
-                    if len(credits['directors']) != 0:
-                        _program['directors'] = credits['directors']
+                    if credits:
+                        if len(credits['actors']) != 0:
+                            _program['actors'] = credits['actors']
+                        if len(credits['directors']) != 0:
+                            _program['directors'] = credits['directors']
                     return True
                 elif elem.tag == 'date':
                     p_date = self.get_p_date(elem)
-                    _program['air_date'] = p_date
-                    if len(p_date) == 4:
-                        _program['formatted_date'] = p_date
-                    else:
-                        _program['formatted_date'] = datetime.datetime.strptime(
-                            p_date, '%Y%m%d').strftime('%Y/%m/%d')
+                    if p_date:
+                        _program['air_date'] = p_date
+                        if len(p_date) == 4:
+                            _program['formatted_date'] = p_date
+                        else:
+                            _program['formatted_date'] = datetime.datetime.strptime(
+                                p_date, '%Y%m%d').strftime('%Y/%m/%d')
                     return True
                 elif elem.tag == 'episode-num':
                     episode_num = self.get_p_episode_num(elem)
-                    if episode_num['system'] == 'common' or \
-                            episode_num['system'] == 'SxxExx':
-                        ep_num = episode_num['text']
-                        _program['se_common'] = ep_num
-                        nums = re.findall('\d+', ep_num)
-                        if len(nums) < 2:
-                            _program['episode'] = nums[0]
-                        else:
-                            _program['episode'] = nums[1]
-                            _program['season'] = nums[0]
-                    elif episode_num['system'] == 'dd_progid':
-                        ep_num = episode_num['text']
-                        _program['se_progid'] = ep_num
-                        _program['progid'] = ep_num.replace('.', '')
-                        if _program['episode'] is None:
-                            nums = int(re.findall('\d+$', ep_num)[0])
-                            if nums != 0:
-                                _program['episode'] = nums
-                    elif episode_num['system'] == 'xmltv_ns':
-                        _program['se_xmltv_ns'] = episode_num['text']
+                    if episode_num:
+                        if episode_num['system'] == 'common' or \
+                                episode_num['system'] == 'SxxExx':
+                            ep_num = episode_num['text']
+                            _program['se_common'] = ep_num
+                            nums = re.findall('\d+', ep_num)
+                            if len(nums) < 2:
+                                _program['episode'] = nums[0]
+                            else:
+                                _program['episode'] = nums[1]
+                                _program['season'] = nums[0]
+                        elif episode_num['system'] == 'dd_progid':
+                            ep_num = episode_num['text']
+                            _program['se_progid'] = ep_num
+                            _program['progid'] = ep_num.replace('.', '')
+                            if _program['episode'] is None:
+                                nums = int(re.findall('\d+$', ep_num)[0])
+                                if nums != 0:
+                                    _program['episode'] = nums
+                        elif episode_num['system'] == 'xmltv_ns':
+                            _program['se_xmltv_ns'] = episode_num['text']
                     return True
             if event == 'end' and elem.tag == 'programme':
                 return False

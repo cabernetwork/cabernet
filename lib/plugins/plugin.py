@@ -100,15 +100,11 @@ class Plugin:
         self.plugin_obj = None
 
 
-
-
-
     def load_config_defn(self):
         try:
             self.logger.debug(
                 'Plugin Config Defn file loaded at {}'.format(self.plugin_path))
             defn_obj = ConfigDefn(self.plugin_path, PLUGIN_CONFIG_DEFN_FILE, self.config_obj.data)
-
             default_config = defn_obj.get_default_config()
             self.config_obj.merge_config(default_config)
             defn_obj.call_oninit(self.config_obj)

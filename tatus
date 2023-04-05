@@ -1,0 +1,131 @@
+[1mdiff --git a/lib/resources/config_defn/clients.json b/lib/resources/config_defn/clients.json[m
+[1mindex 98ef369..c40da02 100644[m
+[1m--- a/lib/resources/config_defn/clients.json[m
+[1m+++ b/lib/resources/config_defn/clients.json[m
+[36m@@ -17,7 +17,7 @@[m
+                         "default": "0.0.0.0",[m
+                         "level": 1,[m
+                         "onInit": "lib.config.config_callbacks.set_ip",[m
+[31m-                        "help": "Use instead of plex_accessible_ip. 0.0.0.0 means bind to all IPs and use the main IP address for json data"[m
+[32m+[m[32m                        "help": "Default: 0.0.0.0. Use instead of plex_accessible_ip. 0.0.0.0 means bind to all IPs and use the main IP address for json data"[m
+                     },[m
+                     "plex_accessible_ip":{[m
+                         "label": "plex_accessible_ip",[m
+[36m@@ -39,28 +39,28 @@[m
+                         "type": "integer",[m
+                         "default": 5004,[m
+                         "level": 1,[m
+[31m-                        "help": "Port used to stream. Default is 5004"[m
+[32m+[m[32m                        "help": "Default: 5004. Port used to stream. Default is 5004"[m
+                     },[m
+                     "web_admin_port":{[m
+                         "label": "web_admin_port",[m
+                         "type": "integer",[m
+                         "default": 6077,[m
+                         "level": 1,[m
+[31m-                        "help": "Port for main web-site.  TVHeadend can use any port; however, others such as Plex and Emby need it on port 80 for full HDHR compatilibity"[m
+[32m+[m[32m                        "help": "Default: 6077. Port for main web-site.  TVHeadend can use any port; however, others such as Plex and Emby need it on port 80 for full HDHR compatilibity"[m
+                     },[m
+                     "disable_web_config":{[m
+                         "label": "disable_web_config",[m
+                         "type": "boolean",[m
+                         "default": false,[m
+                         "level": 3,[m
+[31m-                        "help": "Security setting to disable the ability to edit the configuration remotely"[m
+[32m+[m[32m                        "help": "Default: False. Security setting to disable the ability to edit the configuration remotely"[m
+                     },[m
+                     "concurrent_listeners":{[m
+                         "label": "concurrent_listeners",[m
+                         "type": "integer",[m
+                         "default": 8,[m
+[31m-                        "level": 2,[m
+[31m-                        "help": "GUI Webadmin site only. Number of simultaneous HTTP requests at one time. If requests are exceeded, the request will hang until a listener becomes available."[m
+[32m+[m[32m                        "level": 3,[m
+[32m+[m[32m                        "help": "Default: 8. GUI Webadmin site only. Number of simultaneous HTTP requests at one time. If requests are exceeded, the request will hang until a listener becomes available."[m
+                     }[m
+                 }[m
+             },[m
+[36m@@ -75,7 +75,7 @@[m
+                         "type": "boolean",[m
+                         "default": true,[m
+                         "level": 2,[m
+[31m-                        "help": "Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."[m
+[32m+[m[32m                        "help": "Default: True. Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."[m
+                     }[m
+                 }[m
+             },[m
+[36m@@ -99,49 +99,49 @@[m
+                         "default": "tvheadend",[m
+                         "values": ["normal", "tvheadend"],[m
+                         "level": 1,[m
+[31m-                        "help": "TVHeadend uses specific genre to get colors on tv guide"[m
+[32m+[m[32m                        "help": "Default: tvheadend. TVHeadend uses specific genre to get colors on tv guide"[m
+                     },[m
+                     "epg_channel_number":{[m
+                         "label": "Channel # in Name",[m
+                         "type": "boolean",[m
+                         "default": false,[m
+                         "level": 2,[m
+[31m-                        "help": "When true will include the channel number in the channel name for the channel list and EPG"[m
+[32m+[m[32m                        "help": "Default: False. When true will include the channel number in the channel name for the channel list and EPG"[m
+                     },[m
+                     "epg_use_channel_number":{[m
+                         "label": "Use Channel # for Channel ID",[m
+                         "type": "boolean",[m
+                         "default": false,[m
+                         "level": 2,[m
+[31m-                        "help": "For clients like Plex, they use the channel id field in the xmltv.xml as the channel number"[m
+[32m+[m[32m                        "help": "Default: False. For clients like Plex, they use the channel id field in the xmltv.xml as the channel number"[m
+                     },[m
+                     "epg_add_plugin_to_channel_id":{[m
+                         "label": "Add Plugin name to Channel ID",[m
+                         "type": "boolean",[m
+                         "default": false,[m
+                         "level": 2,[m
+[31m-                        "help": "For cases where the different provider have the same UID for channels"[m
+[32m+[m[32m                        "help": "Default: False. For cases where the different provider have the same UID for channels"[m
+                     },[m
+                     "epg_channel_icon":{[m
+                         "label": "EPG Channel Icon",[m
+                         "type": "boolean",[m
+                         "default": true,[m
+                         "level": 2,[m
+[31m-                        "help": "When true will include the icon for each channel inside the xmltv.xml file"[m
+[32m+[m[32m                        "help": "Default: True. When true will include the icon for each channel inside the xmltv.xml file"[m
+                     },[m
+                     "epg_program_icon":{[m
+                         "label": "EPG Program Icon",[m
+                         "type": "boolean",[m
+                         "default": true,[m
+                         "level": 2,[m
+[31m-                        "help": "When true will include the icon for each program inside the xmltv.xml file"[m
+[32m+[m[32m                        "help": "Default: True. When true will include the icon for each program inside the xmltv.xml file"[m
+                     },[m
+                     "epg_prettyprint":{[m
+                         "label": "EPG Pretty Print",[m
+                         "type": "boolean",[m
+                         "default": false,[m
+                         "level": 1,[m
+[31m-                        "help": "If you are having memory issues, try turning this to false"[m
+[32m+[m[32m                        "help": "Default: False. If you are having memory issues, try turning this to false"[m
+                     }[m
+                 }[m
+             },[m
+[36m@@ -156,7 +156,7 @@[m
+                         "type": "boolean",[m
+                         "default": true,[m
+                         "level": 2,[m
+[31m-                        "help": "Enables SSDP protocol on port 1900. Recommend keeping this disabled and use manual setup"[m
+[32m+[m[32m                        "help": "Default: True. Enables SSDP protocol on port 1900. Recommend keeping this disabled and use manual setup"[m
+                     },[m
+                     "udp_netmask":{[m
+                         "label": "udp_netmask",[m
+[36m@@ -180,7 +180,7 @@[m
+                         "type": "boolean",[m
+                         "default": true,[m
+                         "level": 2,[m
+[31m-                        "help": "Enables HDHR protocol on port 65001. Recommend keeping this disabled and use manual setup"[m
+[32m+[m[32m                        "help": "Default: True. Enables HDHR UDP discovery protocol on port 65001. Recommend keeping this disabled and use manual setup"[m
+                     },[m
+                     "hdhr_id":{[m
+                         "label": "hdhr_id",[m

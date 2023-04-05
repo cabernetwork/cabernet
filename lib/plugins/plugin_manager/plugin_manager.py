@@ -165,7 +165,7 @@ class PluginManager:
         try:
             p = pathlib.Path(tmp_plugin_path)
             shutil.rmtree(p.parents[0])
-            #os.remove(tmp_zip_path)
+            os.remove(tmp_zip_path)
         except OSError as ex:
             self.logger.notice('Unable to delete plugin from tmp area: {}'.format(str(ex)))
             results += '<br>Error: Unable to delete plugin folder from tmp area {}'.format(str(ex))

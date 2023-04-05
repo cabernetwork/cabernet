@@ -17,7 +17,7 @@
                         "default": true,
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_enable",
-                        "help": "Used to enable logging to the system logger"
+                        "help": "Default: Enabled. Used to enable logging to the system logger"
                     },
                     "level":{
                         "label": "Level",
@@ -26,7 +26,7 @@
                         "default": "WARNING",
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
-                        "help": "Log level for system logs. Default is WARNING"
+                        "help": "Default: WARNING. Log level for system logs. Default is WARNING"
                     },
                     "class":{
                         "label": "class",

@@ -84,9 +84,9 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             if sid in sids_processed:
                 continue
             sids_processed.append(sid)
-            if not sid_data['enabled']:
-                continue
-            if not _plugins[sid_data['namespace']].enabled:
+            if not sid_data['enabled'] \
+                    or not _plugins.get(sid_data['namespace']) \
+                    or not _plugins[sid_data['namespace']].enabled:
                 continue
             if not _plugins[sid_data['namespace']] \
                     .plugin_obj.instances[sid_data['instance']].enabled:
@@ -157,6 +157,8 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
             sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
+            if not _plugins.get(sid_data['namespace']):
+                continue
             if not _plugins[sid_data['namespace']].enabled:
                 continue
             if not _plugins[sid_data['namespace']] \
@@ -195,6 +197,8 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
                 continue
             sids_processed.append(sid)
             if not sid_data['enabled']:
+                continue
+            if not _plugins.get(sid_data['namespace']):
                 continue
             if not _plugins[sid_data['namespace']].enabled:
                 continue

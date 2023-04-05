@@ -16,6 +16,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import configparser
 import logging
 import json
 import importlib
@@ -27,6 +28,8 @@ import lib.common.utils as utils
 from .plugin import Plugin
 from .repo_handler import RepoHandler
 from lib.db.db_plugins import DBPlugins
+from lib.db.db_channels import DBChannels
+from lib.db.db_config_defn import DBConfigDefn
 
 PLUGIN_DEFN_FILE = 'plugin_defn.json'
 
@@ -45,6 +48,7 @@ class PluginHandler:
         self.repos.load_cabernet_repo()
         self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'], False)
         self.collect_plugins(self.config_obj.data['paths']['external_plugins_pkg'], True)
+        self.cleanup_config_missing_plugins()
         if PluginHandler.cls_plugins is not None:
             del PluginHandler.cls_plugins
         PluginHandler.cls_plugins = self.plugins
@@ -68,6 +72,42 @@ class PluginHandler:
         for folder in importlib.resources.contents(_plugins_pkg):
             self.collect_plugin(_plugins_pkg, _is_external, folder)
         self.del_missing_plugins()
+
+    def cleanup_config_missing_plugins(self):
+        """
+        Case where the plugin is deleted from folder, but database and config
+        still have data.
+        """
+        ch_db = DBChannels(self.config_obj.data)
+        ns_inst_list = ch_db.get_channel_instances()
+        ns_list = ch_db.get_channel_names()
+        for ns in ns_list:
+            ns = ns['namespace']
+            if not self.plugins.get(ns) and self.config_obj.data.get(ns.lower()):
+                for nv in self.config_obj.data.get(ns.lower()).items():
+                    new_value = self.set_value_type(nv[1])
+                    self.config_obj.data[ns.lower()][nv[0]] = new_value
+        for ns_inst in ns_inst_list:
+            if not self.plugins.get(ns_inst['namespace']):
+                inst_name = utils.instance_config_section(ns_inst['namespace'], ns_inst['instance'])
+                if self.config_obj.data.get(inst_name):
+                    for nv in self.config_obj.data.get(inst_name).items():
+                        new_value = self.set_value_type(nv[1])
+                        self.config_obj.data[inst_name][nv[0]] = new_value
+        db_configdefn = DBConfigDefn(self.config_obj.data)
+        db_configdefn.add_config(self.config_obj.data)
+
+    def set_value_type(self, _value):
+        if not isinstance(_value, str):
+            return _value
+        if _value == 'True':
+            return True
+        elif _value == 'False':
+            return False
+        elif _value.isdigit():
+            return int(_value)
+        else:
+            return _value
 
     def collect_plugin(self, _plugins_pkg, _is_external, _folder):
         if _folder.startswith('__'):

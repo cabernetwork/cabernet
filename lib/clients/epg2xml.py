@@ -71,17 +71,26 @@ class EPG:
             if day < self.today:
                 continue
             config_section = utils.instance_config_section(ns, inst)
-            if not self.config[ns.lower()]['enabled']:
-                continue
-            if not self.config[config_section]['enabled']:
-                continue
-            if not self.config[config_section]['epg-enabled']:
+            
+            if not self.config.get(ns.lower()) \
+                    or not self.config[ns.lower()]['enabled'] \
+                    or not self.config.get(config_section) \
+                    or not self.config[config_section]['enabled'] \
+                    or not self.config[config_section]['epg-enabled']:
                 continue
             is_enabled = True
         return day_data, ns, inst, day
 
     def get_epg_xml(self, _webserver):
         xml_out = None
+        
+        if self.namespace is not None \
+                and not self.plugins.plugins.get(self.namespace):
+            _webserver.do_mime_response(
+                501, 'text/html',
+                web_templates['htmlError'].format('501 - Invalid Namespace: {}'.format(self.namespace)))
+            return
+
         try:
             _webserver.do_dict_response({
                 'code': 200,
@@ -173,11 +182,11 @@ class EPG:
                 if not ch_data['enabled']:
                     continue
                 config_section = utils.instance_config_section(ch_data['namespace'], ch_data['instance'])
-                if not self.config[ch_data['namespace'].lower()]['enabled']:
-                    continue
-                if not self.config[config_section]['enabled']:
-                    continue
-                if not self.config[config_section]['epg-enabled']:
+                if not self.config.get(ch_data['namespace'].lower()) \
+                        or not self.config[ch_data['namespace'].lower()]['enabled'] \
+                        or not self.config.get(config_section) \
+                        or not self.config[config_section]['enabled'] \
+                        or not self.config[config_section]['epg-enabled']:
                     continue
 
                 updated_chnum = utils.wrap_chnum(

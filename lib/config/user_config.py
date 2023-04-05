@@ -58,6 +58,7 @@ class TVHUserConfig:
     def __init__(self, _script_dir=None, _opersystem=None, _args=None, _config=None):
         self.logger = None
         self.defn_json = None
+        self.db = None
         self.script_dir = str(_script_dir)
         self.defn_json = config_defn.load_default_config_defns()
         self.data = self.defn_json.get_default_config()
@@ -131,6 +132,15 @@ class TVHUserConfig:
                 if os.path.exists(poss_config):
                     config_file = poss_config
                     break
+            if not config_file:
+                # create one in the data folder
+                try:
+                    f = open('data/' + CONFIG_FILENAME, 'wb')
+                    config_file = pathlib.Path(_script_dir).joinpath('data/' + CONFIG_FILENAME)
+                    f.close()
+                except PermissionError as e:
+                    print('ERROR: {} unable to create {}'.format(str(e), poss_config))
+                    
         if config_file and os.path.exists(config_file):
             return config_file
         else:
