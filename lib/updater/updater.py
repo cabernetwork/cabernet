@@ -155,7 +155,6 @@ class Updater:
             return
 
         # upgrade the installed external plugins
-        STATUS.data += '(TBD) Upgrading plugins...<br>\r\n'
         p = PluginsUpgrade(self.plugins)
         if not p.upgrade_plugins(STATUS):
             STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'

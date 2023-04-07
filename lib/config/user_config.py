@@ -213,6 +213,8 @@ class TVHUserConfig:
         # make sure the config_handler has all the data from the file
         self.config_handler.read(self.data['paths']['config_file'])
 
+        results = '<hr><h3>Status Results</h3><ul>'
+
         area_data = self.defn_json.get_defn(_area)
         for section, section_data in area_data['sections'].items():
             if section in _updated_data:
@@ -233,17 +235,17 @@ class TVHUserConfig:
                             self.detect_change(section, setting, _updated_data)
 
         # save the changes to config.ini and self.data
-        results = '<hr><h3>Status Results</h3><ul>'
-
         config_defaults = self.defn_json.get_default_config_area(_area)
         for key in _updated_data.keys():
             results += self.save_config_section(key, _updated_data, config_defaults)
+
+        results += self.defn_json.call_onchange(_area, _updated_data, self)
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
 
         # need to inform things that changes occurred...
         restart = False
-        results += self.defn_json.call_onchange(_area, _updated_data, self)
+
         self.db.add_config(self.data)
         if restart:
             results += '</ul><b>Service may need to be restarted if not all changes were implemented</b><hr><br>'
