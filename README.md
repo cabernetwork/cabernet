@@ -34,9 +34,9 @@ See http://ghcr.io/cabernetwork/cabernet:latest
     - http://ipaddress:6077/PlutoTV/Default/channels.m3u
 - config.ini group tag requirements
     - All lower case
-    - Underscore separates the plugin name from the instance name
-    - Use a single word if possible for the instance name or use underlines between words
-    - Do not change the instance name.  It is used throughout the system and is difficult to change.
+    - Underscore is a key character in section tags and separates the plugin name from the instance name
+    - Use a single word if possible for the instance name
+    - Do not change the instance name unless you go into data management and remove the instance first.
     - [plutotv_mychannels]
 
 Enjoy
