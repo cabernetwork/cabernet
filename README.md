@@ -22,9 +22,6 @@ label = PlutoTV Instance
 - Bring up browser and go to http://ipaddress:6077/
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
-    - Under Providers > PlutoTV enable
-        - URL Filtering
-        - PTS/DTS Resync
 - From XML/JSON Links try some of the links
 
 ### 3. Docker
