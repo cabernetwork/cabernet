@@ -131,6 +131,7 @@ class RepoHandler:
                     plugin['version']['installed'] = plugin_data['version']['installed']
                     plugin['version']['latest'] = plugin['version']['current']
                     plugin['version']['current'] = plugin_data['version']['current']
+                    plugin['changelog'] = plugin.get('changelog')
                     if plugin_data.get('external'):
                         plugin['external'] = plugin_data['external']
                     else:

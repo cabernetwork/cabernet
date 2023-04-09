@@ -271,9 +271,22 @@ class PluginsFormHTML:
         else:
             version_installed_div = ''
 
+        if _plugin_defn.get('changelog'):
+            changelog_div = ''.join([
+                '<div class="pluginSection">',
+                '<div class="pluginSectionName">Change Log: </div>',
+                '<div style="float:left; margin-top:3px;" class="pluginValue">',
+                '<code>',
+                str(_plugin_defn['changelog']), '</code></div>',
+                '</div>',
+                ])
+        else:
+            changelog_div = ''
+            
+
         html = ''.join([
             '<button class="menuIconButton menuSection" type="button" onclick="show_menu(this, \'pluginActions\');">',
-            '<i class="md-icon" STYLE="font-size: 1.7em;">menu</i>',
+            '<i class="md-icon" STYLE="font-size: 1.5em;">menu</i>',
             '</button>',
             version_installed_div,
             '<div class="pluginSection">',
@@ -282,6 +295,8 @@ class PluginsFormHTML:
             str(_plugin_defn['version']['latest']),
             '</div>',
             '</div>',
+
+            changelog_div,
 
             '<div class="pluginSection">',
             '<div class="pluginSectionName">Dependencies: </div>',
