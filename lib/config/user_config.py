@@ -62,6 +62,7 @@ class TVHUserConfig:
         self.script_dir = str(_script_dir)
         self.defn_json = config_defn.load_default_config_defns()
         self.data = self.defn_json.get_default_config()
+
         if _script_dir is not None:
             config_file = TVHUserConfig.get_config_path(_script_dir, _args)
             self.import_config(config_file)
@@ -113,6 +114,10 @@ class TVHUserConfig:
 
         for each_section in self.config_handler.sections():
             lower_section = each_section.lower()
+            if each_section != lower_section:
+                self.logger.error('ERROR: ALL SECTIONS IN THE config.ini MUST BE LOWER CASE. Found: {}'
+                    .format(each_section))
+                continue
             if lower_section not in self.data.keys():
                 self.data.update({lower_section: {}})
             for (each_key, each_val) in self.config_handler.items(each_section):

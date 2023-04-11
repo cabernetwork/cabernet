@@ -48,6 +48,7 @@ class PluginHandler:
         self.plugin_defn = self.load_plugin_defn()
         self.check_external_plugin_folder()
         self.repos = RepoHandler(self.config_obj)
+
         self.repos.load_cabernet_repo()
         self.collect_plugins(self.config_obj.data['paths']['internal_plugins_pkg'], False)
         self.collect_plugins(self.config_obj.data['paths']['external_plugins_pkg'], True)
@@ -79,7 +80,7 @@ class PluginHandler:
                 f = open(init_file, 'wb')
                 f.close()
             except PermissionError as e:
-                print('ERROR: {} unable to create {}'.format(str(e), init_file))
+                self.logger.warning('ERROR: {} unable to create {}'.format(str(e), init_file))
 
     def collect_plugins(self, _plugins_pkg, _is_external):
         pkg = importlib.util.find_spec(_plugins_pkg)

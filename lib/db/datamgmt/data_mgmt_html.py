@@ -130,7 +130,7 @@ def del_instance(_config, _name):
 
     html = ''
     db_plugins = DBPlugins(_config)
-    num_del = db_plugins.del_instance(name_inst[0], name_inst[1])
+    num_del = db_plugins.del_instance(None, name_inst[0], name_inst[1])
     if num_del > 0:
         html = ''.join([html,
                         '<b>', _name, '</b> deleted from Plugins<br>'

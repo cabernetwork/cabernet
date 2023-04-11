@@ -225,6 +225,8 @@ class DBPlugins(DB):
         self.delete(DB_PLUGINS_TABLE, (_repo_id, _plugin_id,))
 
     def del_instance(self, _repo, _namespace, _instance):
+        if not _repo:
+            _repo = '%'
         return self.delete(DB_INSTANCE_TABLE, (_repo, _namespace, _instance,))
 
     def get_instances(self, _repo=None, _namespace=None):

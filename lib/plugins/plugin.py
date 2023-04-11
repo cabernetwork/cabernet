@@ -44,7 +44,6 @@ class Plugin:
     logger = None
 
     def __init__(self, _config_obj, _plugin_defn, _plugins_pkg, _plugin_id, _is_external):
-
         if Plugin.logger is None:
             Plugin.logger = logging.getLogger(__name__)
         self.enabled = True
