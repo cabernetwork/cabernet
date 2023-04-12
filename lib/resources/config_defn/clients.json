@@ -113,7 +113,7 @@
                         "type": "boolean",
                         "default": false,
                         "level": 2,
-                        "help": "Default: False. For clients like Plex, they use the channel id field in the xmltv.xml as the channel number"
+                        "help": "Default: False. For clients like Plex and JellyFin, they use the channel id field in the xmltv.xml as the channel number"
                     },
                     "epg_add_plugin_to_channel_id":{
                         "label": "Add Plugin name to Channel ID",

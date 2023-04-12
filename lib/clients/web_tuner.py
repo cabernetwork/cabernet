@@ -27,6 +27,7 @@ from logging import config
 from http.server import HTTPServer
 from urllib.parse import urlparse
 
+from lib.common import utils
 from lib.common.decorators import gettunerrequest
 from lib.web.pages.templates import web_templates
 from lib.db.db_config_defn import DBConfigDefn
@@ -56,14 +57,18 @@ def logreset(_webserver):
 
 
 @gettunerrequest.route('RE:/auto/v.+')
-def logreset(_webserver):
+def autov(_webserver):
     channel = _webserver.content_path.replace('/auto/v', '')
     station_list = TunerHttpHandler.channels_db.get_channels(
         _webserver.query_data['name'], _webserver.query_data['instance'])
+    # is it a uid?
     if channel not in station_list.keys():
-        # check channel number
+        # check channel number with adjustments
         for station in station_list.keys():
-            if station_list[station][0]['display_number'] == channel:
+            updated_chnum = utils.wrap_chnum(
+                str(station_list[station][0]['display_number']), station_list[station][0]['namespace'],
+                station_list[station][0]['instance'], _webserver.config)
+            if updated_chnum == channel:
                 _webserver.do_tuning(station, _webserver.query_data['name'],
                                      _webserver.query_data['instance'])
                 return

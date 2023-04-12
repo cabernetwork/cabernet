@@ -70,6 +70,7 @@ def lineup_json(_webserver):
 def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
     format_descriptor = '#EXTM3U'
     record_marker = '#EXTINF'
+    ch_obj = ChannelsURL(_config, _base_url)
 
     db = DBChannels(_config)
     ch_data = db.get_channels(_namespace, _instance)
@@ -98,8 +99,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             if stream == 'm3u8redirect' and sid_data['json'].get('stream_url'):
                 uri = sid_data['json']['stream_url']
             else:
-                uri = '{}{}/{}/watch/{}'.format(
-                    'http://', _base_url, sid_data['namespace'], str(sid))
+                uri = ch_obj.set_uri(sid_data)
 
             # NOTE tvheadend supports '|' separated names in two attributes
             # either 'group-title' or 'tvh-tags'
@@ -120,7 +120,6 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
-            ch_obj = ChannelsURL(_config)
             service_name = ch_obj.set_service_name(sid_data)
             fakefile.write(
                 '%s\n' % (
@@ -147,6 +146,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
 
 def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
     db = DBChannels(_config)
+    ch_obj = ChannelsURL(_config, _base_url)
     ch_data = db.get_channels(_namespace, _instance)
     return_json = ''
     sids_processed = []
@@ -171,8 +171,7 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
             else:
-                uri = '{}{}/{}/watch/{}'.format(
-                    'http://', _base_url, sid_data['namespace'], str(sid))
+                uri = ch_obj.set_uri(sid_data)
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
@@ -188,6 +187,7 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
 
 def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
     db = DBChannels(_config)
+    ch_obj = ChannelsURL(_config, _base_url)
     ch_data = db.get_channels(_namespace, _instance)
     return_xml = ''
     sids_processed = []
@@ -213,8 +213,7 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
                 uri = sid_data['json']['stream_url']
                 uri = escape(uri)
             else:
-                uri = '{}{}/{}/watch/{}'.format(
-                    'http://', _base_url, sid_data['namespace'], str(sid)).encode()
+                uri = escape(ch_obj.set_uri(sid_data))
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
@@ -228,9 +227,10 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
 
 class ChannelsURL:
 
-    def __init__(self, _config):
+    def __init__(self, _config, _base_url):
         self.logger = logging.getLogger(__name__)
         self.config = _config
+        self.base_url = _base_url
 
     def update_channels(self, _namespace, _query_data):
         db = DBChannels(self.config)
@@ -305,3 +305,15 @@ class ChannelsURL:
                 ' ' + _sid_data['display_name']
         else:
             return _sid_data['display_name']
+
+    def set_uri(self, _sid_data):
+        if self.config['epg']['epg_use_channel_number']:
+            updated_chnum = utils.wrap_chnum(
+                str(_sid_data['display_number']), _sid_data['namespace'],
+                _sid_data['instance'], self.config)
+            uri = '{}{}/{}/auto/v{}'.format(
+                'http://', self.base_url, _sid_data['namespace'], updated_chnum)
+        else:
+            uri = '{}{}/{}/watch/{}'.format(
+                'http://', self.base_url, _sid_data['namespace'], str(_sid_data['uid']))
+        return uri

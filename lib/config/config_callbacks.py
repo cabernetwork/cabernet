@@ -315,6 +315,7 @@ def update_instance_label(_config_obj, _section, _key):
 
 def update_channel_num(_config_obj, _section, _key):
     starting_num = _config_obj.data[_section][_key]
+    init_num = starting_num
     namespace_l, instance = _section.split('_', 1)
     db_channels = DBChannels(_config_obj.data)
     namespaces = db_channels.get_channel_names()
@@ -324,11 +325,17 @@ def update_channel_num(_config_obj, _section, _key):
     namespace = list(namespace)[0]
     ch_list = db_channels.get_channels(namespace, instance)
     for ch in ch_list.values():
-        ch[0]['display_number'] = starting_num
-        starting_num += 1
+        if starting_num == -1:
+            ch[0]['display_number'] = ch[0]['json']['number']
+        else:
+            ch[0]['display_number'] = starting_num
+            starting_num += 1
         db_channels.update_channel_number(ch[0])
 
-    return '{} {} {}'.format(_section, _key, starting_num, namespace)
+    if init_num == -1:
+        return 'Renumbered channels back to default'.format(_section, _key)
+    else:
+        return 'Renumbered channels starting at {}'.format(_section, _key, init_num)
 
 
 def set_theme_folders(_defn, _config, _section, _key):

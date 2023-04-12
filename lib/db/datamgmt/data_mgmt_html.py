@@ -24,9 +24,10 @@ import re
 import shutil
 import os
 
+import lib.db.datamgmt.backups as backups
+from lib.common import utils
 from lib.common.decorators import getrequest
 from lib.common.decorators import postrequest
-import lib.db.datamgmt.backups as backups
 from lib.db.db_channels import DBChannels
 from lib.db.db_epg import DBepg
 from lib.db.db_epg_programs import DBEpgPrograms
@@ -463,8 +464,10 @@ class DataMgmtHTML:
         name_inst_dict = db_plugins.get_instances()
         for ns, inst_list in name_inst_dict.items():
             for inst in inst_list:
-                name_inst.append(''.join([
-                    ns, ':', inst]))
+                section = utils.instance_config_section(ns, inst)
+                if self.config[section]['enabled']:
+                    name_inst.append(''.join([
+                        ns, ':', inst]))
         db_channels = DBChannels(self.config)
         name_inst_list = db_channels.get_channel_instances()
         self.update_ns_inst(name_inst, name_inst_list)
