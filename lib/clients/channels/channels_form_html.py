@@ -45,7 +45,7 @@ def post_channels_html(_webserver):
     filter_dict = get_filter_data(_webserver.query_data)
 
     if sort_col is None:
-        cu = ChannelsURL(_webserver.config)
+        cu = ChannelsURL(_webserver.config, _webserver.stream_url)
         results = cu.update_channels(namespace, _webserver.query_data)
         _webserver.do_mime_response(200, 'text/html', results)
     else:

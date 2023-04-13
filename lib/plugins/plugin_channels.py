@@ -43,9 +43,9 @@ class PluginChannels:
         self.instance_key = _instance_obj.instance_key
         self.db = DBChannels(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
-        if self.config_obj.data[self.config_section].get('channel-start_ch_num') is not None:
-            self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
-        else:
+
+        self.ch_num_enum = self.config_obj.data[self.config_section].get('channel-start_ch_num')
+        if self.ch_num_enum is None or self.ch_num_enum < 0:
             self.ch_num_enum = 0
 
     def terminate(self):
@@ -116,9 +116,8 @@ class PluginChannels:
                              headers=_header)
 
     def refresh_channels(self, force=False):
-        if self.config_obj.data[self.config_section].get('channel-start_ch_num') is not None:
-            self.ch_num_enum = self.config_obj.data[self.config_section]['channel-start_ch_num']
-        else:
+        self.ch_num_enum = self.config_obj.data[self.config_section].get('channel-start_ch_num')
+        if self.ch_num_enum is None or self.ch_num_enum < 0:
             self.ch_num_enum = 0
         last_update = self.db.get_status(self.plugin_obj.name, self.instance_key)
         update_needed = False

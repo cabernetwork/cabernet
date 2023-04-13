@@ -155,10 +155,16 @@ class Scheduler(Thread):
                     elif _trigger['instance'] is None:
                         call_f = getattr(plugin_obj, _trigger['funccall'])
                         results = call_f()
-                    else:
+                    elif plugin_obj.instances.get(_trigger['instance']):
                         call_f = getattr(plugin_obj.instances[_trigger['instance']],
                                          _trigger['funccall'])
                         results = call_f()
+                    else:
+                        self.logger.debug(
+                            '{}:{} scheduled tasks ignored. instance missing'
+                            .format(_trigger['namespace'], _trigger['instance']))
+                        results = False
+
         except exceptions.CabernetException as ex:
             self.logger.warning('{}'.format(str(ex)))
             results = False

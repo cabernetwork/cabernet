@@ -465,7 +465,7 @@ class DataMgmtHTML:
         for ns, inst_list in name_inst_dict.items():
             for inst in inst_list:
                 section = utils.instance_config_section(ns, inst)
-                if self.config[section]['enabled']:
+                if self.config.get(section) and self.config[section]['enabled']:
                     name_inst.append(''.join([
                         ns, ':', inst]))
         db_channels = DBChannels(self.config)
