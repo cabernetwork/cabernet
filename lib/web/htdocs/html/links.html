@@ -20,12 +20,14 @@
     </ul>
 
     All links above have the same ability to apply to any plugin.  You can request the data filtered
-    for a plugin or for an instance of the plugin.  As an example:
+    for a plugin or for an instance of the plugin.  
+    
+
+    <h3>Examples of URLs</h3>
     <pre>    http://idaddress:6077/PlUtotV/DeFauLt/channel.m3u</pre>
     will generate a list of channels for the PlutoTV:default instance while
     <pre>    http://idaddress:6077/M3U/channel.m3u</pre>
-    generates a list of channels for all instances of the M3U plugin, combined.<br>
-    <h3>Examples of URLs</h3>
+    generates a list of channels for all instances of the M3U plugin, combined.
     To get an EPG for everything under XUMO
     <pre>    http://idaddress:6077/Xumo/xmltv.xml</pre>   
     To get a M3U formatted channel list of M3U:Stirr
@@ -34,15 +36,13 @@
     To get EPG for all plugins in Cabernet
     <pre>    http://idaddress:6077/xmltv.xml</pre>
 
-    For TVHeadend, it would be appropriate to create a network for each plug or plugin:instance.<br>
+    For TVHeadend, it would be appropriate to create a network for each plugin or plugin:instance.<br>
     For Plex, it needs a unique IP address for each tuner, so either give it all plugins at once, 
     or create multiple IP Addresses to separate the plugin data.<br>
     For Emby and JellyFin, you can create a TV Source and Guide Data for all, per plugin, or plugin:instance.
 
-    Setting up the HDHomeRun connection with Emby, Plex or JellyFin, you can use the following link
-    http://ipaddress:6077
-    or
-    http://ipaddress:6077/PlutoTV
-    for plutotv only channels. Whgen requested, use the full url to identify the xmltv.xml file
+    Setting up the HDHomeRun connection with Emby, Plex or JellyFin, you can use the following link<br>
+    http://ipaddress:6077 or http://ipaddress:6077/PlutoTV<br>
+    for plutotv only channels. When requested, use the full url to identify the xmltv.xml file
 
 </body>

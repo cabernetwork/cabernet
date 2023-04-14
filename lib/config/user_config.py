@@ -261,7 +261,7 @@ class TVHUserConfig:
     def save_config_section(self, _section, _updated_data, _config_defaults):
         results = ''
         for (key, value) in _updated_data[_section].items():
-            if value[1]:
+            if len(value) > 1 and value[1]:
                 if value[0] is None:
                     # use default and remove item from config.ini
                     try:
@@ -292,13 +292,14 @@ class TVHUserConfig:
                         self.config_handler.add_section(_section)
                         self.config_handler.set(
                             _section, key, str(_updated_data[_section][key][0]))
-                    self.data[_section][key] = _updated_data[_section][key][0]
-                    if len(_updated_data[_section][key]) == 3:
-                        results += '<li>Updated [{}][{}] updated</li>' \
-                            .format(_section, key)
-                    else:
-                        results += '<li>Updated [{}][{}] to {}</li>' \
-                            .format(_section, key, _updated_data[_section][key][0])
+                    if self.data.get(_section) is not None:
+                        self.data[_section][key] = _updated_data[_section][key][0]
+                        if len(_updated_data[_section][key]) == 3:
+                            results += '<li>Updated [{}][{}] updated</li>' \
+                                .format(_section, key)
+                        else:
+                            results += '<li>Updated [{}][{}] to {}</li>' \
+                                .format(_section, key, _updated_data[_section][key][0])
         return results
 
     def write(self, _section, _key, _value):
