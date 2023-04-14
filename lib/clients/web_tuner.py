@@ -61,21 +61,17 @@ def autov(_webserver):
     channel = _webserver.content_path.replace('/auto/v', '')
     station_list = TunerHttpHandler.channels_db.get_channels(
         _webserver.query_data['name'], _webserver.query_data['instance'])
-    # is it a uid?
-    if channel not in station_list.keys():
-        # check channel number with adjustments
-        for station in station_list.keys():
-            updated_chnum = utils.wrap_chnum(
-                str(station_list[station][0]['display_number']), station_list[station][0]['namespace'],
-                station_list[station][0]['instance'], _webserver.config)
-            if updated_chnum == channel:
-                _webserver.do_tuning(station, _webserver.query_data['name'],
-                                     _webserver.query_data['instance'])
-                return
-    else:
-        _webserver.do_tuning(channel, _webserver.query_data['name'],
-                             _webserver.query_data['instance'])
-        return
+
+    # check channel number with adjustments
+    for station in station_list.keys():
+        updated_chnum = utils.wrap_chnum(
+            str(station_list[station][0]['display_number']), station_list[station][0]['namespace'],
+            station_list[station][0]['instance'], _webserver.config)
+        if updated_chnum == channel:
+            _webserver.do_tuning(station, _webserver.query_data['name'],
+                                 _webserver.query_data['instance'])
+            return
+
     _webserver.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
 
 
