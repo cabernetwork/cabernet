@@ -276,13 +276,13 @@ def enable_ssdp(_config_obj, _section, _key):
 
 
 def set_hdhomerun_id(_config_obj, _section, _key):
-    if _config_obj.data['hdhomerun']['hdhr_id'] is None:
+    if _config_obj.data[_section][_key] is None:
         _config_obj.write(
-            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
+            _section, _key, hdhr_server.hdhr_gen_device_id())
     elif not hdhr_server.hdhr_validate_device_id(
-            _config_obj.data['hdhomerun']['hdhr_id']):
+            _config_obj.data[_section][_key]):
         _config_obj.write(
-            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
+            _section, _key, hdhr_server.hdhr_gen_device_id())
 
 
 def set_uuid(_config_obj, _section, _key):

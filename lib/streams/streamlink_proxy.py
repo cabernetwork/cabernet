@@ -109,10 +109,13 @@ class StreamlinkProxy(Stream):
                         raise
             try:
                 self.read_buffer()
+            except exceptions.CabernetException as ex:
+                self.logger.info('{} {}'.format(ex, self.streamlink_proc.pid))
+                break
             except Exception as e:
                 self.logger.error('{}{}'.format(
                     '2 UNEXPECTED EXCEPTION=', e))
-                raise
+                break
         self.terminate_stream()
 
     def validate_stream(self):

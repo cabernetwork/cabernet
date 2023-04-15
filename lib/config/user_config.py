@@ -22,6 +22,7 @@ import json
 import logging
 import pathlib
 import os
+import re
 import shutil
 
 import lib.common.utils as utils
@@ -112,12 +113,20 @@ class TVHUserConfig:
         self.logger = logging.getLogger(__name__)
         self.logger.info("Loading Configuration File: " + str(config_file))
 
+        search_section_name = re.compile('^[a-zA-Z0-9]+_?[a-zA-Z0-9]+$')
+
         for each_section in self.config_handler.sections():
             lower_section = each_section.lower()
             if each_section != lower_section:
                 self.logger.error('ERROR: ALL SECTIONS IN THE config.ini MUST BE LOWER CASE. Found: {}'
                     .format(each_section))
                 continue
+            m = re.match(search_section_name, each_section)
+            if m is None:
+                self.logger.error('ERROR: INVALID SECTION NAME IN THE config.ini. Found: {}'
+                    .format(each_section))
+                continue
+
             if lower_section not in self.data.keys():
                 self.data.update({lower_section: {}})
             for (each_key, each_val) in self.config_handler.items(each_section):

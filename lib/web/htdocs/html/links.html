@@ -15,12 +15,12 @@
         <li><a class="button-link emby-button" href="/channels.m3u" target="_blank">/channels.m3u: M3U formatted channel list</a>
         <li><a class="button-link emby-button" href="/playlist" target="_blank">/playlist M3U formatted channel list</a>
         <li><a class="button-link emby-button" href="/config.json" target="_blank">/config.json: JSON list of most config parameters</a>
-        <li>/watch/#id: Tunes stream to Channel ID requested</li>
-        <li>/auto/v#id: HDHR, Tunes stream to Channel ID requested</li>
+        <li>/watch/#uid: Tunes stream to Channel ID requested</li>
+        <li>/auto/v#chnum: HDHR, Tunes stream to Channel Number requested</li>
     </ul>
 
     All links above have the same ability to apply to any plugin.  You can request the data filtered
-    for a plugin or for an instance of the plugin.  
+    for a plugin or for an instance of the plugin.<br><br>
     
 
     <h3>Examples of URLs</h3>
@@ -37,8 +37,7 @@
     <pre>    http://idaddress:6077/xmltv.xml</pre>
 
     For TVHeadend, it would be appropriate to create a network for each plugin or plugin:instance.<br>
-    For Plex, it needs a unique IP address for each tuner, so either give it all plugins at once, 
-    or create multiple IP Addresses to separate the plugin data.<br>
+    For Plex, you can create a TV Source and Guide Data for all or per plugin<br>
     For Emby and JellyFin, you can create a TV Source and Guide Data for all, per plugin, or plugin:instance.
 
     Setting up the HDHomeRun connection with Emby, Plex or JellyFin, you can use the following link<br>

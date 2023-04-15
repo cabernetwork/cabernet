@@ -168,7 +168,6 @@ class TunerHttpHandler(WebHTTPHandler):
                     .format(self.real_namespace, self.real_instance, sid))
                 self.do_mime_response(503, 'text/html',
                                       web_templates['htmlError'].format('503 - Plugin Not Initialized'))
-
                 return
             section = self.plugins.plugins[self.real_namespace].plugin_obj.instances[self.real_instance].config_section
             if not self.config[section]['enabled']:

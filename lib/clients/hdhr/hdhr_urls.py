@@ -16,27 +16,33 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-from .templates import hdhr_templates
-from lib.common.decorators import getrequest
-from lib.common.decorators import postrequest
 import lib.common.utils as utils
+import lib.clients.hdhr.hdhr_server as hdhr_server
 
 from lib.web.pages.templates import web_templates
+from lib.common.decorators import getrequest
+from lib.common.decorators import postrequest
+from .templates import hdhr_templates
 
 
 @getrequest.route('/discover.json')
 def discover_json(_webserver):
     ns_inst_path = _webserver.get_ns_inst_path(_webserver.query_data)
-    if _webserver.query_data['name'] is None:
+    name = _webserver.query_data['name']
+    if name is None:
         name = ''
+        hdhr_id =  _webserver.config['hdhomerun']['hdhr_id']
     else:
-        name = _webserver.query_data['name'] + ' '
-
+        namespace = name
+        name = namespace + ' '
+        hdhr_id = _webserver.config[namespace.lower()].get('hdhr_id')
+        if not hdhr_id:
+            hdhr_id = _webserver.config['hdhomerun']['hdhr_id']
+        
     namespace = None
     for area, area_data in _webserver.config.items():
         if 'player-tuner_count' in area_data.keys():
             namespace = area
-
     _webserver.do_mime_response(200,
                                 'application/json',
                                 hdhr_templates['jsonDiscover'].format(
@@ -44,23 +50,30 @@ def discover_json(_webserver):
                                     _webserver.config['hdhomerun']['reporting_model'],
                                     _webserver.config['hdhomerun']['reporting_firmware_name'],
                                     _webserver.config['main']['version'],
-                                    _webserver.config['hdhomerun']['hdhr_id'],
+                                    hdhr_id,
                                     _webserver.config[namespace]['player-tuner_count'],
                                     _webserver.web_admin_url, ns_inst_path))
 
 
 @getrequest.route('/device.xml')
 def device_xml(_webserver):
-    if _webserver.query_data['name'] is None:
+    name = _webserver.query_data['name']
+    if name is None:
         name = ''
+        hdhr_id =  _webserver.config['hdhomerun']['hdhr_id']
     else:
-        name = _webserver.query_data['name'] + ' '
+        namespace = name
+        name = namespace + ' '
+        hdhr_id = _webserver.config[namespace.lower()].get('hdhr_id')
+        if not hdhr_id:
+            hdhr_id = _webserver.config['hdhomerun']['hdhr_id']
+
     _webserver.do_mime_response(200,
                                 'application/xml',
                                 hdhr_templates['xmlDevice'].format(
                                     name + _webserver.config['hdhomerun']['reporting_friendly_name'],
                                     _webserver.config['hdhomerun']['reporting_model'],
-                                    _webserver.config['hdhomerun']['hdhr_id'],
+                                    hdhr_id,
                                     _webserver.config['main']['uuid'],
                                     utils.CABERNET_URL
                                 ))

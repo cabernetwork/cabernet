@@ -275,8 +275,6 @@ class DB:
         filename = '_'.join(str(x) for x in _keys) + '.txt'
         file_rel_path = pathlib.Path(self.db_name).joinpath(filename)
         return self.get_file(file_rel_path)
-    
-    
 
     def reinitialize_tables(self):
         self.drop_tables()
