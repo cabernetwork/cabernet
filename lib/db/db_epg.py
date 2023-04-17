@@ -131,7 +131,6 @@ class DBepg(DB):
         """
         Removes all records for this namespace/instance that are over 2 day old
         """
-
         if not _namespace:
             _namespace = '%'
         if not _instance:
@@ -139,8 +138,7 @@ class DBepg(DB):
         files = self.get(DB_EPG_TABLE + '_by_day', (_namespace, _instance, _days,))
         files = [x[0] for x in files]
         for f in files:
-            if not self.delete_file(f):
-                return
+            self.delete_file(f)
         self.delete(DB_EPG_TABLE + '_by_day', (_namespace, _instance, _days,))
 
     def del_instance(self, _namespace, _instance):
@@ -152,8 +150,7 @@ class DBepg(DB):
         files = self.get(DB_EPG_TABLE + '_instance', (_namespace, _instance,))
         files = [x[0] for x in files]
         for f in files:
-            if not self.delete_file(f):
-                return
+            self.delete_file(f)
         return self.delete(DB_EPG_TABLE + '_instance', (_namespace, _instance,))
 
     def set_last_update(self, _namespace=None, _instance=None, _day=None):

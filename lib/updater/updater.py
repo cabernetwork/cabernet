@@ -93,8 +93,8 @@ class Updater:
                 'internal',
                 None,
                 'lib.updater.updater.check_for_updates',
-                20,
-                'thread',
+                99,
+                'inline',
                 'Checks cabernet and all plugins for updated versions'
         ):
             scheduler_db.save_trigger(

@@ -20,9 +20,11 @@ import logging
 import os
 import pathlib
 import random
+import shutil
 import sqlite3
 import threading
 import time
+
 
 DB_EXT = '.db'
 BACKUP_EXT = '.sql'
@@ -34,7 +36,7 @@ SQL_ADD_ROW = '_add'
 SQL_UPDATE = '_update'
 SQL_GET = '_get'
 SQL_DELETE = '_del'
-
+FILE_LINK_ZIP = '_filelinks'
 
 class DB:
     conn = {}
@@ -296,6 +298,15 @@ class DB:
             if not os.path.isdir(backup_folder):
                 os.mkdir(backup_folder)
             self.check_connection()
+
+            # Check for linked file folder and zip up if present
+            db_linkfilepath = pathlib.Path(self.config['paths']['db_dir']) \
+                .joinpath(self.db_name)
+            if db_linkfilepath.exists():
+                self.logger.debug('Linked file folder exists, backing up folder for db {}'.format(self.db_name))
+                backup_filelink = pathlib.Path(backup_folder, self.db_name + FILE_LINK_ZIP)
+                shutil.make_archive(backup_filelink, 'zip', db_linkfilepath)
+
             backup_file = pathlib.Path(backup_folder, self.db_name + BACKUP_EXT)
             with open(backup_file, 'w') as export_f:
                 for line in DB.conn[self.db_name][threading.get_ident()].iterdump():
@@ -310,6 +321,15 @@ class DB:
             msg = 'Backup folder does not exist: {}'.format(backup_folder)
             self.logger.warning(msg)
             return msg
+
+        # Check for linked file folder and zip up if present
+        backup_filelink = pathlib.Path(backup_folder, self.db_name + FILE_LINK_ZIP + '.zip')
+        db_linkfilepath = pathlib.Path(self.config['paths']['db_dir']) \
+            .joinpath(self.db_name)
+        if backup_filelink.exists():
+            self.logger.debug('Linked file folder exists, restoring folder for db {}'.format(self.db_name))
+            shutil.unpack_archive(backup_filelink, db_linkfilepath)
+
         backup_file = pathlib.Path(backup_folder, self.db_name + BACKUP_EXT)
         if not os.path.isfile(backup_file):
             msg = 'Backup file does not exist, skipping: {}'.format(backup_file)

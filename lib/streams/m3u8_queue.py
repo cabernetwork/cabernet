@@ -101,6 +101,8 @@ class M3U8Queue(Thread):
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
                 if queue_item['uri_dt'] == 'terminate':
+                    self.logger.debug('Received terminate from internalproxy')
+                    TERMINATE_REQUESTED = True
                     break
                 elif queue_item['uri_dt'] == 'status':
                     OUT_QUEUE.put({'uri': 'running',
@@ -130,6 +132,8 @@ class M3U8Queue(Thread):
         if self.pts_resync is not None:
             self.pts_resync.terminate()
         self.clear_queues()
+        TERMINATE_REQUESTED = True
+        self.logger.debug('M3U8Queue terminated')
 
     def decrypt_stream(self, _data):
         if _data['key'] and _data['key']['uri']:
@@ -391,6 +395,7 @@ class M3U8Process(Thread):
         self.terminate()
         # wait for m3u8_q to finish so it can cleanup ffmpeg
         self.m3u8_q.join()
+        self.logger.debug('M3U8Process terminated')
 
     def sleep(self, _time):
         start_ttw = time.time()

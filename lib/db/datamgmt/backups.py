@@ -24,12 +24,13 @@ import pathlib
 import shutil
 import zipfile
 
+import lib.common.utils as utils
 from lib.db.db_scheduler import DBScheduler
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
 from lib.db.db_config_defn import DBConfigDefn
 
-BACKUP_FOLDER_NAME = 'CarbernetBackup'
+BACKUP_FOLDER_NAME = 'CabernetBackup'
 CODE_DIRS_TO_IGNORE = ['__pycache__', 'data', '.git', 'ffmpeg', 'streamlink', '.github', 'build', 'misc']
 CODE_FILES_TO_IGNORE = ['config.ini', 'is_container', 'uninst.exe']
 
@@ -84,7 +85,7 @@ class Backups:
                 logging.warning(e)
                 break
             folderlist = sorted(glob.glob(os.path.join(backups_location, BACKUP_FOLDER_NAME + '*')))
-        new_backup_folder = BACKUP_FOLDER_NAME + datetime.datetime.now().strftime('_%Y%m%d_%H%M')
+        new_backup_folder = BACKUP_FOLDER_NAME +'_'+ utils.VERSION + datetime.datetime.now().strftime('_%Y%m%d_%H%M')
         new_backup_path = pathlib.Path(backups_location, new_backup_folder)
 
         for key in Backup.backup2func.keys():

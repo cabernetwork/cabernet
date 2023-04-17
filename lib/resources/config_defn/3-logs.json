@@ -59,7 +59,7 @@
                 "label": "File Log Handler",
                 "sort": "2",
                 "icon": "comment",
-                "description": "Python debug log settings",
+                "description": "Python local log file at data/logs/ log settings",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",

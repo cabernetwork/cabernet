@@ -49,8 +49,8 @@ class DashStatusJS:
 
     def get(self):
         js = ''.join([
-            '{ "tunerstatus": ', self.get_tuner_status(),
-            ', "schedstatus": ', self.get_scheduler_status(),
+            '{ "tunerstatus": ', str(self.get_tuner_status()),
+            ', "schedstatus": ', str(self.get_scheduler_status()),
             '}'
         ])
         return js
@@ -66,6 +66,8 @@ class DashStatusJS:
         req = urllib.request.Request(_url)
         with urllib.request.urlopen(req) as resp:
             result = resp.read()
+        if result is None:
+            return 'null'
         return result.decode('utf-8')
 
     def get_scheduler_status(self):
