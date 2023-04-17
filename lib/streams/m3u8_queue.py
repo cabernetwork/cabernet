@@ -101,7 +101,7 @@ class M3U8Queue(Thread):
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
                 if queue_item['uri_dt'] == 'terminate':
-                    self.logger.debug('Received terminate from internalproxy')
+                    self.logger.debug('Received terminate from internalproxy {}'.format(os.getpid()))
                     TERMINATE_REQUESTED = True
                     break
                 elif queue_item['uri_dt'] == 'status':
@@ -133,7 +133,7 @@ class M3U8Queue(Thread):
             self.pts_resync.terminate()
         self.clear_queues()
         TERMINATE_REQUESTED = True
-        self.logger.debug('M3U8Queue terminated')
+        self.logger.debug('M3U8Queue terminated {}'.format(os.getpid()))
 
     def decrypt_stream(self, _data):
         if _data['key'] and _data['key']['uri']:
@@ -376,8 +376,9 @@ class M3U8Process(Thread):
                 self.logger.debug('Reloading m3u8 stream queue {}'.format(os.getpid()))
                 playlist = self.get_m3u8_data(self.stream_uri)
                 if playlist is None:
-                    self.logger.debug('Playlist is none, terminating stream')
-                    break
+                    self.logger.debug('M3U Playlist is None, retrying')
+                    self.sleep(self.duration+0.5)
+                    continue
                 removed += self.remove_from_stream_queue(playlist)
                 added += self.add_to_stream_queue(playlist)
                 if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
@@ -395,7 +396,8 @@ class M3U8Process(Thread):
         self.terminate()
         # wait for m3u8_q to finish so it can cleanup ffmpeg
         self.m3u8_q.join()
-        self.logger.debug('M3U8Process terminated')
+        TERMINATE_REQUESTED = True
+        self.logger.debug('M3U8Process terminated {}'.format(os.getpid()))
 
     def sleep(self, _time):
         start_ttw = time.time()
