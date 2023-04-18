@@ -96,13 +96,6 @@ class InternalProxy(Stream):
         self.t_m3u8 = None
         self.clear_queues()
 
-    @handle_url_except()
-    @handle_json_except
-    def get_m3u8_data(self, _uri):
-        # it sticks here.  Need to find a workaround for the socket.timeout per process
-        return m3u8.load(_uri,
-                         headers={'User-agent': utils.DEFAULT_USER_AGENT})
-
     def stream(self, _channel_dict, _wfile, _terminate_queue):
         """
         Processes m3u8 interface without using ffmpeg
@@ -354,11 +347,11 @@ class InternalProxy(Stream):
         while not is_running and restarts > 0:
             restarts -= 1
             # Process is not thread safe.  Must do the same target, one at a time.
+            self.in_queue.put({'uri': 'status'})
             self.t_m3u8 = Process(target=m3u8_queue.start, args=(
                 self.config, self.plugins, self.in_queue, self.out_queue, self.channel_dict,))
             self.t_m3u8.start()
             self.logger.debug('3 Requesting status from m3u8_queue {}'.format(self.t_m3u8.pid))
-            self.in_queue.put({'uri': 'status'})
             time.sleep(0.1)
             tries = 0
             while self.out_queue.empty() and tries < max_tries:

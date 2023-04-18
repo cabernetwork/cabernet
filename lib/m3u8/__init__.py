@@ -45,7 +45,7 @@ def loads(content, uri=None, custom_tags_parser=None):
         return M3U8(content, base_uri=base_uri, custom_tags_parser=custom_tags_parser)
 
 
-def load(uri, timeout=10, headers={}, custom_tags_parser=None, http_client=DefaultHTTPClient(), verify_ssl=True):
+def load(uri, timeout=4, headers={}, custom_tags_parser=None, http_client=DefaultHTTPClient(), verify_ssl=True, http_session=None):
     '''
     Retrieves the content from a given URI and returns a M3U8 object.
     Raises ValueError if invalid content or IOError if request fails.
@@ -54,7 +54,7 @@ def load(uri, timeout=10, headers={}, custom_tags_parser=None, http_client=Defau
     if LOGGER is None:
         LOGGER = logging.getLogger(__name__)
     if is_url(uri):
-        content, base_uri = http_client.download(uri, timeout, headers, verify_ssl)
+        content, base_uri = http_client.download(uri, timeout, headers, verify_ssl, http_session)
         if content is None:
             LOGGER.warning('Unable to obtain m3u file {}'.format(uri))
             return None        

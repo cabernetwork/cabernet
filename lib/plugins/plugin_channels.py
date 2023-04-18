@@ -105,15 +105,16 @@ class PluginChannels:
         x = resp.content
         return x
 
-    @handle_url_except(timeout=10.0)
-    @handle_json_except
+    @handle_url_except()
     def get_m3u8_data(self, _uri, _header=None):
         if _header is None:
             return m3u8.load(_uri,
-                             headers={'User-agent': utils.DEFAULT_USER_AGENT})
+                             headers={'User-agent': utils.DEFAULT_USER_AGENT},
+                             http_session=self.plugin_obj.http_session)
         else:
             return m3u8.load(_uri,
-                             headers=_header)
+                             headers=_header,
+                             http_session=self.plugin_obj.http_session)
 
     def refresh_channels(self, force=False):
         self.ch_num_enum = self.config_obj.data[self.config_section].get('channel-start_ch_num')
@@ -210,7 +211,9 @@ class PluginChannels:
         ch_json = ch_dict['json']
         best_resolution = -1
         video_url_m3u = m3u8.load(
-            _url, headers=header)
+            _url, headers=header,
+            http_session=self.plugin_obj.http_session)
+
         if not video_url_m3u:
             self.logger.notice('{}:{} Unable to obtain m3u file, aborting stream {}'
                                .format(self.plugin_obj.name, self.instance_key, _channel_id))

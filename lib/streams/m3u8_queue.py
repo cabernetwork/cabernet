@@ -48,7 +48,6 @@ TERMINATE_REQUESTED = False
 MAX_STREAM_QUEUE_SIZE = 100
 STREAM_QUEUE = Queue()
 
-
 class M3U8Queue(Thread):
     """
     This runs as an independent process (one per stream) to get and process the 
@@ -56,11 +55,12 @@ class M3U8Queue(Thread):
     output to the client.
     """
     is_stuck = None
+    http_session = requests.session()
+
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
-        self.http_session = requests.session()
         self.config = _config
         self.namespace = _channel_dict['namespace'].lower()
         self.pts_validation = None
@@ -300,9 +300,6 @@ class M3U8Process(Thread):
     def __init__(self, _config, _plugins, _channel_dict):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
-        global IN_QUEUE
-        global OUT_QUEUE
-        global TERMINATE_REQUESTED
         self.config = _config
         self.channel_dict = _channel_dict
         if _channel_dict['json'].get('Header') is None:
@@ -314,31 +311,26 @@ class M3U8Process(Thread):
         else:
             self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
 
+        self.ch_uid = _channel_dict['uid']
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
-        i = 5
-        while i > 0 and IN_QUEUE.empty():
-            i -= 1
-            time.sleep(0.02)
-        if IN_QUEUE.empty():
-            self.logger.info('1Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
-            TERMINATE_REQUESTED = True
-            time.sleep(0.01)
-            return
-        time.sleep(0.01)
-        try:
-            IN_QUEUE.get(False, 1)
-        except Empty:
-            self.logger.info('2Corrupted queue, restarting process {} {}'.format(_channel_dict['uid'], os.getpid()))
-            TERMINATE_REQUESTED = True
-            time.sleep(0.01)
-            return
+
+        self.is_running = True
+        self.duration = 6
+        self.m3u8_q = M3U8Queue(_config, _channel_dict)
+        self.file_filter = None
+        self.start()
+
+    def run(self):
+        global IN_QUEUE
+        global OUT_QUEUE
+        global TERMINATE_REQUESTED
 
         self.stream_uri = self.get_stream_uri()
         if not self.stream_uri:
-            self.logger.warning('Unknown Channel {}'.format(_channel_dict['uid']))
+            self.logger.warning('Unknown Channel {}'.format(self.ch_uid))
             OUT_QUEUE.put({'uri': 'terminate',
                            'data': None,
                            'stream': None,
@@ -352,14 +344,7 @@ class M3U8Process(Thread):
                            'stream': None,
                            'atsc': None})
             time.sleep(0.01)
-        self.is_running = True
-        self.duration = 6
-        self.m3u8_q = M3U8Queue(_config, _channel_dict)
-        self.file_filter = None
-        self.start()
 
-    def run(self):
-        global TERMINATE_REQUESTED
         try:
             self.logger.debug('M3U8: {} {}'.format(self.stream_uri, os.getpid()))
             if self.config[self.config_section]['player-enable_url_filter']:
@@ -421,10 +406,9 @@ class M3U8Process(Thread):
             .plugin_obj.get_channel_uri_ext(self.channel_dict['uid'], self.channel_dict['instance'])
 
     @handle_url_except()
-    @handle_json_except
     def get_m3u8_data(self, _uri):
         # it sticks here.  Need to find a work around for the socket.timeout per process
-        return m3u8.load(_uri, headers=self.header)
+        return m3u8.load(_uri, headers=self.header, http_session=M3U8Queue.http_session)
 
     def segment_date_time(self, _segment):
         if _segment:
