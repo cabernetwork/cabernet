@@ -54,7 +54,6 @@ def config_json(_webserver):
 
 
 class TVHUserConfig:
-    config_handler = configparser.ConfigParser(interpolation=None)
 
     def __init__(self, _script_dir=None, _opersystem=None, _args=None, _config=None):
         self.logger = None
@@ -63,6 +62,7 @@ class TVHUserConfig:
         self.script_dir = str(_script_dir)
         self.defn_json = config_defn.load_default_config_defns()
         self.data = self.defn_json.get_default_config()
+        self.config_handler = configparser.ConfigParser(interpolation=None)
 
         if _script_dir is not None:
             config_file = TVHUserConfig.get_config_path(_script_dir, _args)

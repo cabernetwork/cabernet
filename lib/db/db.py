@@ -308,7 +308,7 @@ class DB:
                 shutil.make_archive(backup_filelink, 'zip', db_linkfilepath)
 
             backup_file = pathlib.Path(backup_folder, self.db_name + BACKUP_EXT)
-            with open(backup_file, 'w') as export_f:
+            with open(backup_file, 'w', encoding='utf-8') as export_f:
                 for line in DB.conn[self.db_name][threading.get_ident()].iterdump():
                     export_f.write('%s\n' % line)
         except PermissionError as e:

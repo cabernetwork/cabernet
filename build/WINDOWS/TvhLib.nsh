@@ -188,8 +188,6 @@ Function AddFiles
     File /r /x __pycache__ /x development "${SOURCEPATH}\lib\*.*"
     SetOutPath "$INSTDIR\plugins"
     File /r /x __pycache__ "${SOURCEPATH}\plugins\*.*"
-    SetOutPath "$INSTDIR\plugins_ext"
-    File /r /x __pycache__ /x provider* "${SOURCEPATH}\plugins_ext\*.*"
 
     SetOutPath "$INSTDIR\build\WINDOWS"
     File "${SOURCEPATH}\build\WINDOWS\UpdateConfig.pyw"

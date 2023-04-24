@@ -6,7 +6,7 @@
 !define PRODUCT_NAME "cabernet"
 !define PRODUCT_VERSION ${VERSION}
 !define PRODUCT_PUBLISHER "rocky4546"
-!define PRODUCT_WEB_SITE "http://www.mycompany.com"
+!define PRODUCT_WEB_SITE "https://github.com/cabernetwork/cabernet"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\tvh_main.py"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
@@ -224,9 +224,16 @@ FunctionEnd
 
 
 Function un.onInit
+    Var /GLOBAL remove_all
     !insertmacro MULTIUSER_UNINIT
-    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
+    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name)?" IDYES +2
     Abort
+    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Do you want to remove all data and plugins?" IDYES true2
+    StrCpy $remove_all "0"
+    Goto end2
+    true2:
+    StrCpy $remove_all "1"
+    end2:
 FunctionEnd
 
 
@@ -242,9 +249,24 @@ Section Uninstall
         Call un.installService
     ${EndIf}
 
-    #Delete "$INSTDIR\${PRODUCT_NAME}.url"
-    #Delete "$INSTDIR\uninst.exe"
-    RMDIR /r "$INSTDIR\*.*"
+    ${If} $remove_all == "1"
+        RMDIR /r "$INSTDIR\*.*"
+    ${Else}
+        #Delete Cabernet folders
+        RMDIR /r "$INSTDIR\build"
+        RMDIR /r "$INSTDIR\lib"
+        RMDIR /r "$INSTDIR\plugins"
+
+        #Delete Cabernet files
+        Delete "$INSTDIR\CHANGE*.*"
+        Delete "$INSTDIR\Dock*"
+        Delete "$INSTDIR\LIC*"
+        Delete "$INSTDIR\READ*.*"
+        Delete "$INSTDIR\req*.*"
+        Delete "$INSTDIR\tvh*.*"
+        Delete "$INSTDIR\uninst.exe"
+        Delete "$INSTDIR\${PRODUCT_NAME}.url"
+    ${EndIf}
 
     Delete "$SMPROGRAMS\$ICONS_GROUP\Uninstall.lnk"
     Delete "$SMPROGRAMS\$ICONS_GROUP\Website.lnk"
@@ -252,7 +274,10 @@ Section Uninstall
     Delete "$SMPROGRAMS\$ICONS_GROUP\cabernet.lnk"
 
     RMDir "$SMPROGRAMS\$ICONS_GROUP"
-    RMDir "$INSTDIR"
+
+    ${If} $remove_all == "1"
+        RMDir "$INSTDIR"
+    ${EndIf}
 
     DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
     DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
