@@ -25,7 +25,8 @@ label = PlutoTV Instance
 - Bring up browser and go to http://ipaddress:6077/
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
-- Enable the PlutoTV instance in the settings page and restart the app to have the plugin fully activate
+- Enable the PlutoTV instance in the Settings page
+- Restart the app (from the Scheduler/Applications) to have the plugin fully activate
 - From XML/JSON Links try some of the links
 
 ### 3. Docker
