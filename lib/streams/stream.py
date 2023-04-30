@@ -41,18 +41,31 @@ class Stream:
                 {'namespace': _namespace, 'tuner': _index,
                  'channel': _channel, 'status': _status})
 
-    def find_tuner(self, _namespace, _instance, _ch_num, _tuner):
+    def find_tuner(self, _namespace, _instance, _ch_num, _isvod):
         # keep track of how many tuners we can use at a time
         found = -1
         scan_list = WebHTTPHandler.rmg_station_scans[_namespace]
         for index, scan_status in enumerate(scan_list):
             # the first idle tuner gets it
-            if scan_status == 'Idle':
-                WebHTTPHandler.rmg_station_scans[_namespace][index] = {'instance': _instance, 'ch': _ch_num,
-                                                                       'status': 'Starting'}
-                self.put_hdhr_queue(_namespace, index, _ch_num, 'Stream')
+            if scan_status == 'Idle' and found == -1:
                 found = index
-                break
+            elif isinstance(scan_status, dict):
+                if scan_status['instance'] == _instance \
+                        and scan_status['ch'] == _ch_num \
+                        and not _isvod:
+                    found = index
+                    break
+        if found != -1 \
+                and WebHTTPHandler.rmg_station_scans[_namespace][index] != 'Idle':
+            self.logger.debug('Reusing tuner {} {}:{} ch:{}'.format(found, _namespace, _instance, _ch_num))
+        else:
+            self.logger.debug('Adding new tuner {} for stream {}:{} ch:{}'.format(found, _namespace, _instance, _ch_num))
+            WebHTTPHandler.rmg_station_scans[_namespace][found] = { \
+                'instance': _instance,
+                'ch': _ch_num,
+                'mux': None,
+                'status': 'Starting'}
+            self.put_hdhr_queue(_namespace, index, _ch_num, 'Stream')
         return found
 
     def set_service_name(self, _channel_dict):
@@ -71,7 +84,7 @@ class Stream:
         return self.plugins.plugins[_channel_dict['namespace']] \
             .plugin_obj.get_channel_uri_ext(_channel_dict['uid'], _channel_dict['instance'])
 
-    def gen_response(self, _namespace, _instance, _ch_num, _tuner):
+    def gen_response(self, _namespace, _instance, _ch_num, _isvod):
         """
         Returns dict where the dict is consistent with
         the method do_dict_response requires as an argument
@@ -80,7 +93,7 @@ class Stream:
         """
         self.namespace = _namespace
         self.instance = _instance
-        i = self.find_tuner(_namespace, _instance, _ch_num, _tuner)
+        i = self.find_tuner(_namespace, _instance, _ch_num, _isvod)
         if i >= 0:
             return {
                 'tuner': i,

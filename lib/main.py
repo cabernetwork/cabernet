@@ -54,6 +54,7 @@ import lib.db.datamgmt.backups as backups
 import lib.updater.updater as updater
 import lib.config.user_config as user_config
 from lib.db.db_scheduler import DBScheduler
+from lib.db.db_temp import DBTemp
 from lib.common.utils import clean_exit
 from lib.common.pickling import Pickling
 from lib.schedule.scheduler import Scheduler
@@ -138,6 +139,8 @@ def main(script_dir):
         config_obj.write('main', 'maintenance_mode', False)
 
         utils.cleanup_web_temp(config)
+        dbtemp = DBTemp(config)
+        dbtemp.cleanup_temp(None, None)
         plugins = init_plugins(config_obj)
         config_obj.defn_json = None
         init_versions(plugins)

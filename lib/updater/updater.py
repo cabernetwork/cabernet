@@ -121,7 +121,7 @@ class Updater:
         """
         Loads the manifest for cabernet from a file
         """
-        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], cabernet.MANIFEST_FILE)
+        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], utils.CABERNET_REPO)
         settings = json.loads(json_settings)
         return settings
 

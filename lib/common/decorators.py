@@ -167,7 +167,6 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info('ValueError in function {}(), aborting. {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-                break
 
             time.sleep(1.0)
         self.logger.notice('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}'

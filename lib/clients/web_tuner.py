@@ -19,7 +19,9 @@ substantial portions of the Software.
 import os
 import json
 import logging
+import os
 import pathlib
+import signal
 import time
 import urllib
 from threading import Thread
@@ -35,12 +37,13 @@ from lib.streams.m3u8_redirect import M3U8Redirect
 from lib.streams.internal_proxy import InternalProxy
 from lib.streams.ffmpeg_proxy import FFMpegProxy
 from lib.streams.streamlink_proxy import StreamlinkProxy
+from lib.streams.thread_queue import ThreadQueue
 from .web_handler import WebHTTPHandler
 
 
 @gettunerrequest.route('/tunerstatus')
 def tunerstatus(_webserver):
-    _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans))
+    _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans, cls=ObjectJsonEncoder))
 
 
 @gettunerrequest.route('RE:/watch/.+')
@@ -73,6 +76,14 @@ def autov(_webserver):
             return
 
     _webserver.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
+
+
+class ObjectJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ThreadQueue):
+            return str(obj)
+        else:
+            return json.JSONEncoder.default(self.obj)
 
 
 class TunerHttpHandler(WebHTTPHandler):
@@ -188,24 +199,27 @@ class TunerHttpHandler(WebHTTPHandler):
             self.do_dict_response(self.m3u8_redirect.gen_m3u8_response(station_data))
             return
         elif self.config[section]['player-stream_type'] == 'internalproxy':
-            resp = self.internal_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
-                                                    TunerHttpHandler)
+            resp = self.internal_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json']['VOD'])
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
                 self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue)
         elif self.config[section]['player-stream_type'] == 'ffmpegproxy':
-            resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
-                                                  TunerHttpHandler)
+            resp = self.ffmpeg_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json']['VOD'])
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
                 self.ffmpeg_proxy.stream(station_data, self.wfile)
         elif self.config[section]['player-stream_type'] == 'streamlinkproxy':
-            resp = self.streamlink_proxy.gen_response(self.real_namespace, self.real_instance, station_data['display_number'],
-                                                      TunerHttpHandler)
+            resp = self.streamlink_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json']['VOD'])
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
@@ -216,8 +230,13 @@ class TunerHttpHandler(WebHTTPHandler):
             self.logger.error('Unknown [player-stream_type] {}'
                               .format(self.config[section]['player-stream_type']))
             return
-        self.logger.notice('Provider Connection Closed, ch_id={}'.format(sid))
-        WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
+        station_scans = WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']]
+        
+        if station_scans != 'Idle' and not station_scans['mux'].is_alive():
+            self.logger.notice('Provider Connection Closed, ch_id={}'.format(sid))
+            WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
+        else:
+            self.logger.info('Client Connection Closed, provider continuing ch_id={}'.format(sid))
         time.sleep(0.01)
 
     def get_ns_inst_station(self, _station_data):
@@ -322,8 +341,17 @@ def FactoryTunerHttpHandler():
 
     return CustomHttpHandler
 
+def child_exited(sig, frame):
+    logger = logging.getLogger(__name__)
+    try:
+        pid, exitcode = os.wait()
+        logger.warning('Child process {} exited with code {}'.format(pid, exitcode))
+    except ChildProcessError as ex:
+        logger.warning('Child exit error {}'.format(str(ex)))
 
 def start(_plugins, _hdhr_queue, _terminate_queue):
+    # uncomment this to find out about m3u8 subprocess exits
+    #signal.signal(signal.SIGCHLD, child_exited)
     TunerHttpHandler.start_httpserver(
         _plugins, _hdhr_queue, _terminate_queue,
         _plugins.config_obj.data['web']['plex_accessible_port'],

@@ -86,13 +86,14 @@ class DBTemp(DB):
 
     def cleanup_temp(self, _namespace, _instance, _hours='-6 hours'):
         """
-        Removes all records for this namespace/instance that are over 1 hour old
+        Removes all records for this namespace/instance that are over 6 hour old
         """
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
         deleted = self.delete(DB_TEMP_TABLE + '_by_day', (_namespace, _instance, _hours,))
+        self.sql_exec('VACUUM')
 
     def del_instance(self, _namespace, _instance):
         """

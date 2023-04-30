@@ -155,7 +155,12 @@ class PluginManager:
         plugin_id_folder = plugin_folder.joinpath(self.plugin_rec['id'])
 
         if plugin_id_folder.exists():
-            shutil.rmtree(plugin_id_folder)
+            try:
+                shutil.rmtree(plugin_id_folder)
+            except OSError as ex:
+                self.logger.warning('Unable to upgrade, {}'.format(str(ex)))
+                results += '<br>Error: Unable to delete folder for upgrade, {}'.format(str(ex))
+                return (False, results)
             
         shutil.move(str(tmp_plugin_path), str(plugin_folder))
         results += '<br>Installed plugin {} from repo, version {}' \
