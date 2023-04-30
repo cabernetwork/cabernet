@@ -376,7 +376,7 @@ class InternalProxy(Stream):
                     self.t_queue.status_queue = self.in_queue
                     WebHTTPHandler.rmg_station_scans[namespace][i]['mux'] = self.t_queue
                     break
-                elif self.channel_dict['json']['VOD']:
+                elif self.channel_dict['json'].get('VOD'):
                     pass
                 else:
                     # reuse tuner case

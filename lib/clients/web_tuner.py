@@ -201,7 +201,7 @@ class TunerHttpHandler(WebHTTPHandler):
         elif self.config[section]['player-stream_type'] == 'internalproxy':
             resp = self.internal_proxy.gen_response(
                 self.real_namespace, self.real_instance, 
-                station_data['display_number'], station_data['json']['VOD'])
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
@@ -210,7 +210,7 @@ class TunerHttpHandler(WebHTTPHandler):
         elif self.config[section]['player-stream_type'] == 'ffmpegproxy':
             resp = self.ffmpeg_proxy.gen_response(
                 self.real_namespace, self.real_instance, 
-                station_data['display_number'], station_data['json']['VOD'])
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
@@ -219,7 +219,7 @@ class TunerHttpHandler(WebHTTPHandler):
         elif self.config[section]['player-stream_type'] == 'streamlinkproxy':
             resp = self.streamlink_proxy.gen_response(
                 self.real_namespace, self.real_instance, 
-                station_data['display_number'], station_data['json']['VOD'])
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
