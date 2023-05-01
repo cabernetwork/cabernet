@@ -55,8 +55,9 @@ class Stream:
                         and not _isvod:
                     found = index
                     break
-        if found != -1 \
-                and WebHTTPHandler.rmg_station_scans[_namespace][index] != 'Idle':
+        if found == -1:
+            return found
+        if WebHTTPHandler.rmg_station_scans[_namespace][index] != 'Idle':
             self.logger.debug('Reusing tuner {} {}:{} ch:{}'.format(found, _namespace, _instance, _ch_num))
         else:
             self.logger.debug('Adding new tuner {} for stream {}:{} ch:{}'.format(found, _namespace, _instance, _ch_num))

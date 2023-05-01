@@ -20,10 +20,12 @@ import ast
 import json
 import datetime
 import sqlite3
+import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
+
 
 DB_CHANNELS_TABLE = 'channels'
 DB_STATUS_TABLE = 'status'
@@ -315,12 +317,13 @@ class DBChannels(DB):
             _instance = '%'
 
         rows = self.get_dict(DB_CHANNELS_TABLE + '_one', (_uid, _namespace, _instance,))
-        for row in rows:
-            ch = json.loads(row['json'])
-            row['json'] = ch
-            if row['atsc'] is not None:
-                row['atsc'] = ast.literal_eval(row['atsc'])
-            return row
+        if rows:
+            for row in rows:
+                ch = json.loads(row['json'])
+                row['json'] = ch
+                if row['atsc'] is not None:
+                    row['atsc'] = ast.literal_eval(row['atsc'])
+                return row
         return None
 
     def update_channel_atsc(self, _ch):

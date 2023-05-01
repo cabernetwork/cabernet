@@ -242,16 +242,21 @@ class InternalProxy(Stream):
                     self.duration = data['duration']
                     uri_decoded = urllib.parse.unquote(uri)
                     if self.check_ts_counter(uri_decoded):
-                        start_ttw = time.time()
-                        self.write_buffer(self.video.data)
-                        delta_ttw = time.time() - start_ttw
-                        self.logger.info(
-                            'Serving {} {} ({})s ({}B) ttw:{:.2f}s'
-                            .format(self.t_m3u8_pid, uri_decoded, self.duration,
-                                    len(self.video.data), delta_ttw))
-                        self.is_starting = False
-                        self.update_tuner_status('Streaming')
-                        time.sleep(0.1)
+                        # if the length of the video is tiny, then print the string out
+                        if len(self.video.data) < 10000:
+                            self.logger.info('{} {} Video packet too small (<10,000), data: {} {}'
+                                .format(self.t_m3u8_pid, uri_decoded, len(self.video.data), self.video.data))
+                        else:
+                            start_ttw = time.time()
+                            self.write_buffer(self.video.data)
+                            delta_ttw = time.time() - start_ttw
+                            self.logger.info(
+                                'Serving {} {} ({})s ({}B) ttw:{:.2f}s'
+                                .format(self.t_m3u8_pid, uri_decoded, self.duration,
+                                        len(self.video.data), delta_ttw))
+                            self.is_starting = False
+                            self.update_tuner_status('Streaming')
+                            time.sleep(0.1)
                 else:
                     if not self.is_starting:
                         self.update_tuner_status('No Reply')
@@ -386,7 +391,7 @@ class InternalProxy(Stream):
                     self.t_m3u8_pid = self.t_queue.remote_proc.pid
                     self.in_queue = self.t_queue.status_queue
                     break
-                
+
         while not is_running and restarts > 0:
             restarts -= 1
             # Process is not thread safe.  Must do the same target, one at a time.
