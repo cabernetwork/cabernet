@@ -12,8 +12,11 @@ By default this app doesn't provide any video sources, only the plugins access t
 ### 2. Installation
 - Download source
 - Unzip source in the installation folder
-- Launch the app by running the command "python3 tvh_main.py" and then stopping it after it starts. This should create a data folder and a config.ini inside that folder.
-- Edit the config.ini and add the following lines
+- Launch the app by running the command "python3 tvh_main.py". This should create a data folder and a config.ini inside that folder
+- Bring up browser and go to http://ipaddress:6077/
+- From Plugins, install PlutoTV plugin
+- Stop the app
+- Edit the data/config.ini and add the following lines
 <pre>
 [plutotv_default]
 label = PlutoTV Instance
@@ -22,7 +25,8 @@ label = PlutoTV Instance
 - Bring up browser and go to http://ipaddress:6077/
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
-- Enable the PlutoTV instance in the settings page and restart the app to have the plugin fully activate
+- Enable the PlutoTV instance in the Settings page
+- Restart the app (from the Scheduler/Applications) to have the plugin fully activate
 - From XML/JSON Links try some of the links
 
 ### 3. Docker
