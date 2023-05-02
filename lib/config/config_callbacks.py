@@ -316,6 +316,7 @@ def update_instance_label(_config_obj, _section, _key):
 def update_channel_num(_config_obj, _section, _key):
     starting_num = _config_obj.data[_section][_key]
     init_num = starting_num
+    is_changed = False
     namespace_l, instance = _section.split('_', 1)
     db_channels = DBChannels(_config_obj.data)
     namespaces = db_channels.get_channel_names()
@@ -326,11 +327,17 @@ def update_channel_num(_config_obj, _section, _key):
     ch_list = db_channels.get_channels(namespace, instance)
     for ch in ch_list.values():
         if starting_num == -1:
-            ch[0]['display_number'] = ch[0]['json']['number']
+            if ch[0]['display_number'] != ch[0]['json']['number']:
+                ch[0]['display_number'] = ch[0]['json']['number']
+                is_changed = True
         else:
-            ch[0]['display_number'] = starting_num
+            if ch[0]['display_number'] != starting_num:
+                ch[0]['display_number'] = starting_num
+                is_changed = True
             starting_num += 1
-        db_channels.update_channel_number(ch[0])
+        if is_changed:
+            db_channels.update_channel_number(ch[0])
+            is_changed = False
 
     if init_num == -1:
         return 'Renumbered channels back to default'.format(_section, _key)

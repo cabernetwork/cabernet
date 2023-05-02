@@ -89,7 +89,7 @@ def lineup_status_json(_webserver):
         _webserver.scan_state += 20
         if _webserver.scan_state > 100:
             _webserver.scan_state = 100
-        num_of_channels = len(_webserver.channels_db.get_channels(_webserver.query_data['name'], None))
+        num_of_channels = len(_webserver.channels_db.get_channels(_webserver.query_data['name'], None, True))
         return_json = hdhr_templates['jsonLineupStatusScanning'].format(
             _webserver.scan_state,
             int(num_of_channels * _webserver.scan_state / 100))

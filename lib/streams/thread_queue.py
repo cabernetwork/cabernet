@@ -69,7 +69,8 @@ class ThreadQueue(Thread):
                         .format(queue_item.get('thread_id'), queue_item.get('uri')))
                     continue
                 if queue_item.get('uri') == 'terminate':
-                    self.terminate_requested = self.del_thread(thread_id)
+                    self.terminate_requested = True
+                    self.del_thread(thread_id)
 
                 out_queue = self.queue_list.get(thread_id)
                 if out_queue:
@@ -101,7 +102,7 @@ class ThreadQueue(Thread):
 
         self.clear_queues()
         self.terminate_requested = True
-        self.logger.debug('ThreadQueue terminated'.format(thread_id))
+        self.logger.debug('ThreadQueue terminated')
 
     def clear_queues(self):
         self.clear_q(self.queue)
@@ -133,12 +134,13 @@ class ThreadQueue(Thread):
             del self.queue_list[_thread_id]
             self.logger.debug('Removing thread id queue from thread queue: {}'.format(_thread_id))
             if not len(self.queue_list):
+                if self.terminate_requested:
+                    return True
                 self.terminate_requested = True
                 time.sleep(0.01)
                 self.clear_queues()
                 time.sleep(0.01)
                 self.queue.put({'thread_id': _thread_id, 'uri': 'terminate'})
-                self.logger.debug('Requesting thread queue to terminate')
                 time.sleep(0.01)
                 self.wait_for_termination()
                 return True

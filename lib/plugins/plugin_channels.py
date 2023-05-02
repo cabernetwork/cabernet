@@ -26,12 +26,12 @@ import threading
 import time
 
 import lib.m3u8 as m3u8
+import lib.config.config_callbacks as config_callbacks
 import lib.common.utils as utils
 import lib.image_size.get_image_size as get_image_size
 from lib.db.db_channels import DBChannels
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-
 
 class PluginChannels:
 
@@ -147,6 +147,7 @@ class PluginChannels:
                     self.config_obj.data[self.config_section]['channel-import_groups'])
             else:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict)
+            config_callbacks.update_channel_num(self.config_obj, self.config_section, 'channel-start_ch_num')
             self.logger.debug(
                 '{}:{} Channel update complete'
                 .format(self.plugin_obj.name, self.instance_key))

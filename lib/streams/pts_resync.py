@@ -56,7 +56,7 @@ class PTSResync:
                 break
             except (BrokenPipeError, TypeError) as ex:
                 # This occurs when the process does not start correctly
-                self.logger.notice('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
+                self.logger.debug('BROKENPIPE {} {}'.format(self.ffmpeg_proc.pid, str(ex)))
                 if not self.is_restart_requested:
                     errcode = self.restart_ffmpeg()
                     self.is_looping = True
@@ -70,7 +70,7 @@ class PTSResync:
         video_copy = None
 
     def restart_ffmpeg(self):
-        self.logger.info('Restarting PTSResync ffmpeg due to no ffmpeg processing {}'.format(self.ffmpeg_proc.pid))
+        self.logger.debug('Restarting PTSResync ffmpeg due to no ffmpeg processing {}'.format(self.ffmpeg_proc.pid))
         errcode = 0
         self.empty_packet_count = 0
         self.stream_queue.terminate()

@@ -253,8 +253,9 @@ def init_hdhr(_config, _hdhr_queue):
 def shutdown(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj, _terminate_queue):
     if _terminate_queue:
         _terminate_queue.put('shutdown')
-        time.sleep(2)
+        time.sleep(0.01)
         terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
+    LOGGER.debug('main process terminated')
     clean_exit()
 
 
@@ -281,3 +282,4 @@ def terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner
     if _config_obj and _config_obj.defn_json:
         _config_obj.defn_json.terminate()
         del _config_obj
+    time.sleep(0.5)

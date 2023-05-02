@@ -115,8 +115,11 @@ class M3U8Queue(Thread):
                 self.process_m3u8_item(queue_item)
         except (KeyboardInterrupt, EOFError) as ex:
             TERMINATE_REQUESTED = True
-            self.pts_resync.terminate()
             clear_queues()
+            if self.pts_resync is not None:
+                self.pts_resync.terminate()
+                self.pts_resync = None
+            time.sleep(0.01)
             sys.exit()
         except Exception as ex:
             TERMINATE_REQUESTED = True
@@ -124,6 +127,7 @@ class M3U8Queue(Thread):
             IN_QUEUE.put({'uri': 'terminate'})
             if self.pts_resync is not None:
                 self.pts_resync.terminate()
+                self.pts_resync = None
             clear_queues()
             time.sleep(0.01)
             self.logger.exception('{}'.format(
@@ -132,11 +136,13 @@ class M3U8Queue(Thread):
         # we are terminating so cleanup ffmpeg
         if self.pts_resync is not None:
             self.pts_resync.terminate()
+            self.pts_resync = None
         time.sleep(0.01)
         out_queue_put({'uri': 'terminate',
                        'data': None,
                        'stream': None,
                        'atsc': None})
+        time.sleep(0.01)
         TERMINATE_REQUESTED = True
         self.logger.debug('M3U8Queue terminated {}'.format(os.getpid()))
 
@@ -228,6 +234,7 @@ class M3U8Queue(Thread):
                                'atsc': None})
                 TERMINATE_REQUESTED = True
                 self.pts_resync.terminate()
+                self.pts_resync = None
                 clear_queues()
                 PLAY_LIST[uri_dt]['played'] = True
                 time.sleep(0.01)
@@ -332,7 +339,7 @@ class M3U8Process(Thread):
             self.terminate()
             self.m3u8_q.join()
             TERMINATE_REQUESTED = True
-            self.logger.debug('1M3U8Process terminated {}'.format(os.getpid()))
+            self.logger.debug('1 M3U8Process terminated {}'.format(os.getpid()))
             return
         else:
             out_queue_put({'uri': 'running',
@@ -495,7 +502,8 @@ class M3U8Process(Thread):
                 'key': _key
             }
             if _segment.duration > 0:
-                self.duration = _segment.duration
+                # use geometric averaging of 4 items
+                self.duration = (self.duration*3 + _segment.duration)/4
             try:
                 if not played and not TERMINATE_REQUESTED:
                     self.logger.debug('Added {} to play queue {}'
@@ -654,22 +662,29 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
             except (KeyboardInterrupt, EOFError, TypeError, ValueError) as ex:
                 TERMINATE_REQUESTED = True
                 try:
-                    STREAM_QUEUE.put({'uri_dt': 'terminate'})
+                    clear_queues()
+                    out_queue_put({
+                        'uri': 'terminate',
+                        'data': None,
+                        'stream': None,
+                        'atsc': None})
                     time.sleep(0.01)
+                    STREAM_QUEUE.put({'uri_dt': 'terminate'})
+                    time.sleep(0.1)
                 except (EOFError, TypeError, ValueError) as ex:
                     pass
-                logger.debug('4m3u8_queue process terminated {}'.format(os.getpid()))
+                logger.debug('4 m3u8_queue process terminated {}'.format(os.getpid()))
                 sys.exit()
         clear_queues()
-        logger.debug('1m3u8_queue process terminated {}'.format(os.getpid()))
+        logger.debug('1 m3u8_queue process terminated {}'.format(os.getpid()))
         sys.exit()
     except Exception as ex:
         logger.exception('{}'.format(
             'UNEXPECTED EXCEPTION startup'))
         TERMINATE_REQUESTED = True
-        logger.debug('3m3u8_queue process terminated {}'.format(os.getpid()))
+        logger.debug('3 m3u8_queue process terminated {}'.format(os.getpid()))
         sys.exit()
     except KeyboardInterrupt as ex:
         TERMINATE_REQUESTED = True
-        logger.debug('2m3u8_queue process terminated {}'.format(os.getpid()))
+        logger.debug('2 m3u8_queue process terminated {}'.format(os.getpid()))
         sys.exit()
