@@ -69,9 +69,7 @@ class ThreadQueue(Thread):
                         .format(queue_item.get('thread_id'), queue_item.get('uri')))
                     continue
                 if queue_item.get('uri') == 'terminate':
-                    self.terminate_requested = True
-                    self.del_thread(thread_id)
-
+                    self.del_thread(thread_id, True)
                 out_queue = self.queue_list.get(thread_id)
                 if out_queue:
                     # Define the length of sleep to keep the queues from becoming full
@@ -123,33 +121,33 @@ class ThreadQueue(Thread):
         if not out_queue:
             self.logger.debug('Adding thread id queue to thread queue: {}'.format(_thread_id))
 
-    def del_thread(self, _thread_id):
+    def del_thread(self, _thread_id, _is_inrun=False):
         """
         Removes the thread id from the list of queues this class is sending data to
         if queue list is empty, then will also set the terminate to True
         and return True
+        _is_inrun is set to true when the call comes from the thread run method, 
+        so wait for terminate is not required since it already is not waiting for get queue processing
         """
         out_queue = self.queue_list.get(_thread_id)
         if out_queue:
             del self.queue_list[_thread_id]
             self.logger.debug('Removing thread id queue from thread queue: {}'.format(_thread_id))
             if not len(self.queue_list):
-                if self.terminate_requested:
-                    return True
                 self.terminate_requested = True
                 time.sleep(0.01)
                 self.clear_queues()
-                time.sleep(0.01)
-                self.queue.put({'thread_id': _thread_id, 'uri': 'terminate'})
-                time.sleep(0.01)
-                self.wait_for_termination()
+                if _is_inrun:
+                    return True
+                else:
+                    self.queue.put({'thread_id': _thread_id, 'uri': 'terminate'})
+                    time.sleep(0.01)
+                    self.wait_for_termination()
                 return True
             else:
                 return False
-        if not len(self.queue_list):
-            return True
         else:
-            return False
+            return True
 
     def wait_for_termination(self):
         count = 50
@@ -157,7 +155,6 @@ class ThreadQueue(Thread):
             time.sleep(0.1)
             count -= 1
         self.clear_queues()
-
 
     def sleep(self, _time):
         """
