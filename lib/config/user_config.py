@@ -149,8 +149,11 @@ class TVHUserConfig:
             if not config_file:
                 # create one in the data folder
                 try:
+                    data_folder = pathlib.Path(_script_dir).joinpath('data')
+                    if not data_folder.exists():
+                        os.mkdir(data_folder)
                     f = open('data/' + CONFIG_FILENAME, 'wb')
-                    config_file = pathlib.Path(_script_dir).joinpath('data/' + CONFIG_FILENAME)
+                    config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
                     f.close()
                 except PermissionError as e:
                     print('ERROR: {} unable to create {}'.format(str(e), poss_config))

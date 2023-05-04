@@ -251,9 +251,9 @@ class InternalProxy(Stream):
                             self.write_buffer(self.video.data)
                             delta_ttw = time.time() - start_ttw
                             self.logger.info(
-                                'Serving {} {} ({})s ({}B) ttw:{:.2f}s'
+                                'Serving {} {} ({})s ({}B) ttw:{:.2f}s {}'
                                 .format(self.t_m3u8_pid, uri_decoded, self.duration,
-                                        len(self.video.data), delta_ttw))
+                                        len(self.video.data), delta_ttw, threading.get_ident()))
                             self.is_starting = False
                             self.update_tuner_status('Streaming')
                             time.sleep(0.1)
