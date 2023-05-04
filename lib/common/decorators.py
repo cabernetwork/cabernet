@@ -50,7 +50,8 @@ def handle_url_except(f=None, timeout=None):
         else:
             arg0 = args[0]
         i = 2
-        while i > 0:
+        is_done = 0
+        while i > is_done:
             i -= 1
             try:
                 x = f(self, *args, **kwargs)
@@ -61,7 +62,7 @@ def handle_url_except(f=None, timeout=None):
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
             except ConnectionRefusedError as ex:
                 ex_save = ex
-                self.logger.info("ConnectionRefusedError in function {}, retrying (): {} {} {}"
+                self.logger.info("ConnectionRefusedError in function {}(), retrying (): {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except ConnectionResetError as ex:
                 ex_save = ex
@@ -74,7 +75,7 @@ def handle_url_except(f=None, timeout=None):
             except urllib.error.URLError as ex:
                 ex_save = ex
                 if isinstance(ex.reason, ConnectionRefusedError):
-                    self.logger.info("URLError:ConnectionRefusedError in function {}: {} {} {}"
+                    self.logger.info("URLError:ConnectionRefusedError in function {}(): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
                     count = 5
                     while count > 0:
@@ -82,14 +83,14 @@ def handle_url_except(f=None, timeout=None):
                             x = f(self, *args, **kwargs)
                             return x
                         except urllib.error.URLError as ex2:
-                            self.logger.debug("{} URLError:ConnectionRefusedError in function {}: {} {} {}"
+                            self.logger.debug("{} URLError:ConnectionRefusedError in function {}(): {} {} {}"
                                               .format(count, f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
                             count -= 1
                             time.sleep(.5)
                         except Exception as ex3:
                             break
                 else:
-                    self.logger.info("URLError in function {}, retrying (): {} {} {}"
+                    self.logger.info("URLError in function {}(), retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except requests.exceptions.InvalidURL as ex:
                 ex_save = ex
@@ -108,7 +109,7 @@ def handle_url_except(f=None, timeout=None):
                 else:
                     reason = None
                 if isinstance(reason, urllib3.exceptions.NewConnectionError):
-                    self.logger.info("ConnectionError:ConnectionRefused in function {}, retrying (): {} {} {}"
+                    self.logger.info("ConnectionError:ConnectionRefused in function {}(), retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
                     time.sleep(2)
                     #count = 4
@@ -124,7 +125,7 @@ def handle_url_except(f=None, timeout=None):
                     #    except Exception as ex3:
                     #        break
                 else:
-                    self.logger.info("ConnectionError in function {}, retrying (): {} {} {}"
+                    self.logger.info("ConnectionError in function {}(), retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except http.client.RemoteDisconnected as ex:
                 ex_save = ex
@@ -143,7 +144,7 @@ def handle_url_except(f=None, timeout=None):
                 args = tuple(args_list)
 
                 ex_save = ex
-                self.logger.info('InvalidURL, encoding and trying again. In function {}() {} {} {}'
+                self.logger.info('InvalidURL Error, encoding and trying again. In function {}() {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except (requests.exceptions.ProxyError, requests.exceptions.SSLError, \
                     requests.exceptions.TooManyRedirects, requests.exceptions.InvalidHeader, \
@@ -153,15 +154,15 @@ def handle_url_except(f=None, timeout=None):
                     requests.exceptions.RequestsWarning, requests.exceptions.FileModeWarning, \
                     requests.exceptions.RequestsDependencyWarning) as ex:
                 ex_save = ex
-                self.logger.info('General Requests Exception in function {}(), retrying. {} {} {}'
+                self.logger.info('General Requests Error in function {}(), retrying. {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except (requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema) as ex:
                 ex_save = ex
-                self.logger.info('Missing Schema in function {}(), retrying. {} {} {}'
+                self.logger.info('Missing Schema Error in function {}(), retrying. {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except http.client.IncompleteRead as ex:
                 ex_save = ex
-                self.logger.info('Partial data from url received in function {}(), retrying. {} {} {}'
+                self.logger.info('Partial Data Error from url received in function {}(), retrying. {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except ValueError as ex:
                 ex_save = ex

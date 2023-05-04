@@ -86,7 +86,7 @@ class PluginChannels:
         header = {
             'Content-Type': 'application/json',
             'User-agent': utils.DEFAULT_USER_AGENT}
-        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(4, 8))
         x = resp.json()
         resp.raise_for_status()
         return x
@@ -99,9 +99,9 @@ class PluginChannels:
         else:
             header = _header
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=(2, 4))
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=(4, 8))
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(2, 4))
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(4, 8))
         x = resp.content
         return x
 
@@ -179,7 +179,7 @@ class PluginChannels:
              'Accept-Encoding': 'identity',
              'Connection': 'Keep-Alive'
              }
-        resp = self.plugin_obj.http_session.get(_thumbnail, headers=h, timeout=(2, 4))
+        resp = self.plugin_obj.http_session.get(_thumbnail, headers=h, timeout=(4, 8))
         resp.raise_for_status()
         img_blob = resp.content
         fp = io.BytesIO(img_blob)

@@ -49,6 +49,7 @@ TERMINATE_REQUESTED = False
 MAX_STREAM_QUEUE_SIZE = 100
 STREAM_QUEUE = Queue()
 OUT_QUEUE_LIST = []
+IS_VOD = False
 
 class M3U8Queue(Thread):
     """
@@ -89,7 +90,7 @@ class M3U8Queue(Thread):
 
     @handle_url_except()
     def get_uri_data(self, _uri):
-        resp = self.http_session.get(_uri, headers=self.header, timeout=(2, 4))
+        resp = self.http_session.get(_uri, headers=self.header, timeout=(4, 8))
         x = resp.content
         resp.raise_for_status()
         return x
@@ -200,6 +201,7 @@ class M3U8Queue(Thread):
         return None
 
     def process_m3u8_item(self, _queue_item):
+        global IS_VOD
         global TERMINATE_REQUESTED
         global PLAY_LIST
         global OUT_QUEUE
@@ -213,9 +215,15 @@ class M3U8Queue(Thread):
             PLAY_LIST[uri_dt]['played'] = True
             time.sleep(0.01)
         else:
-            while True:
+            if IS_VOD:
+                count = 2
+            else:
+                count = 1
+            while count > 0:
                 self.video.data = self.get_uri_data(uri_dt[0])
-                break
+                if self.video.data:
+                    break
+                count -= 1
             if uri_dt not in PLAY_LIST.keys():
                 return
             if self.video.data is None:
@@ -324,6 +332,7 @@ class M3U8Process(Thread):
         self.start()
 
     def run(self):
+        global IS_VOD
         global IN_QUEUE
         global OUT_QUEUE
         global TERMINATE_REQUESTED
@@ -367,6 +376,13 @@ class M3U8Process(Thread):
                     self.logger.debug('M3U Playlist is None, retrying')
                     self.sleep(self.duration+0.5)
                     continue
+                if playlist.playlist_type == 'vod' or self.config[self.config_section]['player-play_all_segments']:
+                    if not IS_VOD:
+                        self.logger.debug('Setting stream type to VOD {}'.format(os.getpid()))
+                        IS_VOD = True
+                elif IS_VOD:
+                    self.logger.debug('Setting stream type to non-VOD {}'.format(os.getpid()))
+                    IS_VOD = False
                 removed += self.remove_from_stream_queue(playlist)
                 added += self.add_to_stream_queue(playlist)
                 if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
