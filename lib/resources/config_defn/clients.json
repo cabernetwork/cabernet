@@ -76,6 +76,13 @@
                         "default": true,
                         "level": 2,
                         "help": "Default: True. Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."
+                    },
+                    "vod_retries":{
+                        "label": "VOD Retries",
+                        "type": "integer",
+                        "default": 2,
+                        "level": 3,
+                        "help": "Default: 2. Recommend leaving this as is. On VOD (with all streaming packets provided at one time), may improve timeout errors by changing the number of retries. Minimum Total Timeout = num * 12sec/timeout * 2 retries. Only applies to internalproxy."
                     }
                 }
             },

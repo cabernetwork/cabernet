@@ -210,6 +210,10 @@ class InternalProxy(Stream):
             elif uri == 'running':
                 self.logger.debug('1 Status of Running returned from m3u8_queue {}'.format(self.t_m3u8_pid))
                 continue
+            elif uri == 'extend':
+                self.logger.debug('Extending the idle timeout to {} seconds'.format(self.idle_counter+IDLE_COUNTER_MAX))
+                self.filter_counter = self.idle_counter
+                continue
             data = out_queue_item['data']
             if data['cue'] == 'in':
                 self.cue = False

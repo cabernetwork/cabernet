@@ -216,13 +216,17 @@ class M3U8Queue(Thread):
             time.sleep(0.01)
         else:
             if IS_VOD:
-                count = 2
+                count = self.config['stream']['vod_retries']
             else:
                 count = 1
             while count > 0:
                 self.video.data = self.get_uri_data(uri_dt[0])
                 if self.video.data:
                     break
+                out_queue_put({'uri': 'extend',
+                               'data': data,
+                               'stream': None,
+                               'atsc': None})
                 count -= 1
             if uri_dt not in PLAY_LIST.keys():
                 return

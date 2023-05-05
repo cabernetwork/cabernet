@@ -232,12 +232,14 @@ class TunerHttpHandler(WebHTTPHandler):
                               .format(self.config[section]['player-stream_type']))
             return
         station_scans = WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']]
-        
-        if station_scans != 'Idle' and not station_scans['mux'].is_alive():
-            self.logger.notice('Provider Connection Closed, ch_id={} {}'.format(sid, threading.get_ident()))
+        if station_scans != 'Idle':
+            if station_scans['mux'] is None or not station_scans['mux'].is_alive():
+                self.logger.notice('Provider Connection Closed, ch_id={} {}'.format(sid, threading.get_ident()))
+            else:
+                self.logger.info('1 Client Connection Closed, provider continuing ch_id={} {}'.format(sid, threading.get_ident()))
             WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
         else:
-            self.logger.info('Client Connection Closed, provider continuing ch_id={} {}'.format(sid, threading.get_ident()))
+            self.logger.info('2 Client Connection Closed, provider continuing ch_id={} {}'.format(sid, threading.get_ident()))
         time.sleep(0.01)
 
     def get_ns_inst_station(self, _station_data):
