@@ -83,6 +83,13 @@
                         "default": 2,
                         "level": 3,
                         "help": "Default: 2. Recommend leaving this as is. On VOD (with all streaming packets provided at one time), may improve timeout errors by changing the number of retries. Minimum Total Timeout = num * 12sec/timeout * 2 retries. Only applies to internalproxy."
+                    },
+                    "stream_timeout":{
+                        "label": "Stream Timeout",
+                        "type": "integer",
+                        "default": 59,
+                        "level": 3,
+                        "help": "Default: 59. Recommend leaving this as is. Will terminate the connection when the provider does not provide a new stream packet every x seconds. Adjust for slow connections to provider"
                     }
                 }
             },

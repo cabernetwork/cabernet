@@ -42,7 +42,7 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 30
-IDLE_COUNTER_MAX = 60   # time in seconds beyond any filtered or serving packet to terminate the stream
+IDLE_COUNTER_MAX = 59     # time in seconds beyond any filtered or serving packet to terminate the stream
 STARTUP_IDLE_COUNTER = 40 # time to wait for an initial stream
 # code assumes a timeout response in TVH of 15 or higher.
 
@@ -111,7 +111,10 @@ class InternalProxy(Stream):
         """
         Processes m3u8 interface without using ffmpeg
         """
+        global IDLE_COUNTER_MAX
         self.config = self.db_configdefn.get_config()
+        IDLE_COUNTER_MAX = self.config['stream']['stream_timeout']
+        
         self.channel_dict = _channel_dict
         if not self.start_m3u8_queue_process():
             self.terminate()
@@ -187,6 +190,7 @@ class InternalProxy(Stream):
                 self.write_atsc_msg()
         elif self.idle_counter > self.last_atsc_msg+14:
             self.last_atsc_msg = self.idle_counter
+            self.update_tuner_status('No Reply')
             self.logger.debug('1 Requesting status from m3u8_queue {}'.format(self.t_m3u8_pid))
             self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'status'})
             if not self.is_starting \
@@ -222,6 +226,7 @@ class InternalProxy(Stream):
                 self.cue = True
                 self.logger.debug('Turning M3U8 cue to True')
             if data['filtered']:
+                self.last_atsc_msg = self.idle_counter
                 self.filter_counter = self.idle_counter
                 self.logger.info('Filtered Msg {} {}'.format(self.t_m3u8_pid, urllib.parse.unquote(uri)))
                 self.update_tuner_status('Filtered')
@@ -229,7 +234,7 @@ class InternalProxy(Stream):
                 if self.is_starting:
                     self.is_starting = False
                     self.write_atsc_msg()
-                    self.logger.debug('2 Requesting status from m3u8_queue {}'.format(self.t_m3u8_pid))
+                    self.logger.debug('2 Requesting Status from m3u8_queue {}'.format(self.t_m3u8_pid))
                     self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'status'})
                 time.sleep(0.5)
             else:

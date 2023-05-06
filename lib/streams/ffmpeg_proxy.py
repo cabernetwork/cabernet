@@ -27,7 +27,7 @@ from .stream import Stream
 from .stream_queue import StreamQueue
 from .pts_validation import PTSValidation
 
-MAX_IDLE_TIMER = 20
+MAX_IDLE_TIMER = 59
 
 
 class FFMpegProxy(Stream):
@@ -60,10 +60,13 @@ class FFMpegProxy(Stream):
                 WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
 
     def stream(self, _channel_dict, _write_buffer):
+        global MAX_IDLE_TIMER
         self.logger.info('Using ffmpeg_proxy for channel {}'.format(_channel_dict['uid']))
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         self.config = self.db_configdefn.get_config()
+        MAX_IDLE_TIMER = self.config['stream']['stream_timeout']
+        
         self.pts_validation = PTSValidation(self.config, self.channel_dict)
         channel_uri = self.get_stream_uri(self.channel_dict)
         if not channel_uri:
@@ -135,6 +138,7 @@ class FFMpegProxy(Stream):
         return
 
     def read_buffer(self):
+        global MAX_IDLE_TIMER
         data_found = False
         self.video.data = None
         idle_timer = MAX_IDLE_TIMER  # time slice segments are less than 10 seconds
