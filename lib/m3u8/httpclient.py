@@ -22,7 +22,7 @@ class DefaultHTTPClient:
         self.proxies = proxies
         self.base_uri = None
 
-    def download(self, uri, timeout=4, headers={}, verify_ssl=True, http_session=None):
+    def download(self, uri, timeout=9, headers={}, verify_ssl=True, http_session=None):
         content = self.get_uri(uri, timeout, headers, verify_ssl, http_session)
         return content, self.base_uri
 

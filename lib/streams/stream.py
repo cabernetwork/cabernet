@@ -52,7 +52,8 @@ class Stream:
             elif isinstance(scan_status, dict):
                 if scan_status['instance'] == _instance \
                         and scan_status['ch'] == _ch_num \
-                        and not _isvod:
+                        and not _isvod \
+                        and scan_status['mux']:
                     found = index
                     break
         if found == -1:

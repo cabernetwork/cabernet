@@ -87,7 +87,7 @@ class WebAdminHttpHandler(WebHTTPHandler):
         try:
             super().__init__(*args)
         except ConnectionResetError as ex:
-            self.logger.warning('ConnectionResetError occurred, will try again {}'.format(str(ex)))
+            self.logger.notice('ConnectionResetError occurred on incoming URL request, will try again {}'.format(str(ex)))
             time.sleep(1)
             super().__init__(*args)
         except ValueError as ex:

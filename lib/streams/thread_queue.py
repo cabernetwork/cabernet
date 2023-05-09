@@ -69,6 +69,7 @@ class ThreadQueue(Thread):
                         .format(queue_item.get('thread_id'), queue_item.get('uri')))
                     continue
                 if queue_item.get('uri') == 'terminate':
+                    time.sleep(1.0)
                     self.del_thread(thread_id, True)
                 out_queue = self.queue_list.get(thread_id)
                 if out_queue:
@@ -134,6 +135,7 @@ class ThreadQueue(Thread):
             del self.queue_list[_thread_id]
             self.logger.debug('Removing thread id queue from thread queue: {}'.format(_thread_id))
             if not len(self.queue_list):
+                time.sleep(1.0)  # sleep to deal with boomerang effects on termination
                 self.terminate_requested = True
                 time.sleep(0.01)
                 self.clear_queues()
