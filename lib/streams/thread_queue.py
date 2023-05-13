@@ -110,7 +110,7 @@ class ThreadQueue(Thread):
         try:
             while True:
                 item = _q.get_nowait()
-        except (Empty, ValueError, EOFError) as ex:
+        except (Empty, ValueError, EOFError, OSError) as ex:
             pass
 
     def add_thread(self, _thread_id, _queue):
@@ -135,7 +135,11 @@ class ThreadQueue(Thread):
             del self.queue_list[_thread_id]
             self.logger.debug('Removing thread id queue from thread queue: {}'.format(_thread_id))
             if not len(self.queue_list):
-                time.sleep(1.0)  # sleep to deal with boomerang effects on termination
+                # sleep to deal with boomerang effects on termination
+                # when the channel does a quick reset by the client
+                time.sleep(1.0)
+            if not len(self.queue_list):
+                self.logger.debug('Terminating thread queue')
                 self.terminate_requested = True
                 time.sleep(0.01)
                 self.clear_queues()

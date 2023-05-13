@@ -278,13 +278,36 @@ class InternalProxy(Stream):
         self.video.terminate()
 
     def write_buffer(self, _data):
+        """
+        Plan is to slowly push out bytes until something is
+        added to the queue to process.  This should stop the
+        clients from terminating the data stream due to lack of data for 
+        a short.  It is currently set to at least 20 seconds of data 
+        before it stops transmitting
+        """
         try:
-            self.wfile.flush()
-            # Do not use chunk writes! Just send data.
-            # x = self.wfile.write('{}\r\n'.format(len(_data)).encode())
-            x = self.wfile.write(_data)
-            # x = self.wfile.write('\r\n'.encode())
-            self.wfile.flush()
+            bytes_written = 0
+            bytes_per_write = int(len(_data)/20)  # number of seconds to keep transmitting
+            while self.out_queue.qsize() == 0:
+                self.wfile.flush()
+                # Do not use chunk writes! Just send data.
+                # x = self.wfile.write('{}\r\n'.format(len(_data)).encode())
+                next_buffer_write = bytes_written + bytes_per_write
+                if next_buffer_write >= len(_data):
+                    x = self.wfile.write(_data[bytes_written:])
+                    bytes_written = len(_data)
+                    self.wfile.flush()
+                    break
+                else:
+                    x = self.wfile.write(_data[bytes_written:next_buffer_write])
+                    bytes_written = next_buffer_write
+                    # x = self.wfile.write('\r\n'.encode())
+                    self.wfile.flush()
+                time.sleep(1.0)
+            if bytes_written != len(_data):
+                x = self.wfile.write(_data[bytes_written:])
+                self.wfile.flush()
+            
         except socket.timeout:
             raise
         except IOError:
@@ -468,6 +491,6 @@ class InternalProxy(Stream):
         self.clear_queues()
         time.sleep(0.1)
         self.in_queue = Queue()
-        self.out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
+        self.out_queue = queue.Queue(maxsize=MAX_OUT_QUEUE_SIZE)
         self.t_queue.add_thread(threading.get_ident(), self.out_queue)
         self.t_queue.status_queue = self.in_queue
