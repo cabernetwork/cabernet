@@ -252,19 +252,21 @@ class InternalProxy(Stream):
                     uri_decoded = urllib.parse.unquote(uri)
                     if self.check_ts_counter(uri_decoded):
                         # if the length of the video is tiny, then print the string out
-                        if len(self.video.data) < 1000:
-                            self.logger.info('{} {} Video packet too small (<1,000), data: {} {}'
+                        if len(self.video.data) < 1000 or self.video.data.startswith(b'<'):
+                            self.logger.info('{} {} Video packet too small (<1,000), restarting HTTP Session, data: {} {}'
                                 .format(self.t_m3u8_pid, uri_decoded, len(self.video.data), self.video.data))
+                            self.update_tuner_status('Bad Data')
+                            self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'restart_http'})
                         else:
                             start_ttw = time.time()
                             self.write_buffer(self.video.data)
                             delta_ttw = time.time() - start_ttw
+                            self.update_tuner_status('Streaming')
                             self.logger.info(
                                 'Serving {} {} ({})s ({}B) ttw:{:.2f}s {}'
                                 .format(self.t_m3u8_pid, uri_decoded, self.duration,
                                         len(self.video.data), delta_ttw, threading.get_ident()))
                             self.is_starting = False
-                            self.update_tuner_status('Streaming')
                             time.sleep(0.1)
                 else:
                     if not self.is_starting:
@@ -287,6 +289,7 @@ class InternalProxy(Stream):
         """
         try:
             bytes_written = 0
+            count = 0
             bytes_per_write = int(len(_data)/20)  # number of seconds to keep transmitting
             while self.out_queue.qsize() == 0:
                 self.wfile.flush()
@@ -299,6 +302,9 @@ class InternalProxy(Stream):
                     self.wfile.flush()
                     break
                 else:
+                    count += 1
+                    if count > 13:
+                        self.update_tuner_status('No Reply')
                     x = self.wfile.write(_data[bytes_written:next_buffer_write])
                     bytes_written = next_buffer_write
                     # x = self.wfile.write('\r\n'.encode())
@@ -307,7 +313,6 @@ class InternalProxy(Stream):
             if bytes_written != len(_data):
                 x = self.wfile.write(_data[bytes_written:])
                 self.wfile.flush()
-            
         except socket.timeout:
             raise
         except IOError:
@@ -358,7 +363,6 @@ class InternalProxy(Stream):
         current_time = datetime.datetime.now()
         delta_time = current_time - self.last_reset_time
         self.idle_counter = int(delta_time.total_seconds())
-
 
     def check_ts_counter(self, _uri):
         """

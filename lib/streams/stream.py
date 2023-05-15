@@ -53,7 +53,8 @@ class Stream:
                 if scan_status['instance'] == _instance \
                         and scan_status['ch'] == _ch_num \
                         and not _isvod \
-                        and scan_status['mux']:
+                        and scan_status['mux'] \
+                        and not scan_status['mux'].terminate_requested:
                     found = index
                     break
         if found == -1:

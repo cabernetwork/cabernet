@@ -677,6 +677,13 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     STREAM_QUEUE.put({'uri_dt': 'status'})
                     logger.debug('Sending Status request to stream queue {}'.format(os.getpid()))
                     time.sleep(0.01)
+                elif q_item['uri'] == 'restart_http':
+                    self.logger.debug('HTTP Session restarted {}'.format(os.getpid()))
+                    temp_session = M3U8Queue.http_session
+                    M3U8Queue.http_session = requests.session()
+                    temp_session.close()
+                    temp_session = None
+                    time.sleep(0.01)
                 else:
                     logger.debug('UNKNOWN m3u8 queue request {}'.format(q_item['uri']))
             except (KeyboardInterrupt, EOFError, TypeError, ValueError) as ex:
