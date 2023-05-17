@@ -73,6 +73,7 @@ class InternalProxy(Stream):
         self.terminate_queue = None
         self.tc_match = re.compile(r'^.+\D+(\d*)\.ts')
         self.idle_counter = 0
+        self.tuner_no = -1
         # last time the idle counter was reset
         self.last_reset_time = datetime.datetime.now()
         self.last_atsc_msg = 0
@@ -107,11 +108,12 @@ class InternalProxy(Stream):
         self.t_m3u8 = None
         self.clear_queues()
 
-    def stream(self, _channel_dict, _wfile, _terminate_queue):
+    def stream(self, _channel_dict, _wfile, _terminate_queue, _tuner_no):
         """
         Processes m3u8 interface without using ffmpeg
         """
         global IDLE_COUNTER_MAX
+        self.tuner_no = _tuner_no
         self.config = self.db_configdefn.get_config()
         IDLE_COUNTER_MAX = self.config['stream']['stream_timeout']
         
@@ -351,9 +353,9 @@ class InternalProxy(Stream):
         ch_num = self.channel_dict['display_number']
         namespace = self.channel_dict['namespace']
         scan_list = WebHTTPHandler.rmg_station_scans[namespace]
-        for i, tuner in enumerate(scan_list):
-            if type(tuner) == dict and tuner['ch'] == ch_num:
-                WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
+        tuner = scan_list[self.tuner_no]
+        if type(tuner) == dict and tuner['ch'] == ch_num:
+            WebHTTPHandler.rmg_station_scans[namespace][self.tuner_no]['status'] = _status
 
     def update_idle_counter(self):
         """
@@ -402,31 +404,27 @@ class InternalProxy(Stream):
         ch_num = self.channel_dict['display_number']
         namespace = self.channel_dict['namespace']
         scan_list = WebHTTPHandler.rmg_station_scans[namespace]
+        tuner = scan_list[self.tuner_no]
         m3u8_out_queue = None
 
-        for i, tuner in enumerate(scan_list):
-            if isinstance(tuner, dict) \
-                    and tuner['ch'] == ch_num \
-                    and tuner['instance'] == self.instance:
- 
-                if not WebHTTPHandler.rmg_station_scans[namespace][i]['mux']:
-                    # new tuner case
-                    m3u8_out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
-                    self.t_queue = ThreadQueue(m3u8_out_queue)
-                    self.t_queue.add_thread(threading.get_ident(), self.out_queue)
-                    self.t_queue.status_queue = self.in_queue
-                    WebHTTPHandler.rmg_station_scans[namespace][i]['mux'] = self.t_queue
-                    break
-                elif self.channel_dict['json'].get('VOD'):
-                    pass
-                else:
-                    # reuse tuner case
-                    self.t_queue = WebHTTPHandler.rmg_station_scans[namespace][i]['mux']
-                    self.t_queue.add_thread(threading.get_ident(), self.out_queue)
-                    self.t_m3u8 = self.t_queue.remote_proc
-                    self.t_m3u8_pid = self.t_queue.remote_proc.pid
-                    self.in_queue = self.t_queue.status_queue
-                    break
+        if isinstance(tuner, dict) \
+                and tuner['ch'] == ch_num \
+                and tuner['instance'] == self.instance:
+
+            if not tuner['mux']:
+                # new tuner case
+                m3u8_out_queue = Queue(maxsize=MAX_OUT_QUEUE_SIZE)
+                self.t_queue = ThreadQueue(m3u8_out_queue, self.config)
+                self.t_queue.add_thread(threading.get_ident(), self.out_queue)
+                self.t_queue.status_queue = self.in_queue
+                WebHTTPHandler.rmg_station_scans[namespace][self.tuner_no]['mux'] = self.t_queue
+            else:
+                # reuse tuner case
+                self.t_queue = tuner['mux']
+                self.t_queue.add_thread(threading.get_ident(), self.out_queue)
+                self.t_m3u8 = self.t_queue.remote_proc
+                self.t_m3u8_pid = self.t_queue.remote_proc.pid
+                self.in_queue = self.t_queue.status_queue
 
         while not is_running and restarts > 0:
             restarts -= 1

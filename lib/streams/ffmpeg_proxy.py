@@ -47,6 +47,7 @@ class FFMpegProxy(Stream):
         self.write_buffer = None
         self.stream_queue = None
         self.pts_validation = None
+        self.tuner_no = -1
         super().__init__(_plugins, _hdhr_queue)
         self.db_configdefn = DBConfigDefn(self.config)
         self.video = Video(self.config)
@@ -55,13 +56,14 @@ class FFMpegProxy(Stream):
         ch_num = self.channel_dict['display_number']
         namespace = self.channel_dict['namespace']
         scan_list = WebHTTPHandler.rmg_station_scans[namespace]
-        for i, tuner in enumerate(scan_list):
-            if type(tuner) == dict and tuner['ch'] == ch_num:
-                WebHTTPHandler.rmg_station_scans[namespace][i]['status'] = _status
+        tuner = scan_list[self.tuner_no]
+        if type(tuner) == dict and tuner['ch'] == ch_num:
+            WebHTTPHandler.rmg_station_scans[namespace][self.tuner_no]['status'] = _status
 
-    def stream(self, _channel_dict, _write_buffer):
+    def stream(self, _channel_dict, _write_buffer, _tuner_no):
         global MAX_IDLE_TIMER
         self.logger.info('Using ffmpeg_proxy for channel {}'.format(_channel_dict['uid']))
+        self.tuner_no = _tuner_no
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         self.config = self.db_configdefn.get_config()

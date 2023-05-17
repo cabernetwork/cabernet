@@ -90,6 +90,13 @@
                         "default": 59,
                         "level": 3,
                         "help": "Default: 59. Recommend leaving this as is. Will terminate the connection when the provider does not provide a new stream packet every x seconds. Adjust for slow connections to provider"
+                    },
+                    "switch_channel_timeout":{
+                        "label": "Switch Channel Timeout",
+                        "type": "integer",
+                        "default": 2,
+                        "level": 3,
+                        "help": "Default: 2 seconds. Clients tend to timeout streams and request a reset. This value is the time in seconds it takes to request the stop followed by re-subscribing the channel. If it is too short, Cabernet will drop the current tuner and use a new one instead of reusing the current tuner."
                     }
                 }
             },

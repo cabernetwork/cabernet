@@ -34,13 +34,14 @@ class ThreadQueue(Thread):
     """
     # list of [threadid, queue] items
 
-    def __init__(self, _queue):
+    def __init__(self, _queue, _config):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         # incoming queue containing the thread id of which outgoing queue to send it to.
         self.queue = _queue
         # outgoing queues
         self.queue_list = {}
+        self.config = _config
         self.terminate_requested = False
         # The process using the incoming queue to send data
         self._remote_proc = None
@@ -69,7 +70,7 @@ class ThreadQueue(Thread):
                         .format(queue_item.get('thread_id'), queue_item.get('uri')))
                     continue
                 if queue_item.get('uri') == 'terminate':
-                    time.sleep(1.0)
+                    time.sleep(self.config['stream']['switch_channel_timeout'])
                     self.del_thread(thread_id, True)
                 out_queue = self.queue_list.get(thread_id)
                 if out_queue:

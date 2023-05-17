@@ -207,7 +207,7 @@ class TunerHttpHandler(WebHTTPHandler):
             if resp['tuner'] < 0:
                 return
             else:
-                self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue)
+                self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue, resp['tuner'])
         elif self.config[section]['player-stream_type'] == 'ffmpegproxy':
             resp = self.ffmpeg_proxy.gen_response(
                 self.real_namespace, self.real_instance, 
@@ -216,7 +216,7 @@ class TunerHttpHandler(WebHTTPHandler):
             if resp['tuner'] < 0:
                 return
             else:
-                self.ffmpeg_proxy.stream(station_data, self.wfile)
+                self.ffmpeg_proxy.stream(station_data, self.wfile, resp['tuner'])
         elif self.config[section]['player-stream_type'] == 'streamlinkproxy':
             resp = self.streamlink_proxy.gen_response(
                 self.real_namespace, self.real_instance, 
@@ -225,7 +225,7 @@ class TunerHttpHandler(WebHTTPHandler):
             if resp['tuner'] < 0:
                 return
             else:
-                self.streamlink_proxy.stream(station_data, self.wfile)
+                self.streamlink_proxy.stream(station_data, self.wfile, resp['tuner'])
         else:
             self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Unknown streamtype'))
             self.logger.error('Unknown [player-stream_type] {}'
