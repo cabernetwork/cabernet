@@ -189,7 +189,7 @@ class Plugin:
             else:
                 json_settings = json_settings[0]
                 self.repo_id = json_settings['repoid']
-                if not json_settings['version']['current']:
+                if local_settings['version']['current']:
                     json_settings['version']['current'] = local_settings['version']['current']
             json_settings['external'] = _is_external
             json_settings['version']['installed'] = True
@@ -198,7 +198,6 @@ class Plugin:
             self.logger.debug(
                 'Plugin Manifest file loaded at {}'.format(self.plugin_path))
             self.plugin_settings = utils.merge_dict(self.plugin_settings, json_settings, True)
-
         except FileNotFoundError:
             self.logger.warning(
                 'PLUGIN MANIFEST FILE NOT FOUND AT {}'.format(self.plugin_path))

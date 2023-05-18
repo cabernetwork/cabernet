@@ -254,8 +254,8 @@ class InternalProxy(Stream):
                     uri_decoded = urllib.parse.unquote(uri)
                     if self.check_ts_counter(uri_decoded):
                         # if the length of the video is tiny, then print the string out
-                        if len(self.video.data) < 1000 or self.video.data.startswith(b'<'):
-                            self.logger.info('{} {} Video packet too small (<1,000), restarting HTTP Session, data: {} {}'
+                        if len(self.video.data) < 2000 and len(self.video.data) % 188 != 0  or self.video.data.startswith(b'<'):
+                            self.logger.info('{} {} Not a Video packet, restarting HTTP Session, data: {} {}'
                                 .format(self.t_m3u8_pid, uri_decoded, len(self.video.data), self.video.data))
                             self.update_tuner_status('Bad Data')
                             self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'restart_http'})

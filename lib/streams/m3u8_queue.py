@@ -678,7 +678,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                     logger.debug('Sending Status request to stream queue {}'.format(os.getpid()))
                     time.sleep(0.01)
                 elif q_item['uri'] == 'restart_http':
-                    self.logger.debug('HTTP Session restarted {}'.format(os.getpid()))
+                    logger.debug('HTTP Session restarted {}'.format(os.getpid()))
                     temp_session = M3U8Queue.http_session
                     M3U8Queue.http_session = requests.session()
                     temp_session.close()
