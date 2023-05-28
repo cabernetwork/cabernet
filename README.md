@@ -13,7 +13,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 - Download source
 - Unzip source in the installation folder
 - Launch the app by running the command "python3 tvh_main.py". This should create a data folder and a config.ini inside that folder
-- Bring up browser and go to http://ipaddress:6077/
+- Bring up browser and go to http://ip address:6077/
 - From Plugins, install PlutoTV plugin
 - Stop the app
 - Edit the data/config.ini and add the following lines
