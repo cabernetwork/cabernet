@@ -147,7 +147,8 @@ class PluginChannels:
                     self.config_obj.data[self.config_section]['channel-import_groups'])
             else:
                 self.db.save_channel_list(self.plugin_obj.name, self.instance_key, ch_dict)
-            config_callbacks.update_channel_num(self.config_obj, self.config_section, 'channel-start_ch_num')
+            if self.config_obj.data[self.config_section].get('channel-start_ch_num') > -1:
+                config_callbacks.update_channel_num(self.config_obj, self.config_section, 'channel-start_ch_num')
             self.logger.debug(
                 '{}:{} Channel update complete'
                 .format(self.plugin_obj.name, self.instance_key))

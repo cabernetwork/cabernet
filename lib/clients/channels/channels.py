@@ -256,6 +256,12 @@ class ChannelsURL:
                     lookup_name = self.translate_main2json(name)
                     if lookup_name is not None:
                         value = ch_db['json'][lookup_name]
+                if name == 'display_number':
+                    config_section = utils.instance_config_section(ch_db['namespace'], instance)
+                    start_ch = self.config[config_section].get('channel-start_ch_num')
+                    if start_ch > -1:
+                        results += ''.join(['<li>ERROR: Starting Ch Number setting is not default (-1) [', uid, '][', instance, '][', name, '] not changed', '</li>'])
+                        continue
                 results += ''.join(['<li>Updated [', uid, '][', instance, '][', name, '] to ', str(value), '</li>'])
                 ch_db[name] = value
                 if name == 'thumbnail':
