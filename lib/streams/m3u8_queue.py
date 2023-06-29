@@ -208,7 +208,7 @@ class M3U8Queue(Thread):
         uri_dt = _queue_item['uri_dt']
         data = _queue_item['data']
         if data['filtered']:
-            out_queue_put({'uri': uri_dt[0],
+            out_queue_put({'uri': data['uri'],
                            'data': data,
                            'stream': self.get_stream_from_atsc(),
                            'atsc': None})
@@ -220,7 +220,7 @@ class M3U8Queue(Thread):
             else:
                 count = 1
             while count > 0:
-                self.video.data = self.get_uri_data(uri_dt[0])
+                self.video.data = self.get_uri_data(data['uri'])
                 if self.video.data:
                     break
                 out_queue_put({'uri': 'extend',
@@ -232,7 +232,7 @@ class M3U8Queue(Thread):
                 return
             if self.video.data is None:
                 PLAY_LIST[uri_dt]['played'] = True
-                out_queue_put({'uri': uri_dt[0],
+                out_queue_put({'uri': data['uri'],
                                'data': data,
                                'stream': None,
                                'atsc': None
@@ -253,7 +253,7 @@ class M3U8Queue(Thread):
                 return
             if not self.is_pts_valid():
                 PLAY_LIST[uri_dt]['played'] = True
-                out_queue_put({'uri': uri_dt[0],
+                out_queue_put({'uri': data['uri'],
                                'data': data,
                                'stream': None,
                                'atsc': None
@@ -264,7 +264,7 @@ class M3U8Queue(Thread):
                 self.first_segment = False
             self.pts_resync.resequence_pts(self.video)
             if self.video.data is None:
-                out_queue_put({'uri': uri_dt[0],
+                out_queue_put({'uri': data['uri'],
                                'data': data,
                                'stream': self.video.data,
                                'atsc': None})
@@ -272,7 +272,7 @@ class M3U8Queue(Thread):
                 time.sleep(0.01)
                 return
             atsc_default_msg = self.atsc_processing()
-            out_queue_put({'uri': uri_dt[0],
+            out_queue_put({'uri': data['uri'],
                            'data': data,
                            'stream': self.video.data,
                            'atsc': atsc_default_msg
@@ -328,6 +328,7 @@ class M3U8Process(Thread):
         self.last_refresh = time.time()
         self.plugins = _plugins
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
+        self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
 
         self.is_running = True
         self.duration = 6
@@ -479,7 +480,10 @@ class M3U8Process(Thread):
                 last_key = list(PLAY_LIST.keys())[-1]
                 i = 0
                 for index, segment in enumerate(reversed(_playlist.segments)):
-                    uri = segment.absolute_uri
+                    if self.use_full_duplicate_checking:
+                        uri = segment.absolute_uri
+                    else:
+                        uri = segment.get_path_from_uri()
                     dt = self.segment_date_time(segment)
                     if self.use_date_on_key:
                         uri_dt = (uri, dt)
@@ -499,7 +503,11 @@ class M3U8Process(Thread):
     def add_segment(self, _segment, _key, _default_played=False):
         global TERMINATE_REQUESTED
         self.set_cue_status(_segment)
-        uri = _segment.absolute_uri
+        if self.use_full_duplicate_checking:
+            uri = _segment.absolute_uri
+        else:
+            uri = _segment.get_path_from_uri()
+        uri_full = _segment.absolute_uri
         dt = self.segment_date_time(_segment)
         if self.use_date_on_key:
             uri_dt = (uri, dt)
@@ -510,11 +518,12 @@ class M3U8Process(Thread):
             filtered = False
             cue_status = self.set_cue_status(_segment)
             if self.file_filter is not None:
-                m = self.file_filter.match(urllib.parse.unquote(uri))
+                m = self.file_filter.match(urllib.parse.unquote(uri_full))
                 if m:
                     filtered = True
             PLAY_LIST[uri_dt] = {
                 'uid': self.channel_dict['uid'],
+                'uri': uri_full,
                 'played': played,
                 'filtered': filtered,
                 'duration': _segment.duration,
@@ -527,16 +536,18 @@ class M3U8Process(Thread):
             try:
                 if not played and not TERMINATE_REQUESTED:
                     self.logger.debug('Added {} to play queue {}'
-                                      .format(uri, os.getpid()))
+                                      .format(uri_full, os.getpid()))
                     STREAM_QUEUE.put({'uri_dt': uri_dt,
                                       'data': PLAY_LIST[uri_dt]})
                     return 1
                 if _default_played:
                     self.logger.debug('Skipping {} {} {}'
-                                      .format(uri, os.getpid(), _segment.program_date_time))
+                                      .format(uri_full, os.getpid(), _segment.program_date_time))
             except ValueError as ex:
                 # queue is closed, terminating
                 pass
+        else:
+            self.logger.warning('DUPICATE FOUND {}'.format(uri_dt))
 
         return 0
 
@@ -552,7 +563,10 @@ class M3U8Process(Thread):
                     disc_index = total_index - i
                     break
             for segment in _playlist.segments[disc_index:total_index]:
-                s_uri = segment.absolute_uri
+                if self.use_full_duplicate_checking:
+                    s_uri = segment.absolute_uri
+                else:
+                    s_uri = segment.get_path_from_uri()
                 s_dt = self.segment_date_time(segment)
                 if self.use_date_on_key:
                     s_key = (s_uri, s_dt)
@@ -572,7 +586,10 @@ class M3U8Process(Thread):
         for segment_key in list(PLAY_LIST.keys()):
             is_found = False
             for segment_m3u8 in _playlist.segments:
-                s_uri = segment_m3u8.absolute_uri
+                if self.use_full_duplicate_checking:
+                    s_uri = segment_m3u8.absolute_uri
+                else:
+                    s_uri = segment_m3u8.get_path_from_uri()
                 s_dt = self.segment_date_time(segment_m3u8)
                 if self.use_date_on_key:
                     s_key = (s_uri, s_dt)
