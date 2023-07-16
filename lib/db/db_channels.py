@@ -136,6 +136,12 @@ sqlcmds = {
             display_number=?
             WHERE namespace=? AND instance=? AND uid=?
         """,
+    'channels_num_update':
+        """
+        UPDATE channels SET 
+            number=?
+            WHERE namespace=? AND instance=? AND uid=?
+        """,
     'channels_del':
         """
         DELETE FROM channels WHERE updated LIKE ?
@@ -226,6 +232,12 @@ class DBChannels(DB):
                     True,
                     json.dumps(ch)))
             except sqlite3.IntegrityError as ex:
+                # record already present.  Check the thumbnail and update as needed
+                ch_stored = self.get_channel(ch['id'], _namespace, _instance)
+                if ch_stored['thumbnail'] is None and ch['thumbnail'] is not None:
+                    ch_stored['thumbnail'] = ch['thumbnail']
+                    ch_stored['thumbnail_size'] = ch['thumbnail_size']
+                    self.update_channel(ch_stored)
                 self.update(DB_CHANNELS_TABLE, (
                     ch['number'],
                     True,
@@ -360,6 +372,18 @@ class DBChannels(DB):
         display_number = str(_ch['display_number'])
         self.update(DB_CHANNELS_TABLE + '_chnum', (
             display_number,
+            _ch['namespace'],
+            _ch['instance'],
+            _ch['uid']
+        ))
+        
+    def update_number(self, _ch):
+        """
+        Updates the display_number field for one channel
+        """
+        number = str(_ch['number'])
+        self.update(DB_CHANNELS_TABLE + '_num', (
+            number,
             _ch['namespace'],
             _ch['instance'],
             _ch['uid']

@@ -326,18 +326,11 @@ def update_channel_num(_config_obj, _section, _key):
     namespace = list(namespace)[0]
     ch_list = db_channels.get_channels(namespace, instance)
     for ch in ch_list.values():
-        if starting_num == -1:
-            if ch[0]['display_number'] != ch[0]['json']['number']:
-                ch[0]['display_number'] = ch[0]['json']['number']
-                is_changed = True
-        else:
+        if starting_num != -1:
             if ch[0]['display_number'] != starting_num:
                 ch[0]['display_number'] = starting_num
-                is_changed = True
+                db_channels.update_channel_number(ch[0])
             starting_num += 1
-        if is_changed:
-            db_channels.update_channel_number(ch[0])
-            is_changed = False
 
     if init_num == -1:
         return 'Renumbered channels back to default'.format(_section, _key)
