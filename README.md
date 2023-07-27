@@ -31,7 +31,7 @@ label = PlutoTV Instance
 
 ### 3. Services
 - MS Windows
-    - Services for MS Windows is auto-created during the installer provided for each release.
+    - Services for MS Windows is auto-created using the installer provided for each release.
 - Unix/Linux
     - Services for CoreELEC and Debian/Ubuntu are found here. Follow the instructions found in the files.
     - https://github.com/cabernetwork/cabernet/tree/master/lib/tvheadend/service
