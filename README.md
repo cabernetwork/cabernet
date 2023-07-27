@@ -29,10 +29,17 @@ label = PlutoTV Instance
 - Restart the app (from the Scheduler/Applications) to have the plugin fully activate
 - From XML/JSON Links try some of the links
 
-### 3. Docker
+### 3. Services
+- MS Windows
+    - Services for MS Windows is auto-created during the installer provided for each release.
+- Unix/Linux
+    - Services for CoreELEC and Debian/Ubuntu are found here. Follow the instructions found in the files.
+    - https://github.com/cabernetwork/cabernet/tree/master/lib/tvheadend/service
+
+### 4. Docker
 See http://ghcr.io/cabernetwork/cabernet:latest
 
-### 4. Notes
+### 5. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
     - http://ip address:6077/channels.m3u
     - http://ip address:6077/pLuToTv/channels.m3u
