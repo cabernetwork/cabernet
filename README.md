@@ -38,13 +38,23 @@ label = PlutoTV Instance
 
 ### 4. Docker
 See http://ghcr.io/cabernetwork/cabernet:latest
+- Bring up browser and go to http://ip address:6077/
+- From Plugins, install PlutoTV plugin
+- Stop the app
+- Edit the data/config.ini and add the following lines
+<pre>
+[plutotv_default]
+label = PlutoTV Instance
+</pre>
+- Restart the app (from the Scheduler/Applications) to have the plugin fully activate
+- From XML/JSON Links try some of the links
 
 ### 5. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
     - http://ip address:6077/channels.m3u
     - http://ip address:6077/pLuToTv/channels.m3u
     - http://ip address:6077/PlutoTV/Default/channels.m3u
-- config.ini group tag requirements
+- config.ini group tag requirements when createing an instance
     - All lower case
     - Underscore is a key character in section tags and separates the plugin name from the instance name
     - Use a single word if possible for the instance name
