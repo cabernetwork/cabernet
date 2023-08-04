@@ -54,7 +54,7 @@ label = PlutoTV Instance
     - http://ip address:6077/channels.m3u
     - http://ip address:6077/pLuToTv/channels.m3u
     - http://ip address:6077/PlutoTV/Default/channels.m3u
-- config.ini group tag requirements when createing an instance
+- config.ini group tag requirements when creating an instance
     - All lower case
     - Underscore is a key character in section tags and separates the plugin name from the instance name
     - Use a single word if possible for the instance name
