@@ -61,4 +61,7 @@ label = PlutoTV Instance
     - Do not change the instance name unless you go into data management and remove the instance first.
     - [plutotv_mychannels]
 
+### 6. Forum
+https://tvheadend.org/boards/5/topics/43052
+
 Enjoy
