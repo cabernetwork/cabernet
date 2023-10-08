@@ -38,6 +38,7 @@ label = PlutoTV Instance
 
 ### 4. Docker
 See http://ghcr.io/cabernetwork/cabernet:latest
+- Use or Review ports and remote mount points at docker-compose.yml
 - Bring up browser and go to http://ip address:6077/
 - From Plugins, install PlutoTV plugin
 - Stop the app
