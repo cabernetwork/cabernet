@@ -19,6 +19,7 @@ substantial portions of the Software.
 import functools
 import http
 import http.client
+import httpx
 import json
 import logging
 import os
@@ -102,7 +103,7 @@ def handle_url_except(f=None, timeout=None):
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
 
-            except requests.exceptions.ConnectionError as ex:
+            except (requests.exceptions.ConnectionError, httpx.ConnectError) as ex:
                 ex_save = ex
                 if hasattr(ex.args[0], 'reason'):
                     reason = ex.args[0].reason
@@ -182,7 +183,7 @@ def handle_json_except(f):
     def wrapper_func(self, *args, **kwargs):
         try:
             return f(self, *args, **kwargs)
-        except (json.JSONDecodeError, requests.exceptions.InvalidJSONError) as jsonError:
+        except (json.JSONDecodeError) as jsonError:
             self.logger.error("JSONError in function {}(): {}".format(f.__qualname__, str(jsonError)))
             return None
 

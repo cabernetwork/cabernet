@@ -29,16 +29,23 @@ from multiprocessing import Queue, Process
 try:
     from pip._internal import main as pip
     try:
-        try:
-            import cryptography
-        except ImportError:
-            pip(['install', 'cryptography'])
-        try:
-            import requests
-        except ImportError:
-            pip(['install', 'requests'])
+        import cryptography
+    except ImportError:
+        pip(['install', 'cryptography'])
     except ModuleNotFoundError:
         print('Unable to install required cryptography module')
+    try:
+        import requests
+    except ImportError:
+        pip(['install', 'requests'])
+    except ModuleNotFoundError:
+        print('Unable to install required requests module')
+    try:
+        import httpx
+    except ImportError:
+        pip(['install', 'httpx'])
+    except ModuleNotFoundError:
+        print('Unable to install required httpx module')
 except (ImportError, ModuleNotFoundError):
     print('Unable to load pip module to install required modules')
 

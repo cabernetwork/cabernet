@@ -1,3 +1,4 @@
+import logging
 import posixpath
 import ssl
 import sys
@@ -21,16 +22,20 @@ class DefaultHTTPClient:
     def __init__(self, proxies=None):
         self.proxies = proxies
         self.base_uri = None
+        self.logger = None
 
     def download(self, uri, timeout=9, headers={}, verify_ssl=True, http_session=None):
         content = self.get_uri(uri, timeout, headers, verify_ssl, http_session)
         return content, self.base_uri
 
     def get_uri(self, _uri, _timeout, _headers, _verify_ssl, _http_session):
+        if self.logger is None:
+            self.logger = logging.getLogger(__name__)
+
         if _http_session:
             resp = _http_session.get(_uri, headers=_headers, timeout=_timeout)
             x = resp.text
-            self.base_uri = _parsed_url(resp.url)
+            self.base_uri = _parsed_url(str(resp.url))
             resp.raise_for_status()
             return x
 

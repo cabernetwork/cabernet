@@ -132,14 +132,24 @@ class PluginObj:
         """
         pass
 
-    def enable_instance(self, _namespace, _instance):
+    def enable_instance(self, _namespace, _instance, _instance_name='Instance'):
         """
         When one plugin is tied to another and requires it to be enabled,
         this method will enable the other instance and set this plugin to disabled until 
         everything is up
+        Also used to create a new instance if missing.  When _instance is None, 
+        will look for any instance, if not will create a default one.
         """
         name_config = _namespace.lower()
-        instance_config = name_config + '_' + _instance
+        # if _instance is None and config has no instance for namespace, add one
+        if _instance is None:
+            x = [ k for k in self.config_obj.data.keys() if k.startswith(name_config+'_')]
+            if len(x):
+                return
+            else:
+                _instance = 'Default'
+        instance_config = name_config + '_' + _instance.lower()
+        
         if self.config_obj.data.get(name_config):
             if self.config_obj.data.get(instance_config):
                 if not self.config_obj.data[instance_config]['enabled']:
@@ -150,10 +160,15 @@ class PluginObj:
                     raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
                                                        .format(_namespace, self.namespace))
             else:
-                self.logger.warning('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
-                                   .format(_namespace, _instance, self.namespace))
+                if _namespace != self.namespace:
+                    self.logger.warning('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                                       .format(_namespace, _instance, self.namespace))
+                else:
+                    self.logger.warning('3. Enabling {}:{} plugin instance. Restart Required'
+                                       .format(_namespace, _instance, self.namespace))
+                
                 self.config_obj.write(
-                    instance_config, 'Label', _namespace + ' Instance')
+                    instance_config, 'Label', _namespace + ' ' + _instance_name)
                 self.config_obj.write(
                     instance_config, 'enabled', True)
                 raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
@@ -225,14 +240,15 @@ class PluginObj:
             if _instance is None:
                 for key, instance in self.instances.items():
                     if _what_to_refresh == 'EPG':
-                        return instance.refresh_epg()
+                        instance.refresh_epg()
                     elif _what_to_refresh == 'Channels':
-                        return instance.refresh_channels()
+                        instance.refresh_channels()
             else:
                 if _what_to_refresh == 'EPG':
-                    return self.instances[_instance].refresh_epg()
+                    self.instances[_instance].refresh_epg()
                 elif _what_to_refresh == 'Channels':
-                    return self.instances[_instance].refresh_channels()
+                    self.instances[_instance].refresh_channels()
+            return True
         except exceptions.CabernetException:
             self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
             self.enabled = False

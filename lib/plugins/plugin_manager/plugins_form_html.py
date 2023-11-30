@@ -75,6 +75,10 @@ def post_plugins_html(_webserver):
             pm = PluginManager(_webserver.plugins)
             results = pm.delete_plugin(repoid, pluginid, _webserver.sched_queue)
             _webserver.do_mime_response(200, 'text/html', 'STATUS: Deleting plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
+        if action == "addInstance":
+            pm = PluginManager(_webserver.plugins)
+            results = pm.add_instance(repoid, pluginid, _webserver.sched_queue)
+            _webserver.do_mime_response(200, 'text/html', 'STATUS: Adding Instance plugin: {}:{}<br> '.format(repoid, pluginid) + str(results))
         elif action == "installPlugin":
             pm = PluginManager(_webserver.plugins)
             results = pm.install_plugin(repoid, pluginid, _webserver.sched_queue)

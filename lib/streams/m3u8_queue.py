@@ -16,10 +16,10 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import httpx
 import logging
 import os
 import re
-import requests
 import socket
 import sys
 import threading
@@ -58,7 +58,8 @@ class M3U8Queue(Thread):
     output to the client.
     """
     is_stuck = None
-    http_session = requests.session()
+    #http_session = httpx.Client(http2=True)
+    http_session = httpx.Client(verify=False)
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
@@ -90,7 +91,7 @@ class M3U8Queue(Thread):
 
     @handle_url_except()
     def get_uri_data(self, _uri):
-        resp = self.http_session.get(_uri, headers=self.header, timeout=(8, 8))
+        resp = self.http_session.get(_uri, headers=self.header, timeout=(8, 8), follow_redirects=True)
         x = resp.content
         resp.raise_for_status()
         return x

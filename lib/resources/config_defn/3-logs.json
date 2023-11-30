@@ -22,7 +22,7 @@
                     "level":{
                         "label": "Level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
                         "default": "WARNING",
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
@@ -72,7 +72,7 @@
                     "level":{
                         "label": "Level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
                         "default": "INFO",
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
@@ -163,7 +163,7 @@
                     "level":{
                         "label": "level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
                         "default": "DEBUG",
                         "level": 4,
                         "writable": false,

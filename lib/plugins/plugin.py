@@ -126,9 +126,9 @@ class Plugin:
         # It would have a section name = 'name-instance'
         self.instances = self.find_instances()
         if len(self.instances) == 0:
-            self.enabled = False
-            self.config_obj.data[self.namespace.lower()]['enabled'] = False
-            self.logger.info('No instances found, disabling plugin {}'.format(self.namespace))
+            self.enabled = True
+            self.config_obj.data[self.namespace.lower()]['enabled'] = True
+            self.logger.info('No instances found, {}'.format(self.namespace))
             return
         for inst in self.instances:
             self.plugin_db.save_instance(self.repo_id, self.namespace, inst, '')

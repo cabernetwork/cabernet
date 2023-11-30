@@ -37,11 +37,11 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.13.11'
+VERSION = '0.9.14.0-RC01'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/111.0'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 
@@ -50,6 +50,7 @@ def get_version_str():
 
 logger = None
 LOG_LVL_NOTICE = 25
+LOG_LVL_TRACE = 5
 SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*(?:[\D]+(\d)+)*')
 
 def get_version_index(_ver):
@@ -80,6 +81,12 @@ def logging_setup(_config):
             if self.isEnabledFor(LOG_LVL_NOTICE):
                 self._log(LOG_LVL_NOTICE, message, args, **kws) 
         logging.Logger.notice = notice
+    if str(logging.getLevelName('TRACE')).startswith('Level'):
+        logging.addLevelName(LOG_LVL_TRACE, 'TRACE')
+        def trace(self, message, *args, **kws):
+            if self.isEnabledFor(LOG_LVL_TRACE):
+                self._log(LOG_LVL_TRACE, message, args, **kws) 
+        logging.Logger.trace = trace
     if str(logging.getLevelName('NOTUSED')).startswith('Level'):
         try:
             logging.config.fileConfig(fname=_config['paths']['config_file'])
