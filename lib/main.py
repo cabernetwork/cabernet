@@ -43,9 +43,9 @@ try:
     try:
         import httpx
     except ImportError:
-        pip(['install', 'httpx'])
+        pip(['install', 'httpx[http2]'])
     except ModuleNotFoundError:
-        print('Unable to install required httpx module')
+        print('Unable to install required httpx[http2] module')
 except (ImportError, ModuleNotFoundError):
     print('Unable to load pip module to install required modules')
 

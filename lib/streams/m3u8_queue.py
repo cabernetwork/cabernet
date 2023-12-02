@@ -43,6 +43,7 @@ from .pts_resync import PTSResync
 
 
 PLAY_LIST = OrderedDict()
+PROCESSED_URLS = {}
 IN_QUEUE = Queue()
 OUT_QUEUE = Queue()
 TERMINATE_REQUESTED = False
@@ -50,6 +51,195 @@ MAX_STREAM_QUEUE_SIZE = 40
 STREAM_QUEUE = Queue()
 OUT_QUEUE_LIST = []
 IS_VOD = False
+UID_COUNTER = 1
+UID_PROCESSED = 1
+
+class M3U8GetUriData(Thread):
+    def __init__(self, _queue_item, _uid_counter, _config):
+        Thread.__init__(self)
+        self.queue_item = _queue_item
+        self.uid_counter = _uid_counter
+        self.video = Video(_config)
+        self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
+        self.pts_validation = None
+        if _config[M3U8Queue.config_section]['player-enable_pts_filter']:
+            self.pts_validation = PTSValidation(_config, M3U8Queue.channel_dict)
+        self.start()
+
+    def run(self):
+        global UID_COUNTER
+        global UID_PROCESSED
+        global STREAM_QUEUE
+        self.logger.debug('M3U8GetUriData started {} {} {}'.format(self.queue_item['data']['uri'], os.getpid(), threading.get_ident()))
+        m3u8_data = self.process_m3u8_item(self.queue_item)
+        PROCESSED_URLS[self.uid_counter] = m3u8_data
+        STREAM_QUEUE.put({'uri_dt': 'check_processed_list'})
+        m3u8_data = None
+        self.queue_item = None
+        self.uid_counter = None
+        self.video = None
+        self.pts_validation = None
+        self.logger.debug('M3U8GetUriData terminated {} {}'.format(os.getpid(), threading.get_ident()))
+        self.logger = None
+
+    
+
+    @handle_url_except()
+    def get_uri_data(self, _uri):
+        self.logger.warning(M3U8Queue.http_header)
+        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=5, follow_redirects=True)
+        x = resp.content
+        resp.raise_for_status()
+        return x
+
+    def decrypt_stream(self, _data):
+        if _data['key'] and _data['key']['uri']:
+            if _data['key']['uri'] in M3U8Queue.key_list.keys():
+                key_data = M3U8Queue.key_list[_data['key']['uri']]
+                self.logger.debug('Reusing key {} {}'.format(os.getpid(), _data['key']['uri']))
+            elif not _data['key']['uri'].startswith('http'):
+                self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
+                return False
+            else:
+                key_data = self.get_uri_data(_data['key']['uri'])
+
+            if key_data is not None:
+                M3U8Queue.key_list[_data['key']['uri']] = key_data
+                if _data['key']['iv'] is None:
+                    # if iv is none, use a random value
+                    iv = bytearray.fromhex('000000000000000000000000000000F6')
+                elif _data['key']['iv'].startswith('0x'):
+                    iv = bytearray.fromhex(_data['key']['iv'][2:])
+                else:
+                    iv = bytearray.fromhex(_data['key']['iv'])
+                cipher = Cipher(algorithms.AES(key_data), modes.CBC(iv), default_backend())
+                decryptor = cipher.decryptor()
+                self.video.data = decryptor.update(self.video.data)
+        if len(M3U8Queue.key_list.keys()) > 20:
+            del M3U8Queue.key_list[list(M3U8Queue.key_list)[0]]
+        return True
+
+    def atsc_processing(self):
+        if not M3U8Queue.atsc:
+            p_list = M3U8Queue.atsc_msg.extract_psip(self.video.data)
+            if len(p_list) != 0:
+                M3U8Queue.atsc = p_list
+                self.channel_dict['atsc'] = p_list
+                M3U8Queue.initialized_psi = True
+                return p_list
+
+        elif not M3U8Queue.initialized_psi:
+            p_list = M3U8Queue.atsc_msg.extract_psip(self.video.data)
+            if len(M3U8Queue.atsc) < len(p_list):
+                M3U8Queue.atsc = p_list
+                self.channel_dict['atsc'] = p_list
+                M3U8Queue.initialized_psi = True
+                return p_list
+            if len(M3U8Queue.atsc) == len(p_list):
+                for i in range(len(p_list)):
+                    if p_list[i][4:] != M3U8Queue.atsc[i][4:]:
+                        M3U8Queue.atsc = p_list
+                        self.channel_dict['atsc'] = p_list
+                        M3U8Queue.initialized_psi = True
+                        is_changed = True
+                        return p_list
+        return None
+
+    def is_pts_valid(self):
+        if self.pts_validation is None:
+            return True
+        results = self.pts_validation.check_pts(self.video)
+        if results['byteoffset'] != 0:
+            return False
+        if results['refresh_stream']:
+            return False
+        if results['reread_buffer']:
+            return False
+        return True
+
+    def get_stream_from_atsc(self):
+        if M3U8Queue.atsc is not None:
+            return M3U8Queue.atsc_msg.format_video_packets(self.atsc)
+        else:
+            self.logger.info(''.join([
+                'No ATSC msg available during filtered content, ',
+                'recommend running this channel again to catch the ATSC msg.']))
+            return M3U8Queue.atsc_msg.format_video_packets()
+
+    def process_m3u8_item(self, _queue_item):
+        global IS_VOD
+        global TERMINATE_REQUESTED
+        global PLAY_LIST
+        global OUT_QUEUE
+        uri_dt = _queue_item['uri_dt']
+        data = _queue_item['data']
+        if data['filtered']:
+            PLAY_LIST[uri_dt]['played'] = True
+            return {'uri': data['uri'],
+                           'data': data,
+                           'stream': self.get_stream_from_atsc(),
+                           'atsc': None}
+        else:
+            if IS_VOD:
+                count = self.config['stream']['vod_retries']
+            else:
+                count = 1
+            while count > 0:
+                self.video.data = self.get_uri_data(data['uri'])
+                if self.video.data:
+                    break
+
+                # TBD WHAT TO DO WITH THIS?
+                out_queue_put({'uri': 'extend',
+                               'data': data,
+                               'stream': None,
+                               'atsc': None})
+                count -= 1
+
+            if uri_dt not in PLAY_LIST.keys():
+                self.logger.debug('{} uri_dt not in PLAY_LIST keys {}'.format(os.getpid(), uri_dt))
+                return
+            if self.video.data is None:
+                PLAY_LIST[uri_dt]['played'] = True
+                return {'uri': data['uri'],
+                               'data': data,
+                               'stream': None,
+                               'atsc': None
+                               }
+            if not self.decrypt_stream(data):
+                # terminate if stream is not decryptable
+                TERMINATE_REQUESTED = True
+                M3U8Queue.pts_resync.terminate()
+                M3U8Queue.pts_resync = None
+                clear_queues()
+                PLAY_LIST[uri_dt]['played'] = True
+                return {'uri': 'terminate',
+                               'data': data,
+                               'stream': None,
+                               'atsc': None}
+            if not self.is_pts_valid():
+                PLAY_LIST[uri_dt]['played'] = True
+                return {'uri': data['uri'],
+                               'data': data,
+                               'stream': None,
+                               'atsc': None
+                               }
+
+            M3U8Queue.pts_resync.resequence_pts(self.video)
+            if self.video.data is None:
+                PLAY_LIST[uri_dt]['played'] = True
+                return{'uri': data['uri'],
+                               'data': data,
+                               'stream': self.video.data,
+                               'atsc': None}
+            atsc_default_msg = self.atsc_processing()
+            PLAY_LIST[uri_dt]['played'] = True
+            return {'uri': data['uri'],
+                           'data': data,
+                           'stream': self.video.data,
+                           'atsc': atsc_default_msg
+                           }
+
 
 class M3U8Queue(Thread):
     """
@@ -58,51 +248,49 @@ class M3U8Queue(Thread):
     output to the client.
     """
     is_stuck = None
-    #http_session = httpx.Client(http2=True)
-    http_session = httpx.Client(verify=False)
+    http_session = httpx.Client(http2=True, verify=False)
+    http_header = None
+    key_list = {}
+    config_section = None
+    channel_dict = None
+    pts_resync = None
+    atsc = None
+    atsc_msg = None
+    initialized_psi = False
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
         self.namespace = _channel_dict['namespace'].lower()
-        self.pts_validation = None
-        self.initialized_psi = False
-        self.first_segment = True
-        self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
-        self.atsc_msg = ATSCMsg()
+        M3U8Queue.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
+        M3U8Queue.channel_dict = _channel_dict
+        M3U8Queue.atsc_msg = ATSCMsg()
         self.channel_dict = _channel_dict
-        if self.config[self.config_section]['player-enable_pts_filter']:
-            self.pts_validation = PTSValidation(_config, _channel_dict)
-        self.video = Video(self.config)
-        self.atsc = _channel_dict['atsc']
+        M3U8Queue.atsc = _channel_dict['atsc']
         if _channel_dict['json'].get('Header') is None:
-            self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
+            M3U8Queue.http_header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
-            self.header = _channel_dict['json']['Header']
+            M3U8Queue.http_header = _channel_dict['json']['Header']
         if _channel_dict['json'].get('use_date_on_m3u8_key') is None:
             self.use_date_on_key = True
         else:
             self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
 
-        self.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
-        self.key_list = {}
+        M3U8Queue.pts_resync = PTSResync(_config, self.config_section, _channel_dict['uid'])
         self.start()
 
-    @handle_url_except()
-    def get_uri_data(self, _uri):
-        resp = self.http_session.get(_uri, headers=self.header, timeout=(8, 8), follow_redirects=True)
-        x = resp.content
-        resp.raise_for_status()
-        return x
 
     def run(self):
         global OUT_QUEUE
         global STREAM_QUEUE
         global TERMINATE_REQUESTED
+        global UID_COUNTER
+        global UID_PROCESSED
         try:
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
+                self.logger.warning('QUEUE SIZE: {}'.format(STREAM_QUEUE.qsize()))
                 if queue_item['uri_dt'] == 'terminate':
                     self.logger.debug('Received terminate from internalproxy {}'.format(os.getpid()))
                     TERMINATE_REQUESTED = True
@@ -113,8 +301,23 @@ class M3U8Queue(Thread):
                                    'stream': None,
                                    'atsc': None})
                     continue
-                time.sleep(0.01)
-                self.process_m3u8_item(queue_item)
+                elif queue_item['uri_dt'] == 'check_processed_list':
+                    self.logger.warning('#### Received check_processed_list {} COUNTER: {}  PROCESSED: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED))
+                    self.check_processed_list()
+                    time.sleep(.1)
+                    continue
+
+                self.logger.warning('**** Received check_processed_list {} COUNTER: {}  PROCESSED: {}  QUEUE: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS)))
+                self.check_processed_list()
+                while UID_COUNTER - UID_PROCESSED > 4:
+                    self.logger.warning('SLOWING PROCESSING DUE TO BACKUP')
+                    time.sleep(.4)
+                    self.check_processed_list()
+                self.process_queue = M3U8GetUriData(queue_item, UID_COUNTER, self.config)
+                time.sleep(.1)
+                
+                self.logger.warning('thread running for {} COUNTER: {}  PROCESSED: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED))
+                UID_COUNTER += 1
         except (KeyboardInterrupt, EOFError) as ex:
             TERMINATE_REQUESTED = True
             clear_queues()
@@ -148,159 +351,17 @@ class M3U8Queue(Thread):
         TERMINATE_REQUESTED = True
         self.logger.debug('M3U8Queue terminated {}'.format(os.getpid()))
 
-    def decrypt_stream(self, _data):
-        if _data['key'] and _data['key']['uri']:
-            if _data['key']['uri'] in self.key_list.keys():
-                key_data = self.key_list[_data['key']['uri']]
-                self.logger.debug('Reusing key {} {}'.format(os.getpid(), _data['key']['uri']))
-            elif not _data['key']['uri'].startswith('http'):
-                self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
-                return False
-            else:
-                key_data = self.get_uri_data(_data['key']['uri'])
 
-            if key_data is not None:
-                self.key_list[_data['key']['uri']] = key_data
-                if _data['key']['iv'] is None:
-                    # if iv is none, use a random value
-                    iv = bytearray.fromhex('000000000000000000000000000000F6')
-                elif _data['key']['iv'].startswith('0x'):
-                    iv = bytearray.fromhex(_data['key']['iv'][2:])
-                else:
-                    iv = bytearray.fromhex(_data['key']['iv'])
-                cipher = Cipher(algorithms.AES(key_data), modes.CBC(iv), default_backend())
-                decryptor = cipher.decryptor()
-                self.video.data = decryptor.update(self.video.data)
-        if len(self.key_list.keys()) > 20:
-            del self.key_list[list(self.key_list)[0]]
-        return True
-
-    def atsc_processing(self):
-        if not self.atsc:
-            p_list = self.atsc_msg.extract_psip(self.video.data)
-            if len(p_list) != 0:
-                self.atsc = p_list
-                self.channel_dict['atsc'] = p_list
-                self.initialized_psi = True
-                return p_list
-
-        elif not self.initialized_psi:
-            p_list = self.atsc_msg.extract_psip(self.video.data)
-            if len(self.atsc) < len(p_list):
-                self.atsc = p_list
-                self.channel_dict['atsc'] = p_list
-                self.initialized_psi = True
-                return p_list
-            if len(self.atsc) == len(p_list):
-                for i in range(len(p_list)):
-                    if p_list[i][4:] != self.atsc[i][4:]:
-                        self.atsc = p_list
-                        self.channel_dict['atsc'] = p_list
-                        self.initialized_psi = True
-                        is_changed = True
-                        return p_list
-        return None
-
-    def process_m3u8_item(self, _queue_item):
-        global IS_VOD
-        global TERMINATE_REQUESTED
-        global PLAY_LIST
-        global OUT_QUEUE
-        uri_dt = _queue_item['uri_dt']
-        data = _queue_item['data']
-        if data['filtered']:
-            out_queue_put({'uri': data['uri'],
-                           'data': data,
-                           'stream': self.get_stream_from_atsc(),
-                           'atsc': None})
-            PLAY_LIST[uri_dt]['played'] = True
-            time.sleep(0.01)
-        else:
-            if IS_VOD:
-                count = self.config['stream']['vod_retries']
-            else:
-                count = 1
-            while count > 0:
-                self.video.data = self.get_uri_data(data['uri'])
-                if self.video.data:
-                    break
-                out_queue_put({'uri': 'extend',
-                               'data': data,
-                               'stream': None,
-                               'atsc': None})
-                count -= 1
-            if uri_dt not in PLAY_LIST.keys():
-                return
-            if self.video.data is None:
-                PLAY_LIST[uri_dt]['played'] = True
-                out_queue_put({'uri': data['uri'],
-                               'data': data,
-                               'stream': None,
-                               'atsc': None
-                               })
-                return
-            if not self.decrypt_stream(data):
-                # terminate if stream is not decryptable
-                out_queue_put({'uri': 'terminate',
-                               'data': data,
-                               'stream': None,
-                               'atsc': None})
-                TERMINATE_REQUESTED = True
-                self.pts_resync.terminate()
-                self.pts_resync = None
-                clear_queues()
-                PLAY_LIST[uri_dt]['played'] = True
-                time.sleep(0.01)
-                return
-            if not self.is_pts_valid():
-                PLAY_LIST[uri_dt]['played'] = True
-                out_queue_put({'uri': data['uri'],
-                               'data': data,
-                               'stream': None,
-                               'atsc': None
-                               })
-                return
-
-            if self.first_segment:
-                self.first_segment = False
-            self.pts_resync.resequence_pts(self.video)
-            if self.video.data is None:
-                out_queue_put({'uri': data['uri'],
-                               'data': data,
-                               'stream': self.video.data,
-                               'atsc': None})
-                PLAY_LIST[uri_dt]['played'] = True
-                time.sleep(0.01)
-                return
-            atsc_default_msg = self.atsc_processing()
-            out_queue_put({'uri': data['uri'],
-                           'data': data,
-                           'stream': self.video.data,
-                           'atsc': atsc_default_msg
-                           })
-            PLAY_LIST[uri_dt]['played'] = True
-            time.sleep(0.1)
-
-    def is_pts_valid(self):
-        if self.pts_validation is None:
-            return True
-        results = self.pts_validation.check_pts(self.video)
-        if results['byteoffset'] != 0:
-            return False
-        if results['refresh_stream']:
-            return False
-        if results['reread_buffer']:
-            return False
-        return True
-
-    def get_stream_from_atsc(self):
-        if self.atsc is not None:
-            return self.atsc_msg.format_video_packets(self.atsc)
-        else:
-            self.logger.info(''.join([
-                'No ATSC msg available during filtered content, ',
-                'recommend running this channel again to catch the ATSC msg.']))
-            return self.atsc_msg.format_video_packets()
+    def check_processed_list(self):
+        global UID_PROCESSED
+        global PROCESSED_URLS
+        if len(PROCESSED_URLS) > 0:
+            first_key = sorted(PROCESSED_URLS.keys())[0]
+            if first_key == UID_PROCESSED:
+                self.logger.warning('FIRST KEY={}'.format(first_key))
+                out_queue_put(PROCESSED_URLS[first_key])
+                del PROCESSED_URLS[first_key]
+                UID_PROCESSED += 1
 
 
 class M3U8Process(Thread):

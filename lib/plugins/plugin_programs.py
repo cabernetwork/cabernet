@@ -60,7 +60,7 @@ class PluginPrograms:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=(4, 8))
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
         x = resp.json()
         resp.raise_for_status()
         return x

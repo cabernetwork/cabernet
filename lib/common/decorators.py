@@ -69,36 +69,12 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-            except (requests.exceptions.HTTPError, urllib.error.HTTPError) as ex:
-                ex_save = ex
-                self.logger.info("HTTPError in function {}(), retrying {} {} {}"
-                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
-            except urllib.error.URLError as ex:
-                ex_save = ex
-                if isinstance(ex.reason, ConnectionRefusedError):
-                    self.logger.info("URLError:ConnectionRefusedError in function {}(): {} {} {}"
-                                     .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-                    count = 5
-                    while count > 0:
-                        try:
-                            x = f(self, *args, **kwargs)
-                            return x
-                        except urllib.error.URLError as ex2:
-                            self.logger.debug("{} URLError:ConnectionRefusedError in function {}(): {} {} {}"
-                                              .format(count, f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-                            count -= 1
-                            time.sleep(.5)
-                        except Exception as ex3:
-                            break
-                else:
-                    self.logger.info("URLError in function {}(), retrying (): {} {} {}"
-                                     .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except requests.exceptions.InvalidURL as ex:
                 ex_save = ex
                 self.logger.info("InvalidURL Error in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
 
-            except (socket.timeout, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
+            except (socket.timeout, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout, httpx.ReadTimeout, httpx.ConnectTimeout) as ex:
                 ex_save = ex
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
@@ -147,6 +123,30 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info('InvalidURL Error, encoding and trying again. In function {}() {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+            except (requests.exceptions.HTTPError, urllib.error.HTTPError, httpx.HTTPError) as ex:
+                ex_save = ex
+                self.logger.info("HTTPError in function {}(), retrying {} {} {}"
+                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
+            except urllib.error.URLError as ex:
+                ex_save = ex
+                if isinstance(ex.reason, ConnectionRefusedError):
+                    self.logger.info("URLError:ConnectionRefusedError in function {}(): {} {} {}"
+                                     .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+                    count = 5
+                    while count > 0:
+                        try:
+                            x = f(self, *args, **kwargs)
+                            return x
+                        except urllib.error.URLError as ex2:
+                            self.logger.debug("{} URLError:ConnectionRefusedError in function {}(): {} {} {}"
+                                              .format(count, f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+                            count -= 1
+                            time.sleep(.5)
+                        except Exception as ex3:
+                            break
+                else:
+                    self.logger.info("URLError in function {}(), retrying (): {} {} {}"
+                                     .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             except (requests.exceptions.ProxyError, requests.exceptions.SSLError, \
                     requests.exceptions.TooManyRedirects, requests.exceptions.InvalidHeader, \
                     requests.exceptions.InvalidProxyURL, requests.exceptions.ChunkedEncodingError, \

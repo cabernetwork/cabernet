@@ -167,6 +167,7 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
             config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
             if not _config[config_section]['enabled']:
                 continue
+            sids_processed.append(sid)
             stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
@@ -195,7 +196,6 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
         for sid_data in sid_data_list:
             if sid in sids_processed:
                 continue
-            sids_processed.append(sid)
             if not sid_data['enabled']:
                 continue
             if not _plugins.get(sid_data['namespace']):
@@ -205,9 +205,11 @@ def get_channels_xml(_config, _base_url, _namespace, _instance, _plugins):
             if not _plugins[sid_data['namespace']] \
                     .plugin_obj.instances[sid_data['instance']].enabled:
                 continue
+
             config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
             if not _config[config_section]['enabled']:
                 continue
+            sids_processed.append(sid)
             stream = _config[config_section]['player-stream_type']
             if stream == 'm3u8redirect':
                 uri = sid_data['json']['stream_url']
