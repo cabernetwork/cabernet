@@ -118,7 +118,7 @@ class PluginManager:
             self.repo_rec['dir']['datadir']['url'], 
             self.plugin_rec['id'], zip_file
             ])
-        tmp_zip_path = self.download_zip(zippath, zip_file)
+        tmp_zip_path = self.download_zip(zippath, 2, zip_file)
         if not tmp_zip_path:
             self.logger.notice('Unable to obtain zip file from repo, aborting')
             results = 'Error: Unable to obtain zip file {} from repo, aborting' \
@@ -304,7 +304,7 @@ class PluginManager:
     
         
     @handle_url_except
-    def download_zip(self, _zip_url, _zip_filename):
+    def download_zip(self, _zip_url, _retries, _zip_filename):
         """
         Returns the location of the zip file
         """
