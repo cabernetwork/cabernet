@@ -74,20 +74,22 @@ class M3U8GetUriData(Thread):
         m3u8_data = self.process_m3u8_item(self.queue_item)
         PROCESSED_URLS[self.uid_counter] = m3u8_data
         STREAM_QUEUE.put({'uri_dt': 'check_processed_list'})
+        self.logger.debug('M3U8GetUriData terminated COUNTER {} {} {}'.format(self.uid_counter, os.getpid(), threading.get_ident()))
         m3u8_data = None
         self.queue_item = None
         self.uid_counter = None
         self.video = None
         self.pts_validation = None
-        self.logger.debug('M3U8GetUriData terminated {} {}'.format(os.getpid(), threading.get_ident()))
         self.logger = None
 
     
 
     @handle_url_except()
-    def get_uri_data(self, _uri):
-        self.logger.warning(M3U8Queue.http_header)
-        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=5, follow_redirects=True)
+    def get_uri_data(self, _uri, _retries):
+        """
+        _retries is used by the decorator when a HTTP failure occurs
+        """
+        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=8, follow_redirects=True)
         x = resp.content
         resp.raise_for_status()
         return x
@@ -101,7 +103,7 @@ class M3U8GetUriData(Thread):
                 self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
                 return False
             else:
-                key_data = self.get_uri_data(_data['key']['uri'])
+                key_data = self.get_uri_data(_data['key']['uri'], 3)
 
             if key_data is not None:
                 M3U8Queue.key_list[_data['key']['uri']] = key_data
@@ -171,6 +173,7 @@ class M3U8GetUriData(Thread):
         global TERMINATE_REQUESTED
         global PLAY_LIST
         global OUT_QUEUE
+        global UID_PROCESSED
         uri_dt = _queue_item['uri_dt']
         data = _queue_item['data']
         if data['filtered']:
@@ -185,15 +188,16 @@ class M3U8GetUriData(Thread):
             else:
                 count = 1
             while count > 0:
-                self.video.data = self.get_uri_data(data['uri'])
+                self.video.data = self.get_uri_data(data['uri'], 3)
                 if self.video.data:
                     break
 
                 # TBD WHAT TO DO WITH THIS?
-                out_queue_put({'uri': 'extend',
-                               'data': data,
-                               'stream': None,
-                               'atsc': None})
+                if count > 1:
+                    out_queue_put({'uri': 'extend',
+                                   'data': data,
+                                   'stream': None,
+                                   'atsc': None})
                 count -= 1
 
             if uri_dt not in PLAY_LIST.keys():
@@ -234,6 +238,11 @@ class M3U8GetUriData(Thread):
                                'atsc': None}
             atsc_default_msg = self.atsc_processing()
             PLAY_LIST[uri_dt]['played'] = True
+            if self.uid_counter > UID_PROCESSED+1:
+                out_queue_put({'uri': 'extend',
+                               'data': data,
+                               'stream': None,
+                               'atsc': None})
             return {'uri': data['uri'],
                            'data': data,
                            'stream': self.video.data,
@@ -290,10 +299,10 @@ class M3U8Queue(Thread):
         try:
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
-                self.logger.warning('QUEUE SIZE: {}'.format(STREAM_QUEUE.qsize()))
                 if queue_item['uri_dt'] == 'terminate':
                     self.logger.debug('Received terminate from internalproxy {}'.format(os.getpid()))
                     TERMINATE_REQUESTED = True
+                    
                     break
                 elif queue_item['uri_dt'] == 'status':
                     out_queue_put({'uri': 'running',
@@ -302,21 +311,22 @@ class M3U8Queue(Thread):
                                    'atsc': None})
                     continue
                 elif queue_item['uri_dt'] == 'check_processed_list':
-                    self.logger.warning('#### Received check_processed_list {} COUNTER: {}  PROCESSED: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED))
+                    self.logger.warning('#### Received check_processed_list {} COUNTER: {}  PROCESSED: {}  PROCESSED_Q: {}  QUEUE: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
                     self.check_processed_list()
                     time.sleep(.1)
                     continue
 
-                self.logger.warning('**** Received check_processed_list {} COUNTER: {}  PROCESSED: {}  QUEUE: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS)))
+                self.logger.warning('**** Received check_processed_list {} COUNTER: {}  PROCESSED: {}  PROCESSED_Q: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS)))
                 self.check_processed_list()
-                while UID_COUNTER - UID_PROCESSED > 4:
-                    self.logger.warning('SLOWING PROCESSING DUE TO BACKUP')
-                    time.sleep(.4)
+                while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > 4:
+                    self.logger.warning('SLOWING PROCESSING: {} PROCESSED: {}  PROCESSED_Q: {}  QUEUE: {}'.format(UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
+                    time.sleep(.5)
                     self.check_processed_list()
+                time.sleep(.1)
                 self.process_queue = M3U8GetUriData(queue_item, UID_COUNTER, self.config)
                 time.sleep(.1)
                 
-                self.logger.warning('thread running for {} COUNTER: {}  PROCESSED: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED))
+                self.logger.warning('thread running for {} COUNTER: {}  PROCESSED: {}  PROCESSED_Q: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS)))
                 UID_COUNTER += 1
         except (KeyboardInterrupt, EOFError) as ex:
             TERMINATE_REQUESTED = True
@@ -357,8 +367,8 @@ class M3U8Queue(Thread):
         global PROCESSED_URLS
         if len(PROCESSED_URLS) > 0:
             first_key = sorted(PROCESSED_URLS.keys())[0]
+            self.logger.warning('FIRST KEY={}  UID_PROCESSED={}'.format(first_key, UID_PROCESSED))
             if first_key == UID_PROCESSED:
-                self.logger.warning('FIRST KEY={}'.format(first_key))
                 out_queue_put(PROCESSED_URLS[first_key])
                 del PROCESSED_URLS[first_key]
                 UID_PROCESSED += 1

@@ -42,14 +42,13 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 30
-IDLE_COUNTER_MAX = 59     # time in seconds beyond any filtered or serving packet to terminate the stream
+IDLE_COUNTER_MAX = 140    # four times the timeout * retries to terminate the stream in seconds
 STARTUP_IDLE_COUNTER = 40 # time to wait for an initial stream
 # code assumes a timeout response in TVH of 15 or higher.
 
 class InternalProxy(Stream):
 
     is_m3u8_starting = 0
-
 
     def __init__(self, _plugins, _hdhr_queue):
         global MAX_OUT_QUEUE_SIZE

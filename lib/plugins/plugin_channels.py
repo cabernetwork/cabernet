@@ -164,7 +164,7 @@ class PluginChannels:
         return re.sub('[ +&*%$#@!:;,<>?]', '', group_name)
 
     @handle_url_except()
-    def get_thumbnail_size(self, _thumbnail, _ch_uid, ):
+    def get_thumbnail_size(self, _thumbnail, _retries, _ch_uid, ):
         thumbnail_size = (0, 0)
         if _thumbnail is None or _thumbnail == '':
             return thumbnail_size
@@ -194,7 +194,7 @@ class PluginChannels:
         return thumbnail_size
 
     @handle_url_except
-    def get_best_stream(self, _url, _channel_id, _referer=None):
+    def get_best_stream(self, _url, _retries, _channel_id, _referer=None):
         if self.config_obj.data[self.config_section]['player-stream_type'] == 'm3u8redirect':
             return _url
 
