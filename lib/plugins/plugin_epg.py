@@ -60,7 +60,7 @@ class PluginEPG:
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
-    def get_uri_data(self, _uri, _header=None):
+    def get_uri_data(self, _uri, _retries, _header=None):
         if _header is None:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:

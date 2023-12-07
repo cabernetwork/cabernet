@@ -37,7 +37,7 @@ class TMPMgmt:
         self.config = _config
 
     @handle_url_except()
-    def download_file(self, _url, _folder, _filename, _file_type):
+    def download_file(self, _url, _retries, _folder, _filename, _file_type):
         if _filename == None:
             _filename = '{}{}'.format(time.time(), _file_type)
         if _folder is None:

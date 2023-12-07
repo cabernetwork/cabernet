@@ -7,8 +7,6 @@ from urllib.error import HTTPError
 from urllib.parse import urlparse, urljoin
 import urllib.request
 
-from lib.common.decorators import handle_url_except
-
 
 def _parsed_url(url):
     parsed_url = urlparse(url)

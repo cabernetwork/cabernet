@@ -50,6 +50,8 @@ TERMINATE_REQUESTED = False
 MAX_STREAM_QUEUE_SIZE = 40
 STREAM_QUEUE = Queue()
 OUT_QUEUE_LIST = []
+HTTP_TIMEOUT=8
+HTTP_RETRIES=3
 IS_VOD = False
 UID_COUNTER = 1
 UID_PROCESSED = 1
@@ -60,6 +62,7 @@ class M3U8GetUriData(Thread):
         self.queue_item = _queue_item
         self.uid_counter = _uid_counter
         self.video = Video(_config)
+        self.config = _config
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.pts_validation = None
         if _config[M3U8Queue.config_section]['player-enable_pts_filter']:
@@ -89,12 +92,14 @@ class M3U8GetUriData(Thread):
         """
         _retries is used by the decorator when a HTTP failure occurs
         """
-        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=8, follow_redirects=True)
+        global HTTP_TIMEOUT
+        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, follow_redirects=True)
         x = resp.content
         resp.raise_for_status()
         return x
 
     def decrypt_stream(self, _data):
+        global HTTP_RETRIES
         if _data['key'] and _data['key']['uri']:
             if _data['key']['uri'] in M3U8Queue.key_list.keys():
                 key_data = M3U8Queue.key_list[_data['key']['uri']]
@@ -103,7 +108,7 @@ class M3U8GetUriData(Thread):
                 self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
                 return False
             else:
-                key_data = self.get_uri_data(_data['key']['uri'], 3)
+                key_data = self.get_uri_data(_data['key']['uri'], HTTP_RETRIES)
 
             if key_data is not None:
                 M3U8Queue.key_list[_data['key']['uri']] = key_data
@@ -126,7 +131,7 @@ class M3U8GetUriData(Thread):
             p_list = M3U8Queue.atsc_msg.extract_psip(self.video.data)
             if len(p_list) != 0:
                 M3U8Queue.atsc = p_list
-                self.channel_dict['atsc'] = p_list
+                M3U8Queue.channel_dict['atsc'] = p_list
                 M3U8Queue.initialized_psi = True
                 return p_list
 
@@ -134,14 +139,14 @@ class M3U8GetUriData(Thread):
             p_list = M3U8Queue.atsc_msg.extract_psip(self.video.data)
             if len(M3U8Queue.atsc) < len(p_list):
                 M3U8Queue.atsc = p_list
-                self.channel_dict['atsc'] = p_list
+                M3U8Queue.channel_dict['atsc'] = p_list
                 M3U8Queue.initialized_psi = True
                 return p_list
             if len(M3U8Queue.atsc) == len(p_list):
                 for i in range(len(p_list)):
                     if p_list[i][4:] != M3U8Queue.atsc[i][4:]:
                         M3U8Queue.atsc = p_list
-                        self.channel_dict['atsc'] = p_list
+                        M3U8Queue.channel_dict['atsc'] = p_list
                         M3U8Queue.initialized_psi = True
                         is_changed = True
                         return p_list
@@ -161,7 +166,7 @@ class M3U8GetUriData(Thread):
 
     def get_stream_from_atsc(self):
         if M3U8Queue.atsc is not None:
-            return M3U8Queue.atsc_msg.format_video_packets(self.atsc)
+            return M3U8Queue.atsc_msg.format_video_packets(M3U8Queue.atsc)
         else:
             self.logger.info(''.join([
                 'No ATSC msg available during filtered content, ',
@@ -174,6 +179,7 @@ class M3U8GetUriData(Thread):
         global PLAY_LIST
         global OUT_QUEUE
         global UID_PROCESSED
+        global HTTP_RETRIES
         uri_dt = _queue_item['uri_dt']
         data = _queue_item['data']
         if data['filtered']:
@@ -188,7 +194,7 @@ class M3U8GetUriData(Thread):
             else:
                 count = 1
             while count > 0:
-                self.video.data = self.get_uri_data(data['uri'], 3)
+                self.video.data = self.get_uri_data(data['uri'], HTTP_RETRIES)
                 if self.video.data:
                     break
 
@@ -266,6 +272,7 @@ class M3U8Queue(Thread):
     atsc = None
     atsc_msg = None
     initialized_psi = False
+
 
     def __init__(self, _config, _channel_dict):
         Thread.__init__(self)
@@ -382,6 +389,8 @@ class M3U8Process(Thread):
     """
 
     def __init__(self, _config, _plugins, _channel_dict):
+        global HTTP_TIMEOUT
+        global HTTP_RETRIES
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
@@ -399,6 +408,8 @@ class M3U8Process(Thread):
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
+        HTTP_TIMEOUT=self.config[_channel_dict['namespace'].lower()]['stream-g_http_timeout']
+        HTTP_RETRIES=self.config[_channel_dict['namespace'].lower()]['stream-g_http_retries']
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
 
@@ -448,7 +459,7 @@ class M3U8Process(Thread):
                 added = 0
                 removed = 0
                 self.logger.debug('Reloading m3u8 stream queue {}'.format(os.getpid()))
-                playlist = self.get_m3u8_data(self.stream_uri)
+                playlist = self.get_m3u8_data(self.stream_uri, 2)
                 if playlist is None:
                     self.logger.debug('M3U Playlist is None, retrying')
                     self.sleep(self.duration+0.5)
@@ -503,7 +514,7 @@ class M3U8Process(Thread):
             .plugin_obj.get_channel_uri_ext(self.channel_dict['uid'], self.channel_dict['instance'])
 
     @handle_url_except()
-    def get_m3u8_data(self, _uri):
+    def get_m3u8_data(self, _uri, _retries):
         # it sticks here.  Need to find a work around for the socket.timeout per process
         return m3u8.load(_uri, headers=self.header, http_session=M3U8Queue.http_session)
 

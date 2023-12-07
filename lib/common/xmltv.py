@@ -47,7 +47,7 @@ class XMLTV:
         self.tmp_mgmt = TMPMgmt(self.config)
         self.has_future_dates = False
         self.start_date = None
-        self.file_compressed = self.tmp_mgmt.download_file(self.url, TMP_FOLDER, None, self.file_type)
+        self.file_compressed = self.tmp_mgmt.download_file(self.url, 2, TMP_FOLDER, None, self.file_type)
         if self.file_compressed is None:
             self.file = None
             raise exceptions.CabernetException('Unable to obtain XMLTV File {}' \

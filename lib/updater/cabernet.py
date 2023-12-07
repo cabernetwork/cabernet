@@ -99,11 +99,11 @@ class CabernetUpgrade:
             _manifest['dir']['github_repo_' + self.config['main']['upgrade_quality']],
             '/releases'
         ])
-        return self.get_uri_data(url)
+        return self.get_uri_data(url, 2)
 
     @handle_json_except
     @handle_url_except
-    def get_uri_data(self, _uri):
+    def get_uri_data(self, _uri, _retries):
         header = {'Content-Type': 'application/json',
                   'User-agent': utils.DEFAULT_USER_AGENT}
         req = urllib.request.Request(_uri, headers=header)
@@ -177,7 +177,7 @@ class CabernetUpgrade:
         if not self.download_zip('/'.join([
             c_manifest['dir']['github_repo_' + self.config['main']['upgrade_quality']],
             'zipball', c_manifest['version']['next']
-        ])):
+        ]), 2):
             _web_status.data += 'Download of the new version failed, aborting upgrade<br>\r\n'
             return False
 
@@ -235,7 +235,7 @@ class CabernetUpgrade:
 
     @handle_json_except
     @handle_url_except
-    def download_zip(self, _zip_url):
+    def download_zip(self, _zip_url, _retries):
 
         buf_size = 2 * 16 * 16 * 1024
         save_path = pathlib.Path(self.config['paths']['tmp_dir']).joinpath(TMP_ZIPFILE)

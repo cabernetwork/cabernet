@@ -55,7 +55,7 @@ class PluginPrograms:
 
     @handle_url_except()
     @handle_json_except
-    def get_uri_data(self, _uri, _header=None):
+    def get_uri_data(self, _uri, _retries, _header=None):
         if _header is None:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:

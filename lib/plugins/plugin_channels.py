@@ -82,7 +82,7 @@ class PluginChannels:
 
     @handle_url_except()
     @handle_json_except
-    def get_uri_json_data(self, _uri):
+    def get_uri_json_data(self, _uri, _retries):
         header = {
             'Content-Type': 'application/json',
             'User-agent': utils.DEFAULT_USER_AGENT}
@@ -92,7 +92,7 @@ class PluginChannels:
         return x
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _header=None, _data=None):
+    def get_uri_data(self, _uri, _retries, _header=None, _data=None):
         if _header is None:
             header = {
                 'User-agent': utils.DEFAULT_USER_AGENT}
@@ -106,7 +106,7 @@ class PluginChannels:
         return x
 
     @handle_url_except()
-    def get_m3u8_data(self, _uri, _header=None):
+    def get_m3u8_data(self, _uri, _retries, _header=None):
         if _header is None:
             return m3u8.load(_uri,
                              headers={'User-agent': utils.DEFAULT_USER_AGENT},

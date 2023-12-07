@@ -17,6 +17,7 @@ substantial portions of the Software.
 """
 
 
+import configparser
 import logging
 import traceback
 
@@ -25,7 +26,7 @@ from lib.db.db_plugins import DBPlugins
 from lib.db.db_scheduler import DBScheduler
 
 
-REQUIRED_VERSION = '0.9.12'
+REQUIRED_VERSION = '0.9.14'
 LOGGER = None
 
 
@@ -47,26 +48,11 @@ def patch_upgrade(_config_obj, _new_version):
         LOGGER.info('Applying patches to version: {}'.format(REQUIRED_VERSION))
 
         try:
-            plugin_db = DBPlugins(_config_obj.data)
-            pm = PluginManager(None, _config_obj)
+            _config_obj.config_handler.remove_option('streams', 'stream_timeout')
 
-            # All plugins should be in the ext folder
-            plugin_list = plugin_db.get_plugins(True)
-            if plugin_list:
-                for plugin in plugin_list:
-                    if plugin.get('external') is False:
-                        results = pm.delete_plugin(plugin['repoid'], plugin['id'])
-                        results = pm.install_plugin(plugin['repoid'], plugin['id'])
-                        results = 'Patch: Moving {} to plugins_ext ...'.format(plugin['id'])
-                        LOGGER.warning('Patch: Moving {} to plugins_ext ...'.format(plugin['id']))
 
-            # Check for Updates schedule task needs to be inline with high priority
-            schedule_db = DBScheduler(_config_obj.data)
-            task = schedule_db.get_tasks('Applications', 'Check for Updates')
-            if task and task[0]['threadtype'] != 'inline':
-                schedule_db.del_task('Applications', 'Check for Updates')
-                LOGGER.warning('Resetting Check For Update task')
-
+        except configparser.NoSectionError:
+            pass
         except Exception:
             # Make sure that the patcher exits normally so the maintenance flag is removed
             LOGGER.warning(traceback.format_exc())

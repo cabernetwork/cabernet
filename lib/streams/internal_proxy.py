@@ -31,8 +31,6 @@ import lib.common.exceptions as exceptions
 import lib.common.utils as utils
 import lib.m3u8 as m3u8
 import lib.streams.m3u8_queue as m3u8_queue
-from lib.common.decorators import handle_url_except
-from lib.common.decorators import handle_json_except
 from lib.streams.video import Video
 from lib.streams.atsc import ATSCMsg
 from lib.streams.thread_queue import ThreadQueue
@@ -42,7 +40,7 @@ from lib.clients.web_handler import WebHTTPHandler
 from .stream import Stream
 
 MAX_OUT_QUEUE_SIZE = 30
-IDLE_COUNTER_MAX = 140    # four times the timeout * retries to terminate the stream in seconds set in config!
+IDLE_COUNTER_MAX = 110    # four times the timeout * retries to terminate the stream in seconds set in config!
 STARTUP_IDLE_COUNTER = 40 # time to wait for an initial stream
 # code assumes a timeout response in TVH of 15 or higher.
 
@@ -114,7 +112,7 @@ class InternalProxy(Stream):
         global IDLE_COUNTER_MAX
         self.tuner_no = _tuner_no
         self.config = self.db_configdefn.get_config()
-        IDLE_COUNTER_MAX = self.config['stream']['stream_timeout']
+        IDLE_COUNTER_MAX = self.config[self.namespace.lower()]['stream-g_stream_timeout']
         
         self.channel_dict = _channel_dict
         if not self.start_m3u8_queue_process():

@@ -108,7 +108,7 @@ class RepoHandler:
         full_cache = pathlib.Path(
             _thumbnail_path, _plugin_id, _image_relpath)
         if not full_cache.exists():
-            image = self.get_uri_data(full_repo)
+            image = self.get_uri_data(full_repo, 2)
             self.save_file(image, full_cache)
 
     def update_plugins(self, _repo_settings):
@@ -146,7 +146,7 @@ class RepoHandler:
                 self.plugin_db.save_plugin(plugin)
 
     @handle_url_except()
-    def get_uri_data(self, _uri):
+    def get_uri_data(self, _uri, _retries):
         header = {
             'User-agent': utils.DEFAULT_USER_AGENT}
         resp = RepoHandler.http_session.get(_uri, headers=header, timeout=8)

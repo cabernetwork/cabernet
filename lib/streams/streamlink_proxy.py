@@ -68,8 +68,8 @@ class StreamlinkProxy(Stream):
         self.channel_dict = _channel_dict
         self.write_buffer = _write_buffer
         self.config = self.db_configdefn.get_config()
-        MAX_IDLE_TIMER = self.config['stream']['stream_timeout']
-        
+        MAX_IDLE_TIMER = self.config[self.namespace.lower()]['stream-g_stream_timeout']
+
         self.pts_validation = PTSValidation(self.config, self.channel_dict)
         channel_uri = self.get_stream_uri(self.channel_dict)
         if not channel_uri:
