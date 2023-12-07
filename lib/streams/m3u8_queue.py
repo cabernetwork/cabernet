@@ -52,6 +52,7 @@ STREAM_QUEUE = Queue()
 OUT_QUEUE_LIST = []
 HTTP_TIMEOUT=8
 HTTP_RETRIES=3
+PARALLEL_DOWNLOADS=3
 IS_VOD = False
 UID_COUNTER = 1
 UID_PROCESSED = 1
@@ -303,6 +304,7 @@ class M3U8Queue(Thread):
         global TERMINATE_REQUESTED
         global UID_COUNTER
         global UID_PROCESSED
+        global PARALLEL_DOWNLOADS
         try:
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
@@ -325,7 +327,7 @@ class M3U8Queue(Thread):
 
                 self.logger.warning('**** Received check_processed_list {} COUNTER: {}  PROCESSED: {}  PROCESSED_Q: {}'.format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS)))
                 self.check_processed_list()
-                while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > 4:
+                while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > PARALLEL_DOWNLOADS+1:
                     self.logger.warning('SLOWING PROCESSING: {} PROCESSED: {}  PROCESSED_Q: {}  QUEUE: {}'.format(UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
                     time.sleep(.5)
                     self.check_processed_list()
@@ -391,6 +393,7 @@ class M3U8Process(Thread):
     def __init__(self, _config, _plugins, _channel_dict):
         global HTTP_TIMEOUT
         global HTTP_RETRIES
+        global PARALLEL_DOWNLOADS
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
@@ -408,8 +411,9 @@ class M3U8Process(Thread):
         self.is_starting = True
         self.last_refresh = time.time()
         self.plugins = _plugins
-        HTTP_TIMEOUT=self.config[_channel_dict['namespace'].lower()]['stream-g_http_timeout']
-        HTTP_RETRIES=self.config[_channel_dict['namespace'].lower()]['stream-g_http_retries']
+        HTTP_TIMEOUT = self.config[_channel_dict['namespace'].lower()]['stream-g_http_timeout']
+        HTTP_RETRIES = self.config[_channel_dict['namespace'].lower()]['stream-g_http_retries']
+        PARALLEL_DOWNLOADS = self.config[_channel_dict['namespace'].lower()]['stream-g_concurrent_downloads']
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
 
