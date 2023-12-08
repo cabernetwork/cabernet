@@ -2,7 +2,7 @@
 # versioning system.
 # The recommendation is to have the entire cabernet source folder be in its own volume.
 # whether you mount /app or /app/cabernet, the whole cabernet folder should be a volume.
-# then run the python script tvh_mail.py at the top level Caberent folder to start Cabernet.
+# then run the python script tvh_main.py at the top level Caberent folder to start Cabernet.
 
 version: '2.4'
 services:
