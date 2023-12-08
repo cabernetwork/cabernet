@@ -3,9 +3,9 @@ By default this app doesn't provide any video sources, only the plugins access t
 
 ## Installation
 ### 1. Requirements
-- Python 3.7+
+- Python 3.8+
 - python cryptography module
-- python requests module
+- python httpx[http2] module
 - (optional) streamlink module
 - ffmpeg and ffprobe
 
@@ -16,7 +16,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 - Bring up browser and go to http://ip address:6077/
 - From Plugins, install PlutoTV plugin
 - Stop the app
-- Edit the data/config.ini and add the following lines
+- Edit the data/config.ini and add the following lines (Update: This is suppose to automatically happen in 0.9.14)
 <pre>
 [plutotv_default]
 label = PlutoTV Instance
