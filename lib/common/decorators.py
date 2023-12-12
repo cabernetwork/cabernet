@@ -47,7 +47,6 @@ def handle_url_except(f=None, timeout=None):
         ex_save = None
         # arg0 = uri, arg1=retries
         if len(args) == 0:
-            self.logger.warning('get uri called with no args f:{}'.format(f))
             arg0 = 'None'
             retries = 2
         elif len(args) == 1:
@@ -55,7 +54,6 @@ def handle_url_except(f=None, timeout=None):
             retries = 2
         else:
             arg0 = args[0]
-            self.logger.warning('get uri called from {} with retires={}'.format(f, args[1]))
             retries = args[1]
         i = retries
         is_done = 0
