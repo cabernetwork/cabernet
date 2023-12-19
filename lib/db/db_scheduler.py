@@ -342,7 +342,7 @@ class DBScheduler(DB):
             interval,
             randdur,
         ))
-        return id
+        return id_
 
     def get_triggers_by_type(self, _timetype):
         """

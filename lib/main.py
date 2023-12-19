@@ -35,12 +35,6 @@ try:
     except ModuleNotFoundError:
         print('Unable to install required cryptography module')
     try:
-        import requests
-    except ImportError:
-        pip(['install', 'requests'])
-    except ModuleNotFoundError:
-        print('Unable to install required requests module')
-    try:
         import httpx
     except ImportError:
         pip(['install', 'httpx[http2]'])

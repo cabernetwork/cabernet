@@ -16,13 +16,13 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import httpx
 import logging
 import json
 import importlib
 import importlib.resources
 import os
 import pathlib
-import requests
 import urllib
 
 import lib.common.exceptions as exceptions
@@ -34,7 +34,7 @@ from lib.common.decorators import handle_json_except
 
 class RepoHandler:
 
-    http_session = requests.session()
+    http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
     logger = None
 
     def __init__(self, _config_obj):

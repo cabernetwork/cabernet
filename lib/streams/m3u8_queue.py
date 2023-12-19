@@ -260,7 +260,7 @@ class M3U8Queue(Thread):
     output to the client.
     """
     is_stuck = None
-    http_session = httpx.Client(http2=True, verify=False)
+    http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
     http_header = None
     key_list = {}
     config_section = None
@@ -304,6 +304,7 @@ class M3U8Queue(Thread):
         global UID_PROCESSED
         global PARALLEL_DOWNLOADS
         global PROCESSED_URLS
+        global IS_VOD
         try:
             while not TERMINATE_REQUESTED:
                 queue_item = STREAM_QUEUE.get()
@@ -336,8 +337,10 @@ class M3U8Queue(Thread):
                     if TERMINATE_REQUESTED:
                         break
                 self.process_queue = M3U8GetUriData(queue_item, UID_COUNTER, self.config)
-                time.sleep(.1)
-                
+                if IS_VOD:
+                    time.sleep(0.1)
+                else:
+                    time.sleep(1.0)
                 UID_COUNTER += 1
         except (KeyboardInterrupt, EOFError) as ex:
             TERMINATE_REQUESTED = True
@@ -428,6 +431,7 @@ class M3U8Process(Thread):
         self.is_running = True
         self.duration = 6
         self.m3u8_q = M3U8Queue(_config, _channel_dict)
+        time.sleep(0.1)
         self.file_filter = None
         self.start()
 
@@ -792,7 +796,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                 elif q_item['uri'] == 'restart_http':
                     logger.debug('HTTP Session restarted {}'.format(os.getpid()))
                     temp_session = M3U8Queue.http_session
-                    M3U8Queue.http_session = requests.session()
+                    M3U8Queue.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
                     temp_session.close()
                     temp_session = None
                     time.sleep(0.01)
