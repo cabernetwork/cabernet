@@ -47,6 +47,7 @@ class PluginChannels:
         self.ch_num_enum = self.config_obj.data[self.config_section].get('channel-start_ch_num')
         if self.ch_num_enum is None or self.ch_num_enum < 0:
             self.ch_num_enum = 0
+        self.plugin_obj.initialize_http_session()
 
     def terminate(self):
         """

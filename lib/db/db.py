@@ -50,7 +50,6 @@ class DB:
         self.offset = -1
         self.where = None
         self.sqlcmd = None
-
         self.db_fullpath = pathlib.Path(self.config['paths']['db_dir']) \
             .joinpath(_db_name + DB_EXT)
         if not os.path.exists(self.db_fullpath):
@@ -83,6 +82,7 @@ class DB:
         time.sleep(sec)
 
     def add(self, _table, _values):
+        self.logger.trace('DB add() called {}'.format(threading.get_ident()))
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_ADD_ROW])]
         i = 10
@@ -103,9 +103,11 @@ class DB:
                 if cur is not None:
                     cur.close()
                 self.rnd_sleep(0.3)
+        self.logger.trace('DB add() exit {}'.format(threading.get_ident()))
         return None
 
     def delete(self, _table, _values):
+        self.logger.trace('DB delete() called {}'.format(threading.get_ident()))
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_DELETE])]
         i = 10
@@ -126,9 +128,11 @@ class DB:
                 if cur is not None:
                     cur.close()
                 self.rnd_sleep(0.3)
+        self.logger.trace('DB delete() exit {}'.format(threading.get_ident()))
         return 0
 
     def update(self, _table, _values=None):
+        self.logger.trace('DB update() called {}'.format(threading.get_ident()))
         cur = None
         sqlcmd = self.sqlcmds[''.join([_table, SQL_UPDATE])]
         i = 10
@@ -152,6 +156,7 @@ class DB:
                     cur.close()
                 LOCK.release()
                 self.rnd_sleep(0.3)
+        self.logger.trace('DB update() exit {}'.format(threading.get_ident()))
         return None
 
     def commit(self):

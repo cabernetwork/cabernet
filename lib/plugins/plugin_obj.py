@@ -36,7 +36,7 @@ class PluginObj:
         self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
         self.plugins = None
-        self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+        self.http_session = None
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.def_trans = ''.join([
@@ -69,6 +69,16 @@ class PluginObj:
         self.instances = None
         self.scheduler_db = None
 
+    def initialize_http_session(self):
+        """
+        httpx cannot be initialized until later due to the httpx lib not being
+        pickleable. So, when a function call is made, it checks to see if the 
+        http_session has been initialized and if not, will initialize it.
+        """
+        if self.http_session is None:
+            self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+    
+    
 
     # INTERFACE METHODS
     # Plugin may have the following methods
@@ -231,6 +241,7 @@ class PluginObj:
         """
         _what_to_refresh is either 'EPG' or 'Channels' for now
         """
+        self.initialize_http_session()
         try:
             if not self.enabled:
                 self.logger.debug(

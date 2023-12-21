@@ -164,11 +164,11 @@
                         "label": "level",
                         "type": "list",
                         "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
-                        "default": "DEBUG",
+                        "default": "TRACE",
                         "level": 4,
                         "writable": false,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
-                        "help": "Default is WARNING"
+                        "help": "Default is TRACE"
                     },
                     "handlers":{
                         "label": "handlers",

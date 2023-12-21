@@ -19,6 +19,7 @@ substantial portions of the Software.
 
 import configparser
 import logging
+import time
 import traceback
 
 from lib.plugins.plugin_manager.plugin_manager import PluginManager
@@ -48,11 +49,14 @@ def patch_upgrade(_config_obj, _new_version):
         LOGGER.info('Applying patches to version: {}'.format(REQUIRED_VERSION))
 
         try:
-            _config_obj.config_handler.remove_option('streams', 'stream_timeout')
+            try:
+                _config_obj.config_handler.remove_option('streams', 'stream_timeout')
+            except configparser.NoSectionError:
+                pass
+            _config_obj.config_handler.remove_option('logger_root', 'level')
+            _config_obj.config_handler.set('logger_root', 'level', 'TRACE')
 
 
-        except configparser.NoSectionError:
-            pass
         except Exception:
             # Make sure that the patcher exits normally so the maintenance flag is removed
             LOGGER.warning(traceback.format_exc())
