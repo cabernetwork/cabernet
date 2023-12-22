@@ -97,7 +97,7 @@ class M3U8GetUriData(Thread):
         _retries is used by the decorator when a HTTP failure occurs
         """
         global HTTP_TIMEOUT
-        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, follow_redirects=True)
+        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT)
         x = resp.content
         resp.raise_for_status()
         return x

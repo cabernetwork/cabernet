@@ -147,11 +147,6 @@ def main(script_dir):
         init_versions(plugins)
 
         if opersystem in ['Windows']:
-            # Need to make sure all http_sessions are None since
-            # that object cannot pickle
-            for name, plugin in plugins.plugins.items():
-                if plugin.plugin_obj.http_session is not None:
-                    plugin.plugin_obj.http_session = None
             pickle_it = Pickling(config)
             pickle_it.to_pickle(plugins)
 
