@@ -84,6 +84,7 @@ class PluginChannels:
     @handle_url_except()
     @handle_json_except
     def get_uri_json_data(self, _uri, _retries):
+        self.plugin_obj.initialize_http_session()
         header = {
             'Content-Type': 'application/json',
             'User-agent': utils.DEFAULT_USER_AGENT}
@@ -94,6 +95,7 @@ class PluginChannels:
 
     @handle_url_except()
     def get_uri_data(self, _uri, _retries, _header=None, _data=None):
+        self.plugin_obj.initialize_http_session()
         if _header is None:
             header = {
                 'User-agent': utils.DEFAULT_USER_AGENT}
@@ -108,6 +110,7 @@ class PluginChannels:
 
     @handle_url_except()
     def get_m3u8_data(self, _uri, _retries, _header=None):
+        self.plugin_obj.initialize_http_session()
         if _header is None:
             return m3u8.load(_uri,
                              headers={'User-agent': utils.DEFAULT_USER_AGENT},
@@ -196,6 +199,7 @@ class PluginChannels:
 
     @handle_url_except
     def get_best_stream(self, _url, _retries, _channel_id, _referer=None):
+        self.plugin_obj.initialize_http_session()
         if self.config_obj.data[self.config_section]['player-stream_type'] == 'm3u8redirect':
             return _url
 
