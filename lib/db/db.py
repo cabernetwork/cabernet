@@ -95,6 +95,7 @@ class DB:
                 DB.conn[self.db_name][threading.get_ident()].commit()
                 lastrow = cur.lastrowid
                 cur.close()
+                self.logger.trace('DB add() exit {}'.format(threading.get_ident()))
                 return lastrow
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} Add request ignored, retrying {}, {}'
@@ -120,6 +121,7 @@ class DB:
                 num_deleted = cur.rowcount
                 DB.conn[self.db_name][threading.get_ident()].commit()
                 cur.close()
+                self.logger.trace('DB delete() exit {}'.format(threading.get_ident()))
                 return num_deleted
             except sqlite3.OperationalError as e:
                 self.logger.warning('{} Delete request ignored, retrying {}, {}'
@@ -147,6 +149,7 @@ class DB:
                 lastrow = cur.lastrowid
                 cur.close()
                 LOCK.release()
+                self.logger.trace('DB update() exit {}'.format(threading.get_ident()))
                 return lastrow
             except sqlite3.OperationalError as e:
                 self.logger.notice('{} Update request ignored, retrying {}, {}'
