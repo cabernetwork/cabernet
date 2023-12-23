@@ -13,7 +13,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 - Download source
 - Unzip source in the installation folder
 - Launch the app by running the command "python3 tvh_main.py". This should create a data folder and a config.ini inside that folder
-- Bring up browser and go to http://ip address:6077/
+- Bring up browser and go to http://your-ip:6077/
 - From Plugins, install PlutoTV plugin
 - Stop the app
 - Edit the data/config.ini and add the following lines (Update: This is suppose to automatically happen in 0.9.14)
@@ -22,7 +22,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 label = PlutoTV Instance
 </pre>
 - Launch the app by running the command "python3 tvh_main.py"
-- Bring up browser and go to http://ip address:6077/
+- Bring up browser and go to http://your-ip:6077/
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
 - Enable the PlutoTV instance in the Settings page
@@ -37,26 +37,70 @@ label = PlutoTV Instance
     - https://github.com/cabernetwork/cabernet/tree/master/lib/tvheadend/service
 
 ### 4. Docker
-See http://ghcr.io/cabernetwork/cabernet:latest
-- Use or Review ports and remote mount points at docker-compose.yml
-- Note: it requires unzipping the cabernet source into ./docker/cabernet/config/app to run
-- Recommended Docker file: Dockerfile_tvh_crypt.alpine
-- Bring up browser and go to http://ip address:6077/
-- From Plugins, install PlutoTV plugin
-- Stop the app
-- Edit the data/config.ini and add the following lines
-<pre>
-[plutotv_default]
-label = PlutoTV Instance
-</pre>
-- Restart the app (from the Scheduler/Applications) to have the plugin fully activate
-- From XML/JSON Links try some of the links
+You can either use docker-compose or the docker cli.
+
+| Architecture | Available |
+|:----:|:----:|
+| X86-64 | ✅ |
+| arm64 | ✅ |
+| armhf | ❌ |
+
+**NOTE:** armhf not available due to python cryptography only supports 64bit systems.
+[Cryptography supported platforms](https://cryptography.io/en/latest/installation/#supported-platforms)
+
+#### docker-compose
+```
+version: '2.4'
+services:
+    cabernet:
+        container_name: cabernet
+        image: ghcr.io/cabernetwork/cabernet:latest
+        environment:
+          - TZ="Etc/UTC"  # optional
+          - PUID=1000     # optional
+          - PGID=1000     # optional
+        ports:
+          - "6077:6077"
+          - "5004:5004"
+        restart: unless-stopped
+        volumes:
+          - /path/to/cabernet/data:/app/data      # optional
+          - /path/to/plugins_ext:/app/plugins_ext # optional
+```
+
+#### docker cli
+```
+docker run -d \
+  --name=cabernet \
+  -e PUID=1000 `#optional` \
+  -e PGID=1000 `#optional` \
+  -e TZ=Etc/UTC `#optional` \
+  -p 6077:6077 \
+  -p 5004:5004 \
+  -v /path/to/cabernet/data:/app/data `#optional` \
+  -v /path/to/plugins_ext:/app/plugins_ext `#optional` \
+  --restart unless-stopped \
+  ghcr.io/cabernetwork/cabernet:latest
+```
+
+#### Parameters
+
+| Parameter | Function |
+| :----: | :----: |
+| -p 6077 | Cabernet WebUI |
+| -p 5004 | Cabernet stream port |
+| -e PUID=1000  | for UserID    |
+| -e PGID=1000  | for GroupID   |
+| -e TZ=Etc/UTC | specify a timezone to use, see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).|
+| -v /app/data | Where Cabernet should store its database and config. |
+| -v /app/plugins_ext | External Plugins |
+
 
 ### 5. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
-    - http://ip address:6077/channels.m3u
-    - http://ip address:6077/pLuToTv/channels.m3u
-    - http://ip address:6077/PlutoTV/Default/channels.m3u
+    - http://your-ip:6077/channels.m3u
+    - http://your-ip:6077/pLuToTv/channels.m3u
+    - http://your-ip:6077/PlutoTV/Default/channels.m3u
 - config.ini group tag requirements when creating an instance
     - All lower case
     - Underscore is a key character in section tags and separates the plugin name from the instance name
