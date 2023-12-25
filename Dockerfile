@@ -9,5 +9,6 @@ RUN apk add --no-cache --update bash tzdata ffmpeg curl su-exec && \
     mv entrypoint.sh /usr/local/bin && \
     rm -rf /tmp/* $HOME/.cache $HOME/.cargo
 
+VOLUME /app/data /app/plugins_ext /app/.cabernet
 EXPOSE 6077 5004
 ENTRYPOINT ["entrypoint.sh"]

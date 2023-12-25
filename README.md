@@ -13,7 +13,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 - Download source
 - Unzip source in the installation folder
 - Launch the app by running the command "python3 tvh_main.py". This should create a data folder and a config.ini inside that folder
-- Bring up browser and go to http://your-ip:6077/
+- Bring up browser and go to http://ip address:6077/
 - From Plugins, install PlutoTV plugin
 - Stop the app
 - Edit the data/config.ini and add the following lines (Update: This is suppose to automatically happen in 0.9.14)
@@ -22,7 +22,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 label = PlutoTV Instance
 </pre>
 - Launch the app by running the command "python3 tvh_main.py"
-- Bring up browser and go to http://your-ip:6077/
+- Bring up browser and go to http://ip address:6077/
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
 - Enable the PlutoTV instance in the Settings page
@@ -45,7 +45,9 @@ You can either use docker-compose or the docker cli.
 | arm64 | ✅ |
 | armhf | ❌ |
 
-**NOTE:** armhf not available due to python cryptography only supports 64bit systems.
+**NOTES:** 
+- Volume for ```/app/.cabernet``` must be provided before enabling encryption.
+- armhf not available due to python cryptography only supports 64bit systems.
 [Cryptography supported platforms](https://cryptography.io/en/latest/installation/#supported-platforms)
 
 #### docker-compose
@@ -65,7 +67,8 @@ services:
         restart: unless-stopped
         volumes:
           - /path/to/cabernet/data:/app/data      # optional
-          - /path/to/plugins_ext:/app/plugins_ext # optional
+          - /path/to/cabernet/plugins_ext:/app/plugins_ext # optional
+          - /path/to/cabernet/secrets:/app/.cabernet # optional
 ```
 
 #### docker cli
@@ -79,6 +82,7 @@ docker run -d \
   -p 5004:5004 \
   -v /path/to/cabernet/data:/app/data `#optional` \
   -v /path/to/plugins_ext:/app/plugins_ext `#optional` \
+  -v /path/to/cabernet/secrets:/app/.cabernet `#optional` \
   --restart unless-stopped \
   ghcr.io/cabernetwork/cabernet:latest
 ```
@@ -94,13 +98,49 @@ docker run -d \
 | -e TZ=Etc/UTC | specify a timezone to use, see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).|
 | -v /app/data | Where Cabernet should store its database and config. |
 | -v /app/plugins_ext | External Plugins |
+| -v /app/.cabernet | Where encryption key is stored |
+
+#### Updating Info
+**Via Docker Compose:**
+
+- Update the image:
+```
+docker-compose rm --stop -f cabernet
+docker-compose pull cabernet
+docker-compose up -d cabernet
+```
+
+**Via Docker Run:**
+
+- Update the image:   
+```docker pull ghcr.io/cabernetwork/cabernet:latest```
+
+- Stop the running container:  
+```docker stop cabernet```
+
+- Delete the container:   
+```docker rm cabernet```
+
+- You can also remove the old dangling images:
+```docker image prune```
+
+#### Via Watchtower auto-updater
+```
+docker run --rm \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  containrrr/watchtower \
+  --run-once cabernet
+```
+
+- For regulary updates follow Watchtower instructions 
+https://containrrr.dev/watchtower/
 
 
 ### 5. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
-    - http://your-ip:6077/channels.m3u
-    - http://your-ip:6077/pLuToTv/channels.m3u
-    - http://your-ip:6077/PlutoTV/Default/channels.m3u
+    - http://ip address:6077/channels.m3u
+    - http://ip address:6077/pLuToTv/channels.m3u
+    - http://ip address:6077/PlutoTV/Default/channels.m3u
 - config.ini group tag requirements when creating an instance
     - All lower case
     - Underscore is a key character in section tags and separates the plugin name from the instance name

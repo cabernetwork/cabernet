@@ -12,5 +12,6 @@ services:
           - "5004:5004"    # Port used to stream
         restart: unless-stopped
         volumes:
-          - /path/to/cabernet/data:/app/data      # App data (Optional)
-          - /path/to/plugins_ext:/app/plugins_ext # External Plugins (Optional)
+          - /path/to/cabernet/data:/app/data                # App data (Optional)
+          - /path/to/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
+          - /path/to/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)
