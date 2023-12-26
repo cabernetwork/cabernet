@@ -10,7 +10,6 @@ USERNAME=cabernet
 echo "Starting with UID : $USER_ID"
 addgroup -S -g $GROUP_ID $USERNAME
 adduser -S -D -H -h /app -u $USER_ID -G $USERNAME $USERNAME
-chown -R $USER_ID:$GROUP_ID /app
 
 blockUpdate="/app/do_not_updagrade_from_WEBUI_on_Docker"
 
@@ -30,6 +29,9 @@ EOF
 
 cp "$oldKeyFile" "$newKeyFile"
 fi
+
+# Set permissions
+chown -R $USER_ID:$GROUP_ID /app
 
 [ ! -f "$blockUpdate" ] && touch "$blockUpdate"
 
