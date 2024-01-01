@@ -368,9 +368,14 @@ class PluginsFormHTML:
             _is_installed, None, None)
 
         if not plugin_defns:
-            return ''.join([
-                'All available plugins are installed'
-                ])
+            if self.area == 'My_Plugins':
+                return ''.join([
+                    'No plugins are installed.  Go to Catalog and select a plugin to install.'
+                    ])
+            elif self.area == 'Catalog':
+                return ''.join([
+                    'All available plugins are installed'
+                    ])
 
         plugins_list = ''
         for plugin_defn in sorted(plugin_defns, key=lambda p: p['id']):
@@ -427,6 +432,7 @@ class PluginsFormHTML:
                 self.form_plugins(True), '</div>'])
         elif self.area == 'Catalog':
             forms_html = ''.join([
+                'Plugins Available To Install:'
                 '<div class="plugin_list">',
                 self.form_plugins(_is_installed=False), 
                 '</div>'])
