@@ -52,7 +52,13 @@ label = PlutoTV Instance
 - Restart the app (from the Scheduler/Applications) to have the plugin fully activate
 - From XML/JSON Links try some of the links
 
-### 5. Notes
+### 5. Default Ports
+- 6007 Web UI
+- 5004 Stream port
+- 1900 SSDP (if enabled)
+- 65001 HDHomeRun (if enabled)
+
+### 6. Notes
 - URL used can include plugin and instance levels to filter down to a specific set of data
     - http://ip address:6077/channels.m3u
     - http://ip address:6077/pLuToTv/channels.m3u
@@ -64,7 +70,7 @@ label = PlutoTV Instance
     - Do not change the instance name unless you go into data management and remove the instance first.
     - [plutotv_mychannels]
 
-### 6. Forum
+### 7. Forum
 https://tvheadend.org/boards/5/topics/43052
 
 Enjoy
