@@ -122,6 +122,10 @@ def main(script_dir):
         config_obj = user_config.get_config(script_dir, opersystem, args)
         config = config_obj.data
         LOGGER = logging.getLogger(__name__)
+        # reduce logging for httpx modules
+        logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
 
         LOGGER.warning('#########################################')
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
