@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,17 +16,13 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import datetime
 import json
 import logging
 import threading
-import urllib.request
 
 import lib.common.utils as utils
-from lib.db.db_epg import DBepg
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-
 
 
 class PluginPrograms:
@@ -45,22 +41,30 @@ class PluginPrograms:
         """
         pass
 
-    @handle_url_except(timeout=10.0)
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.logger = None
+        self.instance_obj = None
+        self.config_obj = None
+        self.instance_key = None
+        self.plugin_obj = None
+        self.config_section = None
+
+    @handle_url_except()
     @handle_json_except
-    def get_uri_data(self, _uri, _header=None):
+    def get_uri_data(self, _uri, _retries, _header=None):
         if _header is None:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            x = json.load(resp)
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
+        x = resp.json()
+        resp.raise_for_status()
         return x
-
-
-
-
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))

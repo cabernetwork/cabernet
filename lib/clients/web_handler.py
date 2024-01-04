@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -20,14 +20,14 @@ import importlib
 import importlib.resources
 import logging
 import mimetypes
-import os
 import pathlib
 import platform
+import re
 import socket
 import time
 import urllib
+import urllib.parse
 from http.server import BaseHTTPRequestHandler
-from multiprocessing import Queue
 
 import lib.common.utils as utils
 from lib.web.pages.templates import web_templates
@@ -110,6 +110,13 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 if _package:
                     x = importlib.resources.read_binary(_package, _reply_file)
                 else:
+                    # add security to prevent hacker paths
+                    search_file = re.compile(r'^[A-Z]?[:]?([\\\/]([A-Za-z0-9_\-]+[\\\/])+[A-Za-z0-9\._\-]+$)')
+                    valid_check = re.match(search_file, str(_reply_file))
+                    if not valid_check:
+                        self.logger.info('Invalid filepath {}'.format(_reply_file))
+                        self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Invalid File Path'))
+                        return
                     x_path = pathlib.Path(str(_reply_file))
                     with open(x_path, 'br') as reader:
                         x = reader.read()
@@ -131,12 +138,19 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
                 self.logger.info('ConnectionAbortedError:{}'.format(e))
             except ModuleNotFoundError as e:
                 self.logger.info('ModuleNotFoundError:{}'.format(e))
-                self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Area Not Found'))
+                self.do_mime_response(404, 'text/html', web_templates['htmlError'].format('404 - Module Not Found'))
+
+
+
 
     def do_response(self, _code, _mime, _reply_str=None):
-        self.send_response(_code)
-        self.send_header('Content-type', _mime)
-        self.end_headers()
+        try:
+            self.send_response(_code)
+            self.send_header('Content-type', _mime)
+            self.end_headers()
+        except BrokenPipeError as ex:
+            self.logger.notice('BrokenPipeError on do_response(), ignoring {}'.format(str(ex)))
+            pass
         if _reply_str:
             self.do_write(_reply_str.encode('utf-8'))
         
@@ -162,7 +176,13 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
             self.wfile.write(_data)
         except BrokenPipeError as ex:
             self.logger.debug('Client dropped connection while writing, ignoring. {}'.format(ex))
-    
+
+    @classmethod
+    def init_class_var_sub(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+        """
+        Interface class
+        """
+        pass
 
     @classmethod
     def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue):
@@ -185,11 +205,12 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         WebHTTPHandler.channels_db = DBChannels(_plugins.config_obj.data)
         tmp_rmg_scans = {}
         for plugin_name in _plugins.plugins.keys():
-            if _plugins.config_obj.data.get(plugin_name.lower()):
-                if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
-                    tmp_rmg_scans[plugin_name] = []
-                    for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
-                        tmp_rmg_scans[plugin_name].append('Idle')
+            if plugin_name:
+                if _plugins.config_obj.data.get(plugin_name.lower()):
+                    if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
+                        tmp_rmg_scans[plugin_name] = []
+                        for x in range(int(_plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'])):
+                            tmp_rmg_scans[plugin_name].append('Idle')
         WebHTTPHandler.rmg_station_scans = tmp_rmg_scans
         if WebHTTPHandler.total_instances == 0:
             WebHTTPHandler.total_instances = _plugins.config_obj.data['web']['concurrent_listeners']
@@ -214,7 +235,7 @@ class WebHTTPHandler(BaseHTTPRequestHandler):
         server_socket.listen(int(_plugins.config_obj.data['web']['concurrent_listeners']))
         utils.logging_setup(_plugins.config_obj.data)
         logger = logging.getLogger(__name__)
-        cls.init_class_var(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
+        cls.init_class_var_sub(_plugins, _hdhr_queue, _terminate_queue, _sched_queue)
         if cls.total_instances == 0:
             _plugins.config_obj.data['web']['concurrent_listeners']
         logger.info(

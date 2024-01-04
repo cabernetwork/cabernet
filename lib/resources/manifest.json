@@ -1,13 +1,44 @@
 {
-    "id": "cabernet",
-    "name": "Cabernet",
-    "github_repo_stable": "https://api.github.com/repos/cabernetwork/cabernet",
-    "github_repo_unstable": "https://api.github.com/repos/cabernetwork/cabernet",
-    "provider-name": "rocky4546",
-    "summary": "Cabernet allows control of IPTV streams",
-    "description": "Connect streams to your favorite media server. Cabernet is a modular-based appliance/platform that cleans, organizes and repackages IPTV streams to be compatible and digested by media clients.",
-    "license": "MIT License, Copyright (C) 2021 ROCKY4546",
-    "source": "https://github.com/cabernetwork/cabernet",
-    "forum": "https://tvheadend.org/boards/5/topics/43052",
-    "website": "https://cabernetwork.github.io/"
+    "plugin": {
+        "id": "cabernet",
+        "name": "Cabernet",
+        "version": {
+            "current": "0.1.0"
+        },
+        "requires": [{
+            "python": {
+                "name": "python",
+                "version": "3.7.0"
+            },
+            "python-lib": {
+                "name": "cryptography",
+                "version": "2.8"
+            },
+            "python-lib": {
+                "name": "streamlink",
+                "version": "5.3.1"
+            },
+            "python-lib": {
+                "name": "requests",
+                "version": "2.26.0"
+            }
+        }],
+        "category": ["repository"],
+        "provider-name": "rocky4546",
+        "summary": "Cabernet allows control of IPTV streams",
+        "description": "Connect streams to your favorite media server. Cabernet is a modular-based appliance/platform that cleans, organizes and repackages IPTV streams to be compatible and digested by media clients.",
+        "license": "MIT License, Copyright (C) 2021 ROCKY4546",
+        "source": "https://github.com/cabernetwork/cabernet",
+        "forum": "https://tvheadend.org/boards/5/topics/43052",
+        "website": "https://cabernetwork.github.io/",
+        "dir": {
+            "github_repo_stable": "https://api.github.com/repos/cabernetwork/cabernet",
+            "github_repo_unstable": "https://api.github.com/repos/cabernetwork/cabernet",
+            "info": "https://raw.githubusercontent.com/cabernetwork/Cabernet-Repository/main/plugin.json",
+            "checksum": "https://raw.githubusercontent.com/cabernetwork/Cabernet-Repository/main/plugin.json.sha2",
+            "datadir": {
+                "url": "https://raw.githubusercontent.com/cabernetwork/Cabernet-Repository/main/repo"
+            }
+        }
+    }
 }

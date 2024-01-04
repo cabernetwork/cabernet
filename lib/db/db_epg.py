@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -18,12 +18,10 @@ substantial portions of the Software.
 
 import json
 import datetime
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
-
 
 DB_EPG_TABLE = 'epg'
 DB_CONFIG_NAME = 'db_files-epg_db'
@@ -36,7 +34,7 @@ sqlcmds = {
             instance  VARCHAR(255) NOT NULL,
             day       DATE NOT NULL,
             last_update TIMESTAMP,
-            json      TEXT NOT NULL,
+            file      VARCHAR(255) NOT NULL,
             UNIQUE(namespace, instance, day)
             )
         """
@@ -44,13 +42,18 @@ sqlcmds = {
     'dt': [
         """
         DROP TABLE IF EXISTS epg
+        """
+    ],
+
+    'epg_column_names_get':
+        """
+        SELECT name FROM pragma_table_info('epg')
         """,
-        ],
 
     'epg_add':
         """
         INSERT OR REPLACE INTO epg (
-            namespace, instance, day, last_update, json
+            namespace, instance, day, last_update, file
             ) VALUES ( ?, ?, ?, ?, ? )
         """,
 
@@ -58,9 +61,19 @@ sqlcmds = {
         """
         DELETE FROM epg WHERE namespace LIKE ? AND instance LIKE ? AND day < DATE('now',?)
         """,
-    'epg_del':
+    'epg_by_day_get':
+        """
+        SELECT file FROM epg WHERE namespace LIKE ? AND instance LIKE ? AND day < DATE('now',?)
+        """,
+
+    'epg_instance_del':
         """
         DELETE FROM epg WHERE namespace=? AND instance LIKE ?
+        """,
+
+    'epg_instance_get':
+        """
+        SELECT file FROM epg WHERE namespace=? AND instance LIKE ?
         """,
 
     'epg_last_update_get':
@@ -89,7 +102,7 @@ sqlcmds = {
         """
         SELECT DISTINCT namespace FROM epg
         """,
-    'epg_instance_get':
+    'epg_instances_get':
         """
         SELECT DISTINCT namespace, instance FROM epg
         """
@@ -101,23 +114,32 @@ class DBepg(DB):
     def __init__(self, _config):
         super().__init__(_config, _config['datamgmt'][DB_CONFIG_NAME], sqlcmds)
 
+    def get_col_names(self):
+        return self.get(DB_EPG_TABLE + '_column_names')
+    
     def save_program_list(self, _namespace, _instance, _day, _prog_list):
-        self.add(DB_EPG_TABLE, (
-            _namespace,
-            _instance,
-            _day,
-            datetime.datetime.utcnow(),
-            json.dumps(_prog_list),))
+        filepath = self.save_file((DB_EPG_TABLE, _namespace, _instance, _day), json.dumps(_prog_list))
+        if filepath:
+            self.add(DB_EPG_TABLE, (
+                _namespace,
+                _instance,
+                _day,
+                datetime.datetime.utcnow(),
+                str(filepath),))
 
-    def del_old_programs(self, _namespace, _instance, _days='-1 day'):
+    def del_old_programs(self, _namespace, _instance, _days='-2 day'):
         """
-        Removes all records for this namespace/instance that are over 1 day old
+        Removes all records for this namespace/instance that are over 2 day old
         """
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.delete(DB_EPG_TABLE +'_by_day', (_namespace, _instance, _days,))
+        files = self.get(DB_EPG_TABLE + '_by_day', (_namespace, _instance, _days,))
+        files = [x[0] for x in files]
+        for f in files:
+            self.delete_file(f)
+        self.delete(DB_EPG_TABLE + '_by_day', (_namespace, _instance, _days,))
 
     def del_instance(self, _namespace, _instance):
         """
@@ -125,14 +147,18 @@ class DBepg(DB):
         """
         if not _instance:
             _instance = '%'
-        return self.delete(DB_EPG_TABLE, (_namespace, _instance,))
+        files = self.get(DB_EPG_TABLE + '_instance', (_namespace, _instance,))
+        files = [x[0] for x in files]
+        for f in files:
+            self.delete_file(f)
+        return self.delete(DB_EPG_TABLE + '_instance', (_namespace, _instance,))
 
     def set_last_update(self, _namespace=None, _instance=None, _day=None):
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        self.update(DB_EPG_TABLE+'_last_update', (
+        self.update(DB_EPG_TABLE + '_last_update', (
             _day,
             _namespace,
             _instance,
@@ -155,10 +181,16 @@ class DBepg(DB):
         return self.get_dict(DB_EPG_TABLE + '_name')
 
     def get_epg_instances(self):
-        return self.get_dict(DB_EPG_TABLE + '_instance')
+        return self.get_dict(DB_EPG_TABLE + '_instances')
 
     def get_epg_one(self, _namespace, _instance, _day):
-        return self.get_dict(DB_EPG_TABLE + '_one', (_namespace, _instance, _day))
+        row = self.get_dict(DB_EPG_TABLE + '_one', (_namespace, _instance, _day))
+        if len(row):
+            blob = self.get_file_by_key((_namespace, _instance, _day,))
+            if blob:
+                row[0]['json'] = json.loads(blob)
+                return row
+        return []
 
     def init_get_query(self, _namespace, _instance):
         if not _namespace:
@@ -176,13 +208,18 @@ class DBepg(DB):
             namespace = row['namespace']
             instance = row['instance']
             day = row['day']
-            json_data = json.loads(row['json'])
+            file = row['file']
+            blob = self.get_file(file)
+            if blob:
+                json_data = json.loads(blob)
+            else:
+                json_data = []
             row = json_data
         return row, namespace, instance, day
 
     def close_query(self):
         self.cur.close()
-        
+
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):
         self.export_sql(backup_folder)

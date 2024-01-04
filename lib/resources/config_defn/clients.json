@@ -17,7 +17,7 @@
                         "default": "0.0.0.0",
                         "level": 1,
                         "onInit": "lib.config.config_callbacks.set_ip",
-                        "help": "Use instead of plex_accessible_ip. 0.0.0.0 means bind to all IPs and use the main IP address for json data"
+                        "help": "Default: 0.0.0.0. Use instead of plex_accessible_ip. 0.0.0.0 means bind to all IPs and use the main IP address for json data"
                     },
                     "plex_accessible_ip":{
                         "label": "plex_accessible_ip",
@@ -39,28 +39,28 @@
                         "type": "integer",
                         "default": 5004,
                         "level": 1,
-                        "help": "Port used to stream. Default is 5004"
+                        "help": "Default: 5004. Port used to stream. Default is 5004"
                     },
                     "web_admin_port":{
                         "label": "web_admin_port",
                         "type": "integer",
                         "default": 6077,
                         "level": 1,
-                        "help": "Port for main web-site.  TVHeadend can use any port; however, others such as Plex and Emby need it on port 80 for full HDHR compatilibity"
+                        "help": "Default: 6077. Port for main web-site.  TVHeadend can use any port; however, others such as Plex and Emby need it on port 80 for full HDHR compatilibity"
                     },
                     "disable_web_config":{
                         "label": "disable_web_config",
                         "type": "boolean",
                         "default": false,
                         "level": 3,
-                        "help": "Security setting to disable the ability to edit the configuration remotely"
+                        "help": "Default: False. Security setting to disable the ability to edit the configuration remotely"
                     },
                     "concurrent_listeners":{
                         "label": "concurrent_listeners",
                         "type": "integer",
                         "default": 8,
-                        "level": 2,
-                        "help": "GUI Webadmin site only. Number of simultaneous HTTP requests at one time. If requests are exceeded, the request will hang until a listener becomes available."
+                        "level": 3,
+                        "help": "Default: 8. GUI Webadmin site only. Number of simultaneous HTTP requests at one time. If requests are exceeded, the request will hang until a listener becomes available."
                     }
                 }
             },
@@ -75,7 +75,21 @@
                         "type": "boolean",
                         "default": true,
                         "level": 2,
-                        "help": "Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."
+                        "help": "Default: True. Identifies the service name as the channel name to client. Recommend disabling unless running a Scan in the client to reduce overhead."
+                    },
+                    "vod_retries":{
+                        "label": "VOD Retries",
+                        "type": "integer",
+                        "default": 2,
+                        "level": 3,
+                        "help": "Default: 2. Recommend leaving this as is. On VOD (with all streaming packets provided at one time), may improve timeout errors by changing the number of retries. Minimum Total Timeout = num * 12sec/timeout * 2 retries. Only applies to internalproxy."
+                    },
+                    "switch_channel_timeout":{
+                        "label": "Switch Channel Timeout",
+                        "type": "integer",
+                        "default": 2,
+                        "level": 3,
+                        "help": "Default: 2 seconds. Clients tend to timeout streams and request a reset. This value is the time in seconds it takes to request the stop followed by re-subscribing the channel. If it is too short, Cabernet will drop the current tuner and use a new one instead of reusing the current tuner."
                     }
                 }
             },
@@ -99,35 +113,49 @@
                         "default": "tvheadend",
                         "values": ["normal", "tvheadend"],
                         "level": 1,
-                        "help": "TVHeadend uses specific genre to get colors on tv guide"
+                        "help": "Default: tvheadend. TVHeadend uses specific genre to get colors on tv guide"
                     },
                     "epg_channel_number":{
                         "label": "Channel # in Name",
                         "type": "boolean",
                         "default": false,
                         "level": 2,
-                        "help": "When true will include the channel number in the channel name for the channel list and EPG"
+                        "help": "Default: False. When true will include the channel number in the channel name for the channel list and EPG"
+                    },
+                    "epg_use_channel_number":{
+                        "label": "Use Channel # for Channel ID",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "Default: False. For clients like Plex and JellyFin, they use the channel id field in the xmltv.xml as the channel number"
+                    },
+                    "epg_add_plugin_to_channel_id":{
+                        "label": "Add Plugin name to Channel ID",
+                        "type": "boolean",
+                        "default": false,
+                        "level": 2,
+                        "help": "Default: False. For cases where the different provider have the same UID for channels"
                     },
                     "epg_channel_icon":{
                         "label": "EPG Channel Icon",
                         "type": "boolean",
                         "default": true,
                         "level": 2,
-                        "help": "When true will include the icon for each channel inside the xmltv.xml file"
+                        "help": "Default: True. When true will include the icon for each channel inside the xmltv.xml file"
                     },
                     "epg_program_icon":{
                         "label": "EPG Program Icon",
                         "type": "boolean",
                         "default": true,
                         "level": 2,
-                        "help": "When true will include the icon for each program inside the xmltv.xml file"
+                        "help": "Default: True. When true will include the icon for each program inside the xmltv.xml file"
                     },
                     "epg_prettyprint":{
                         "label": "EPG Pretty Print",
                         "type": "boolean",
-                        "default": true,
+                        "default": false,
                         "level": 1,
-                        "help": "If you are having memory issues, try turning this to false"
+                        "help": "Default: False. If you are having memory issues, try turning this to false"
                     }
                 }
             },
@@ -142,7 +170,7 @@
                         "type": "boolean",
                         "default": true,
                         "level": 2,
-                        "help": "Enables SSDP protocol on port 1900. Recommend keeping this disabled and use manual setup"
+                        "help": "Default: True. Enables SSDP protocol on port 1900. Recommend keeping this disabled and use manual setup"
                     },
                     "udp_netmask":{
                         "label": "udp_netmask",
@@ -166,7 +194,7 @@
                         "type": "boolean",
                         "default": true,
                         "level": 2,
-                        "help": "Enables HDHR protocol on port 65001. Recommend keeping this disabled and use manual setup"
+                        "help": "Default: True. Enables HDHR UDP discovery protocol on port 65001. Recommend keeping this disabled and use manual setup"
                     },
                     "hdhr_id":{
                         "label": "hdhr_id",

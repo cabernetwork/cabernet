@@ -6,7 +6,6 @@
     <p>This is a list of interfaces provided by Cabernet.
         If it states HDHR, then the interface matches that of HDHomerun tuners.
     <ul>
-        <li><a class="button-link emby-button" href="/playlist" target="_blank">/playlist: Same as channels.m3u</a>
         <li><a class="button-link emby-button" href="/device.xml" target="_blank">/device.xml: DLNA/SSDP device description response</a>
         <li><a class="button-link emby-button" href="/discover.json" target="_blank">/discover.json: HDHR, app metadata</a>
         <li><a class="button-link emby-button" href="/lineup_status.json" target="_blank">/lineup_status.json: HDHR, stream source data</a>
@@ -14,8 +13,35 @@
         <li><a class="button-link emby-button" href="/lineup.xml" target="_blank">/lineup.xml: HDHR, channel list in XML format</a>
         <li><a class="button-link emby-button" href="/xmltv.xml" target="_blank">/xmltv.xml: XMLTV formatted EPG</a>
         <li><a class="button-link emby-button" href="/channels.m3u" target="_blank">/channels.m3u: M3U formatted channel list</a>
+        <li><a class="button-link emby-button" href="/playlist" target="_blank">/playlist M3U formatted channel list</a>
         <li><a class="button-link emby-button" href="/config.json" target="_blank">/config.json: JSON list of most config parameters</a>
-        <li>/watch/#id: Tunes stream to Channel ID requested</a>
-        <li>/auto/v#id: HDHR, Tunes stream to Channel ID requested</a>
+        <li>/watch/#uid: Tunes stream to Channel ID requested</li>
+        <li>/auto/v#chnum: HDHR, Tunes stream to Channel Number requested</li>
     </ul>
+
+    All links above have the same ability to apply to any plugin.  You can request the data filtered
+    for a plugin or for an instance of the plugin.<br><br>
+    
+
+    <h3>Examples of URLs</h3>
+    <pre>    http://idaddress:6077/PlUtotV/DeFauLt/channel.m3u</pre>
+    will generate a list of channels for the PlutoTV:default instance while
+    <pre>    http://idaddress:6077/M3U/channel.m3u</pre>
+    generates a list of channels for all instances of the M3U plugin, combined.
+    To get an EPG for everything under XUMO
+    <pre>    http://idaddress:6077/Xumo/xmltv.xml</pre>   
+    To get a M3U formatted channel list of M3U:Stirr
+    <pre>    http://idaddress:6077/m3u/sTirR/playlist or
+    http://idaddress:6077/m3U/sTirR/channels.m3u</pre>   
+    To get EPG for all plugins in Cabernet
+    <pre>    http://idaddress:6077/xmltv.xml</pre>
+
+    For TVHeadend, it would be appropriate to create a network for each plugin or plugin:instance.<br>
+    For Plex, you can create a TV Source and Guide Data for all or per plugin<br>
+    For Emby and JellyFin, you can create a TV Source and Guide Data for all, per plugin, or plugin:instance.
+
+    Setting up the HDHomeRun connection with Emby, Plex or JellyFin, you can use the following link<br>
+    http://ipaddress:6077 or http://ipaddress:6077/PlutoTV<br>
+    for plutotv only channels. When requested, use the full url to identify the xmltv.xml file
+
 </body>

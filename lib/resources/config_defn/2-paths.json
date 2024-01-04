@@ -50,6 +50,15 @@
                         "onInit": "lib.config.config_callbacks.set_logs_path",
                         "help": "Location of log files when set to be used"
                     },
+                    "thumbnails_dir":{
+                        "label": "Thumbnails Cache Path",
+                        "type": "path",
+                        "default": null,
+                        "level": 1,
+                        "writable": false,
+                        "onInit": "lib.config.config_callbacks.set_thumbnails_path",
+                        "help": "Location of where cached thumbnails are stored"
+                    },
                     "tmp_dir":{
                         "label": "TEMP Path",
                         "type": "path",
@@ -113,7 +122,7 @@
                         "default": null,
                         "level": 2,
                         "onInit": "lib.config.config_callbacks.set_ffmpeg_path",
-                        "help": "Only used with stream_type=ffmpegproxy"
+                        "help": "Used with stream_type=ffmpegproxy or when PTS Filtering or PTS/DTS Resync are enabled"
                     },
                     "ffprobe_path":{
                         "label": "ffprobe_path",
@@ -121,7 +130,15 @@
                         "default": null,
                         "level": 2,
                         "onInit": "lib.config.config_callbacks.set_ffprobe_path",
-                        "help": "Only used with stream_type=ffmpegproxy"
+                        "help": "Used when PTS Filter is enabled"
+                    },
+                    "streamlink_path":{
+                        "label": "streamlink_path",
+                        "type": "path",
+                        "default": null,
+                        "level": 2,
+                        "onInit": "lib.config.config_callbacks.set_streamlink_path",
+                        "help": "Used with stream_type=streamlinkproxy"
                     }
 
                 }

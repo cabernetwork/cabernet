@@ -50,7 +50,6 @@ except ImportError:
 ENCRYPT_STRING = 'ENC::'
 
 
-
 def noop(_config_obj, _section, _key):
     pass
 
@@ -79,7 +78,7 @@ def logging_enable(_config_obj, _section, _key):
 
 def set_version(_config_obj, _section, _key):
     _config_obj.data[_section][_key] \
-        = 'v' + utils.get_version_str()
+        = utils.get_version_str()
 
 
 def set_system(_config_obj, _section, _key):
@@ -115,30 +114,37 @@ def set_path(_config_obj, _section, _key, _base_dir, _folder):
 def set_data_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,
-            _config_obj.data['paths']['main_dir'], 'data')
+                 _config_obj.data['paths']['main_dir'], 'data')
 
 
 def set_logs_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,
-            _config_obj.data['paths']['data_dir'], 'logs')
+                 _config_obj.data['paths']['data_dir'], 'logs')
+
+
+def set_thumbnails_path(_config_obj, _section, _key):
+    if _config_obj.data[_section][_key] is None:
+        set_path(_config_obj, _section, _key,
+                 _config_obj.data['paths']['data_dir'], 'thumbnails')
 
 
 def set_temp_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,
-            _config_obj.data['paths']['data_dir'], 'tmp')
+                 _config_obj.data['paths']['data_dir'], 'tmp')
 
 
 def set_database_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,
-            _config_obj.data['paths']['data_dir'], 'db')
+                 _config_obj.data['paths']['data_dir'], 'db')
+
 
 def set_backup_path(_config_obj, _section, _key):
     if _config_obj.data[_section][_key] is None:
         set_path(_config_obj, _section, _key,
-            _config_obj.data['paths']['data_dir'], 'backups')
+                 _config_obj.data['paths']['data_dir'], 'backups')
 
 
 def set_configdefn_path(_config_obj, _section, _key):
@@ -160,8 +166,9 @@ def set_ffmpeg_path(_config_obj, _section, _key):
                 _config_obj.data[_section][_key] \
                     = str(pathlib.Path(base_ffmpeg_dir).joinpath('ffmpeg.exe'))
             else:
-                _config_obj.logger \
-                    .info('ffmpeg_path does not exist and may be needed based on stream_type')
+                _config_obj.data[_section][_key] = 'ffmpeg.exe'
+                _config_obj.logger.notice(
+                    'ffmpeg_path does not exist in [cabernet]/ffmpeg/bin, will use PATH env to find ffmpeg.exe')
         else:
             _config_obj.data[_section][_key] = 'ffmpeg'
 
@@ -169,30 +176,50 @@ def set_ffmpeg_path(_config_obj, _section, _key):
 def set_ffprobe_path(_config_obj, _section, _key):
     if not _config_obj.data[_section][_key]:
         if platform.system() in ['Windows']:
-            base_ffprobe_dir \
+            base_ffmpeg_dir \
                 = pathlib.Path(_config_obj.script_dir).joinpath('ffmpeg/bin')
-            _config_obj.data[_section][_key] \
-                = str(pathlib.Path(base_ffprobe_dir).joinpath('ffprobe.exe'))
-            _config_obj.logger.info('ffprobe_path does not exist and may be needed based on stream_type')
+            if base_ffmpeg_dir.is_dir():
+                _config_obj.data[_section][_key] \
+                    = str(pathlib.Path(base_ffmpeg_dir).joinpath('ffprobe.exe'))
+            else:
+                _config_obj.data[_section][_key] = 'ffprobe.exe'
+                _config_obj.logger.notice(
+                    'ffprobe_path does not exist in [cabernet]/ffmpeg/bin, will use PATH env to find ffprobe.exe')
         else:
             _config_obj.data[_section][_key] = 'ffprobe'
+
+
+def set_streamlink_path(_config_obj, _section, _key):
+    if not _config_obj.data[_section][_key]:
+        if platform.system() in ['Windows']:
+            _config_obj.data[_section][_key] \
+                = 'streamlink.exe'
+            _config_obj.logger.notice(
+                'streamlink_path does not exist in PATH to find streamlink.exe')
+        else:
+            streamlink_file = os.path.expanduser('~/.local/bin/streamlink')
+            if os.path.isfile(streamlink_file):
+                _config_obj.data[_section][_key] = streamlink_file
+            else:
+                _config_obj.data[_section][_key] = 'streamlink'
+
 
 def set_pdata(_config_obj, _section, _key):
     if not _config_obj.data[_section][_key]:
         _config_obj.data[_section][_key] = \
-             utils.PLUGIN_DATA + config_defn.PLUGIN_DATA
+            utils.PLUGIN_DATA + config_defn.PLUGIN_DATA
 
 
 def check_encryption(_config_obj, _section, _key):
     if not CRYPTO_LOADED:
         return 'python cryptography module not installed, unable to encrypt'
-        
+
 
 def load_encrypted_setting(_config_obj, _section, _key):
     if CRYPTO_LOADED and _config_obj.data['main']['use_encryption']:
         if _config_obj.data['main']['encrypt_key'] is None:
             _config_obj.data['main']['encrypt_key'] = encryption.set_fernet_key().decode('utf-8')
-    
+
         if _config_obj.data[_section][_key] is not None:
             if _config_obj.data[_section][_key].startswith(ENCRYPT_STRING):
                 # encrypted
@@ -249,13 +276,13 @@ def enable_ssdp(_config_obj, _section, _key):
 
 
 def set_hdhomerun_id(_config_obj, _section, _key):
-    if _config_obj.data['hdhomerun']['hdhr_id'] is None:
+    if _config_obj.data[_section][_key] is None:
         _config_obj.write(
-            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
+            _section, _key, hdhr_server.hdhr_gen_device_id())
     elif not hdhr_server.hdhr_validate_device_id(
-            _config_obj.data['hdhomerun']['hdhr_id']):
+            _config_obj.data[_section][_key]):
         _config_obj.write(
-            'hdhomerun', 'hdhr_id', hdhr_server.hdhr_gen_device_id())
+            _section, _key, hdhr_server.hdhr_gen_device_id())
 
 
 def set_uuid(_config_obj, _section, _key):
@@ -272,7 +299,7 @@ def update_instance_label(_config_obj, _section, _key):
     elif len(areas) == 0:
         return
     else:
-        result = None
+        results = None
     section_data = db_confdefn.get_one_section_dict(areas[0], _section)
     section_data[_section]['label'] = value
     db_confdefn.add_section(areas[0], _section, section_data[_section])
@@ -282,11 +309,14 @@ def update_instance_label(_config_obj, _section, _key):
     namespace, instance = _section.split('_', 1)
     tasks = db_scheduler.get_tasks_by_name(namespace, instance)
     for task in tasks:
-        WebHTTPHandler.sched_queue.put({'cmd': 'deltask', 'taskid': task['taskid'] })
+        WebHTTPHandler.sched_queue.put({'cmd': 'deltask', 'taskid': task['taskid']})
+    return results
 
 
 def update_channel_num(_config_obj, _section, _key):
     starting_num = _config_obj.data[_section][_key]
+    init_num = starting_num
+    is_changed = False
     namespace_l, instance = _section.split('_', 1)
     db_channels = DBChannels(_config_obj.data)
     namespaces = db_channels.get_channel_names()
@@ -296,11 +326,16 @@ def update_channel_num(_config_obj, _section, _key):
     namespace = list(namespace)[0]
     ch_list = db_channels.get_channels(namespace, instance)
     for ch in ch_list.values():
-        ch[0]['display_number'] = str(int(ch[0]['number'])+starting_num)
-        db_channels.update_channel_number(ch[0])
+        if starting_num != -1:
+            if ch[0]['display_number'] != starting_num:
+                ch[0]['display_number'] = starting_num
+                db_channels.update_channel_number(ch[0])
+            starting_num += 1
 
-    return '{} {} {}'.format(_section, _key, starting_num, namespace)
-
+    if init_num == -1:
+        return 'Renumbered channels back to default'.format(_section, _key)
+    else:
+        return 'Renumbered channels starting at {}'.format(_section, _key, init_num)
 
 
 def set_theme_folders(_defn, _config, _section, _key):
@@ -317,10 +352,9 @@ def set_theme_folders(_defn, _config, _section, _key):
             importlib.resources.read_text(themes_path, folder)
         except (IsADirectoryError, PermissionError):
             theme_list.append(folder)
-        except (UnicodeDecodeError):
+        except UnicodeDecodeError:
             continue
     _defn['general']['sections']['display']['settings']['theme']['values'] = theme_list
     theme_default = _defn['general']['sections']['display']['settings']['theme']['default']
     if theme_default not in theme_list:
         _defn['general']['sections']['display']['settings']['theme']['default'] = theme_list[0]
-    

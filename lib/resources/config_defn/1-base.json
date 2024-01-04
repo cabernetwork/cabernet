@@ -19,7 +19,7 @@
                             "2-Expert", "3-Advanced"],
                         "level": 0,
                         "onDefnLoad": "lib.config.config_callbacks.set_theme_folders",
-                        "help": "Displays settings based on complexity"
+                        "help": "Default: 1-Standard. Displays settings based on complexity"
                     },
                     "theme":{
                         "label": "Theme",
@@ -30,14 +30,14 @@
                             "light", "light-blue", "light-pink", 
                             "light-purple", "light-red", "spring", "wmc"],
                         "level": 0,
-                        "help": "Changes the way the page appears"
+                        "help": "Default: spring. Changes the way the page appears"
                     },
                     "backgrounds":{
                         "label": "Background Folder",
                         "type": "path",
                         "default": null,
                         "level": 0,
-                        "help": "Uses the images in the folder for the background"
+                        "help": "Default: None. Uses the images in the folder for the background"
                     }
                 }
             },
@@ -62,21 +62,21 @@
                         "default": "stable",
                         "values": ["stable", "unstable"],
                         "level": 1,
-                        "help": "Version upgrade quality"
+                        "help": "Default: stable. Version upgrade quality"
                     },
                     "maintenance_mode":{
                         "label": "Maintenance Mode",
                         "type": "boolean",
                         "default": false,
                         "level": 1,
-                        "help": "Used during upgrades.  When enabled, causes the patch upgrades to be re-applied on a scheduler restart"
+                        "help": "Default: false. Used during upgrades.  When enabled, causes the patch upgrades to be re-applied on a scheduler restart"
                     },
                     "memory_usage":{
                         "label": "Memory Usage",
                         "type": "boolean",
                         "default": false,
                         "level": 2,
-                        "help": "Turn on and set logging to DEBUG. This will generate a memory profile after each web request or scheduler trigger."
+                        "help": "Default: false. Turn on and set logging to DEBUG. This will generate a memory profile after each web request or scheduler trigger."
                     },
                     "ostype":{
                         "label": "OS Type",
@@ -136,7 +136,7 @@
                         "default": false,
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.check_encryption",
-                        "help": "Will encrypt the password using a self-generated key.  Use with only one user running service."
+                        "help": "Default: False. Will encrypt the password using a self-generated key.  Use with only one user running service."
                     },
                     "plugin_data":{
                         "label": "plugin data",
@@ -161,7 +161,7 @@
                         "values": ["None", "Tiny(16)", "Small(48)", "Medium(128)", 
                             "Large(180)", "X-Large(270)", "Full-Size"],
                         "level": 1,
-                        "help": "The default size of the thumbnails displayed in the Channel Editor"
+                        "help": "Default: Medium(128). The default size used throughout Cabernet (Channel Editor, Plugins, Config Plugin Icons)"
                     }
                 }
             }

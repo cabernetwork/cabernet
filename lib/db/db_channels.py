@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -79,7 +79,6 @@ sqlcmds = {
             )
         """
 
-
     ],
     'dt': [
         """
@@ -90,12 +89,12 @@ sqlcmds = {
         """,
         """
         DROP TABLE IF EXISTS categories
-        """
+        """,
         """
         DROP TABLE IF EXISTS zones
         """
-        ],
-    
+    ],
+
     'channels_add':
         """
         INSERT INTO channels (
@@ -114,7 +113,7 @@ sqlcmds = {
         UPDATE channels SET 
             enabled=?, display_number=?, display_name=?, group_tag=?, thumbnail=?, thumbnail_size=?
             WHERE namespace=? AND instance=? AND uid=?
-        """,        
+        """,
     'channels_updated_update':
         """
         UPDATE channels SET updated = False WHERE namespace=? AND instance=?
@@ -137,6 +136,12 @@ sqlcmds = {
             display_number=?
             WHERE namespace=? AND instance=? AND uid=?
         """,
+    'channels_num_update':
+        """
+        UPDATE channels SET 
+            number=?
+            WHERE namespace=? AND instance=? AND uid=?
+        """,
     'channels_del':
         """
         DELETE FROM channels WHERE updated LIKE ?
@@ -145,7 +150,8 @@ sqlcmds = {
     'channels_get':
         """
         SELECT * FROM channels WHERE namespace LIKE ?
-        AND instance LIKE ? ORDER BY CAST(number as FLOAT), namespace, instance
+        AND instance LIKE ? AND enabled LIKE ?
+        ORDER BY CAST(number as FLOAT), namespace, instance
         """,
     'channels_one_get':
         """
@@ -160,7 +166,7 @@ sqlcmds = {
         """
         SELECT DISTINCT namespace,instance FROM channels
         """,
-    
+
     'status_add':
         """
         INSERT OR REPLACE INTO status (
@@ -202,9 +208,10 @@ class DBChannels(DB):
         Assume the list is complete and will remove any old channels not updated
         """
         if _instance is None or _namespace is None:
-            self.logger.warning('Saving Channel List: Namespace or Instance is None {}:{}'
+            self.logger.warning(
+                'Saving Channel List: Namespace or Instance is None {}:{}'
                 .format(_namespace, _instance))
-        self.update(DB_CHANNELS_TABLE + '_updated', (_namespace, _instance,))        
+        self.update(DB_CHANNELS_TABLE + '_updated', (_namespace, _instance,))
         for ch in _ch_dict:
             if save_edit_groups:
                 edit_groups = ch['groups_other']
@@ -225,6 +232,12 @@ class DBChannels(DB):
                     True,
                     json.dumps(ch)))
             except sqlite3.IntegrityError as ex:
+                # record already present.  Check the thumbnail and update as needed
+                ch_stored = self.get_channel(ch['id'], _namespace, _instance)
+                if ch_stored['thumbnail'] is None and ch['thumbnail'] is not None:
+                    ch_stored['thumbnail'] = ch['thumbnail']
+                    ch_stored['thumbnail_size'] = ch['thumbnail_size']
+                    self.update_channel(ch_stored)
                 self.update(DB_CHANNELS_TABLE, (
                     ch['number'],
                     True,
@@ -242,7 +255,7 @@ class DBChannels(DB):
         """
         Updates the editable fields for one channel
         """
-        self.update(DB_CHANNELS_TABLE+'_editable', (
+        self.update(DB_CHANNELS_TABLE + '_editable', (
             _ch['enabled'],
             _ch['display_number'],
             _ch['display_name'],
@@ -260,7 +273,7 @@ class DBChannels(DB):
         if not _instance:
             _instance = '%'
         return self.delete(DB_CHANNELS_TABLE, ('%', _namespace, _instance,))
-    
+
     def del_status(self, _namespace=None, _instance=None):
         if not _namespace:
             _namespace = '%'
@@ -269,8 +282,7 @@ class DBChannels(DB):
         return self.delete(DB_STATUS_TABLE, (_namespace, _instance,))
 
     def get_status(self, _namespace, _instance):
-        result = self.get(DB_STATUS_TABLE,
-            (_namespace, _instance))
+        result = self.get(DB_STATUS_TABLE, (_namespace, _instance))
         if result:
             last_update = result[0][0]
             if last_update is not None:
@@ -280,14 +292,16 @@ class DBChannels(DB):
         else:
             return None
 
-    def get_channels(self, _namespace, _instance):
+    def get_channels(self, _namespace, _instance, _enabled=None):
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
+        if _enabled is None:
+            _enabled = '%'
 
         rows_dict = {}
-        rows = self.get_dict(DB_CHANNELS_TABLE, (_namespace, _instance,))
+        rows = self.get_dict(DB_CHANNELS_TABLE, (_namespace, _instance, _enabled))
         if rows is None:
             return None
         for row in rows:
@@ -302,7 +316,7 @@ class DBChannels(DB):
             else:
                 rows_dict[row['uid']] = []
                 rows_dict[row['uid']].append(row)
-                
+
         return rows_dict
 
     def get_channel_names(self):
@@ -318,12 +332,13 @@ class DBChannels(DB):
             _instance = '%'
 
         rows = self.get_dict(DB_CHANNELS_TABLE + '_one', (_uid, _namespace, _instance,))
-        for row in rows:
-            ch = json.loads(row['json'])
-            row['json'] = ch
-            if row['atsc'] is not None:
-                row['atsc'] = ast.literal_eval(row['atsc'])
-            return row
+        if rows:
+            for row in rows:
+                ch = json.loads(row['json'])
+                row['json'] = ch
+                if row['atsc'] is not None:
+                    row['atsc'] = ast.literal_eval(row['atsc'])
+                return row
         return None
 
     def update_channel_atsc(self, _ch):
@@ -331,7 +346,7 @@ class DBChannels(DB):
         Updates the atsc field for one channel
         """
         atsc_str = str(_ch['atsc'])
-        self.update(DB_CHANNELS_TABLE+'_atsc', (
+        self.update(DB_CHANNELS_TABLE + '_atsc', (
             atsc_str,
             _ch['namespace'],
             _ch['instance'],
@@ -343,7 +358,7 @@ class DBChannels(DB):
         Updates the json field for one channel
         """
         json_str = json.dumps(_ch)
-        self.update(DB_CHANNELS_TABLE+'_json', (
+        self.update(DB_CHANNELS_TABLE + '_json', (
             json_str,
             _namespace,
             _instance,
@@ -355,15 +370,27 @@ class DBChannels(DB):
         Updates the display_number field for one channel
         """
         display_number = str(_ch['display_number'])
-        self.update(DB_CHANNELS_TABLE+'_chnum', (
+        self.update(DB_CHANNELS_TABLE + '_chnum', (
             display_number,
             _ch['namespace'],
             _ch['instance'],
             _ch['uid']
         ))
+        
+    def update_number(self, _ch):
+        """
+        Updates the display_number field for one channel
+        """
+        number = str(_ch['number'])
+        self.update(DB_CHANNELS_TABLE + '_num', (
+            number,
+            _ch['namespace'],
+            _ch['instance'],
+            _ch['uid']
+        ))
 
-
-    def get_sorted_channels(self, _namespace, _instance, _first_sort_key=[None, True], _second_sort_key=[None, True]):
+    def get_sorted_channels(self, _namespace, _instance,
+                            _first_sort_key=[None, True], _second_sort_key=[None, True]):
         """
         Using dynamic SQl to create a SELECT statement and send to the DB
         keys are [name_of_column, direction_asc=True]
@@ -379,39 +406,35 @@ class DBChannels(DB):
             _namespace = '%'
         if not _instance:
             _instance = '%'
-
-        rows_dict = {}
         rows = self.get_dict(None, (_namespace, _instance,), sql=sqlcmd)
         for row in rows:
             ch = json.loads(row['json'])
             row['json'] = ch
             row['thumbnail_size'] = ast.literal_eval(row['thumbnail_size'])
         return rows
-    
+
     def get_channels_orderby(self, _column, _ascending):
         str_types = ['namespace', 'instance', 'enabled', 'display_name', 'group_tag', 'thumbnail']
         float_types = ['uid', 'display_number']
         json_types = ['HD', 'callsign']
         if _ascending:
-            dir = 'ASC'
+            dir_ = 'ASC'
         else:
-            dir = 'DESC'
+            dir_ = 'DESC'
         if _column is None:
             return ''
         elif _column in str_types:
-            return ''.join([_column, ' ', dir, ', '])
+            return ''.join([_column, ' ', dir_, ', '])
         elif _column in float_types:
-            return ''.join(['CAST(', _column, ' as FLOAT) ', dir, ', '])
+            return ''.join(['CAST(', _column, ' as FLOAT) ', dir_, ', '])
         elif _column in json_types:
-            return ''.join(['JSON_EXTRACT(json, "$.', _column,  '") ', dir, ', '])    
+            return ''.join(['JSON_EXTRACT(json, "$.', _column, '") ', dir_, ', '])
 
     def add_zone(self, _namespace, _instance, _uid, _name):
         self.add(DB_ZONE_TABLE, (_namespace, _instance, _uid, _name))
 
     def get_zones(self, _namespace, _instance):
         return self.get_dict(DB_ZONE_TABLE, (_namespace, _instance,))
-
-
 
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):

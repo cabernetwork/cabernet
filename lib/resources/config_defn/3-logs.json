@@ -17,16 +17,16 @@
                         "default": true,
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_enable",
-                        "help": "Used to enable logging to the system logger"
+                        "help": "Default: Enabled. Used to enable logging to the system logger"
                     },
                     "level":{
                         "label": "Level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
                         "default": "WARNING",
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
-                        "help": "Log level for system logs. Default is WARNING"
+                        "help": "Default: WARNING. Log level for system logs. Default is WARNING"
                     },
                     "class":{
                         "label": "class",
@@ -59,7 +59,7 @@
                 "label": "File Log Handler",
                 "sort": "2",
                 "icon": "comment",
-                "description": "Python debug log settings",
+                "description": "Python local log file at data/logs/ log settings",
                 "settings":{
                     "enabled":{
                         "label": "Enabled",
@@ -72,7 +72,7 @@
                     "level":{
                         "label": "Level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
                         "default": "INFO",
                         "level": 1,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
@@ -163,12 +163,12 @@
                     "level":{
                         "label": "level",
                         "type": "list",
-                        "values": ["DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
-                        "default": "DEBUG",
+                        "values": ["TRACE", "DEBUG", "INFO", "NOTICE", "WARNING", "ERROR", "CRITICAL"],
+                        "default": "TRACE",
                         "level": 4,
                         "writable": false,
                         "onChange": "lib.config.config_callbacks.logging_refresh",
-                        "help": "Default is WARNING"
+                        "help": "Default is TRACE"
                     },
                     "handlers":{
                         "label": "handlers",

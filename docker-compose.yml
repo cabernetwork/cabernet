@@ -1,8 +1,22 @@
-locast2plex:
-    image: tgorg/locast2plex
-    ports:
-      - "6077:6077"
-      - "1900:1900/udp"
-    restart: unless-stopped
-    volumes:
-      - ./config.ini:/app/config/config.ini
+# NOTE: Cabernet tends to maintain versions on its own and will conflict with docker's
+# versioning system.
+# The recommendation is to have the entire cabernet source folder be in its own volume.
+# whether you mount /app or /app/cabernet, the whole cabernet folder should be a volume.
+# then run the python script tvh_main.py at the top level Caberent folder to start Cabernet.
+
+version: '2.4'
+services:
+    cabernet:
+        container_name: cabernet
+        image: ghcr.io/cabernetwork/cabernet:latest
+        environment:
+          - TZ="America/New_York"
+          - PUID=1000
+          - PGID=1000
+        ports:
+          - "5004:5004"    # Port used to stream
+          - "6077:6077"    # Web Interface Port
+        restart: unless-stopped
+        volumes:
+          - ./docker/cabernet/config/app:/app
+          - ./.cabernet/key.txt:/root/.cabernet/key.txt

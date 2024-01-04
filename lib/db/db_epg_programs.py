@@ -18,12 +18,10 @@ substantial portions of the Software.
 
 import json
 import datetime
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
-
 
 DB_PROGRAMS_TABLE = 'programs'
 DB_CONFIG_NAME = 'db_files-epg_programs_db'
@@ -44,7 +42,7 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS programs
         """,
-        ],
+    ],
 
     'programs_add':
         """
@@ -89,7 +87,7 @@ class DBEpgPrograms(DB):
         """
         Removes all records for this namespace/instance that are over xx days old
         """
-        self.delete(DB_PROGRAMS_TABLE +'_by_day', (_namespace, _days))
+        self.delete(DB_PROGRAMS_TABLE + '_by_day', (_namespace, _days))
 
     def del_namespace(self, _namespace):
         """
@@ -102,7 +100,7 @@ class DBEpgPrograms(DB):
 
     def get_program(self, _namespace, _id):
         return self.get_dict(DB_PROGRAMS_TABLE, (_namespace, _id))
-        
+
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):
         self.export_sql(backup_folder)

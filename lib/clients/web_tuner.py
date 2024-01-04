@@ -19,7 +19,10 @@ substantial portions of the Software.
 import os
 import json
 import logging
+import os
 import pathlib
+import signal
+import threading
 import time
 import urllib
 from threading import Thread
@@ -27,6 +30,7 @@ from logging import config
 from http.server import HTTPServer
 from urllib.parse import urlparse
 
+from lib.common import utils
 from lib.common.decorators import gettunerrequest
 from lib.web.pages.templates import web_templates
 from lib.db.db_config_defn import DBConfigDefn
@@ -34,12 +38,13 @@ from lib.streams.m3u8_redirect import M3U8Redirect
 from lib.streams.internal_proxy import InternalProxy
 from lib.streams.ffmpeg_proxy import FFMpegProxy
 from lib.streams.streamlink_proxy import StreamlinkProxy
+from lib.streams.thread_queue import ThreadQueue
 from .web_handler import WebHTTPHandler
 
 
 @gettunerrequest.route('/tunerstatus')
 def tunerstatus(_webserver):
-    _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans))
+    _webserver.do_mime_response(200, 'application/json', json.dumps(WebHTTPHandler.rmg_station_scans, cls=ObjectJsonEncoder))
 
 
 @gettunerrequest.route('RE:/watch/.+')
@@ -50,28 +55,36 @@ def watch(_webserver):
 
 @gettunerrequest.route('/logreset')
 def logreset(_webserver):
-    logging.config.fileConfig(fname=_webserver.config['paths']['config_file'], 
-        disable_existing_loggers=False)
+    logging.config.fileConfig(fname=_webserver.config['paths']['config_file'],
+                              disable_existing_loggers=False)
     _webserver.do_mime_response(200, 'text/html')
 
 
 @gettunerrequest.route('RE:/auto/v.+')
-def logreset(_webserver):
+def autov(_webserver):
     channel = _webserver.content_path.replace('/auto/v', '')
     station_list = TunerHttpHandler.channels_db.get_channels(
         _webserver.query_data['name'], _webserver.query_data['instance'])
-    if channel not in station_list.keys():
-        # check channel number
-        for station in station_list.keys():
-            if station_list[station][0]['number'] == channel:
-                _webserver.do_tuning(station, _webserver.query_data['name'], 
-                    _webserver.query_data['instance'])
-                return
-    else:
-        _webserver.do_tuning(channel, _webserver.query_data['name'], 
-            _webserver.query_data['instance'])
-        return
+
+    # check channel number with adjustments
+    for station in station_list.keys():
+        updated_chnum = utils.wrap_chnum(
+            str(station_list[station][0]['display_number']), station_list[station][0]['namespace'],
+            station_list[station][0]['instance'], _webserver.config)
+        if updated_chnum == channel:
+            _webserver.do_tuning(station, _webserver.query_data['name'],
+                                 _webserver.query_data['instance'])
+            return
+
     _webserver.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
+
+
+class ObjectJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ThreadQueue):
+            return str(obj)
+        else:
+            return json.JSONEncoder.default(self.obj)
 
 
 class TunerHttpHandler(WebHTTPHandler):
@@ -99,12 +112,14 @@ class TunerHttpHandler(WebHTTPHandler):
         try:
             super().__init__(*args)
         except ConnectionResetError as ex:
-            self.logger.warning('ConnectionResetError occurred, will try again {}' \
+            self.logger.warning(
+                'ConnectionResetError occurred, will try again {}'
                 .format(ex))
             time.sleep(1)
             super().__init__(*args)
         except ValueError as ex:
-            self.logger.warning('ValueError occurred, Bad stream recieved.  {}' \
+            self.logger.warning(
+                'ValueError occurred, Bad stream recieved.  {}'
                 .format(ex))
             raise
 
@@ -149,23 +164,34 @@ class TunerHttpHandler(WebHTTPHandler):
         self.plugins.config_obj.refresh_config_data()
         self.config = self.db_configdefn.get_config()
         self.plugins.config_obj.data = self.config
-        #try:
+        # try:
         station_list = TunerHttpHandler.channels_db.get_channels(_namespace, _instance)
         try:
             self.real_namespace, self.real_instance, station_data = self.get_ns_inst_station(station_list[sid])
             if not self.config[self.real_namespace.lower()]['enabled']:
-                self.logger.warning('Plugin is not enabled, ignoring request: {} sid:{}' \
+                self.logger.warning(
+                    'Plugin is not enabled, ignoring request: {} sid:{}'
                     .format(self.real_namespace, sid))
                 self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Disabled'))
                 return
+            if not self.plugins.plugins[self.real_namespace].plugin_obj:
+                self.logger.warning(
+                    'Plugin not initialized, ignoring request: {}:{} sid:{}'
+                    .format(self.real_namespace, self.real_instance, sid))
+                self.do_mime_response(503, 'text/html',
+                                      web_templates['htmlError'].format('503 - Plugin Not Initialized'))
+                return
             section = self.plugins.plugins[self.real_namespace].plugin_obj.instances[self.real_instance].config_section
             if not self.config[section]['enabled']:
-                self.logger.warning('Plugin Instance is not enabled, ignoring request: {}:{} sid:{}' \
+                self.logger.warning(
+                    'Plugin Instance is not enabled, ignoring request: {}:{} sid:{}'
                     .format(self.real_namespace, self.real_instance, sid))
-                self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
+                self.do_mime_response(503, 'text/html',
+                                      web_templates['htmlError'].format('503 - Plugin Instance Disabled'))
                 return
         except (KeyError, TypeError):
-            self.logger.warning('Unknown Channel ID, not found in database {} {} {}' \
+            self.logger.warning(
+                'Unknown Channel ID, not found in database {} {} {}'
                 .format(_namespace, _instance, sid))
             self.do_mime_response(503, 'text/html', web_templates['htmlError'].format('503 - Unknown channel'))
             return
@@ -174,47 +200,60 @@ class TunerHttpHandler(WebHTTPHandler):
             self.do_dict_response(self.m3u8_redirect.gen_m3u8_response(station_data))
             return
         elif self.config[section]['player-stream_type'] == 'internalproxy':
-            resp = self.internal_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
+            resp = self.internal_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
-                self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue)
+                self.internal_proxy.stream(station_data, self.wfile, self.terminate_queue, resp['tuner'])
         elif self.config[section]['player-stream_type'] == 'ffmpegproxy':
-            resp = self.ffmpeg_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
+            resp = self.ffmpeg_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
-                self.ffmpeg_proxy.stream(station_data, self.wfile)
+                self.ffmpeg_proxy.stream(station_data, self.wfile, resp['tuner'])
         elif self.config[section]['player-stream_type'] == 'streamlinkproxy':
-            resp = self.streamlink_proxy.gen_response(self.real_namespace, self.real_instance, station_data['number'], TunerHttpHandler)
+            resp = self.streamlink_proxy.gen_response(
+                self.real_namespace, self.real_instance, 
+                station_data['display_number'], station_data['json'].get('VOD'))
             self.do_dict_response(resp)
             if resp['tuner'] < 0:
                 return
             else:
-                self.streamlink_proxy.stream(station_data, self.wfile)
+                self.streamlink_proxy.stream(station_data, self.wfile, resp['tuner'])
         else:
             self.do_mime_response(501, 'text/html', web_templates['htmlError'].format('501 - Unknown streamtype'))
             self.logger.error('Unknown [player-stream_type] {}'
-                .format(self.config[section]['player-stream_type']))
+                              .format(self.config[section]['player-stream_type']))
             return
-        self.logger.notice('Provider Connection Closed, ch_id={}'.format(sid))
-        WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
+        station_scans = WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']]
+        if station_scans != 'Idle':
+            if station_scans['mux'] is None or not station_scans['mux'].is_alive():
+                self.logger.notice('Provider Connection Closed, ch_id={} {}'.format(sid, threading.get_ident()))
+                WebHTTPHandler.rmg_station_scans[self.real_namespace][resp['tuner']] = 'Idle'
+            else:
+                self.logger.info('1 Client Connection Closed, provider continuing ch_id={} {}'.format(sid, threading.get_ident()))
+        else:
+            self.logger.info('2 Client Connection Closed, provider continuing ch_id={} {}'.format(sid, threading.get_ident()))
         time.sleep(0.01)
 
     def get_ns_inst_station(self, _station_data):
         lowest_namespace = _station_data[0]['namespace']
         lowest_instance = _station_data[0]['instance']
         station = _station_data[0]
-        
+
         # do simple checks first.
         # is there only one channel?
         if len(_station_data) == 1:
             return lowest_namespace, \
                 lowest_instance, \
                 station
-        
+
         # Is there only one channel instance enabled?
         i = 0
         for one_station in _station_data:
@@ -225,7 +264,7 @@ class TunerHttpHandler(WebHTTPHandler):
             return station['namespace'], \
                 station['instance'], \
                 station
-        
+
         # round robin capability when instances are tied to a single provider
         # must make sure the channel is enabled for both instances
         ns = []
@@ -263,17 +302,19 @@ class TunerHttpHandler(WebHTTPHandler):
         return lowest_namespace, lowest_instance, station
 
     @classmethod
-    def init_class_var(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
+    def init_class_var_sub(cls, _plugins, _hdhr_queue, _terminate_queue, _sched_queue):
         WebHTTPHandler.logger = logging.getLogger(__name__)
         tuner_count = 0
         for plugin_name in _plugins.plugins.keys():
-            if _plugins.config_obj.data.get(plugin_name.lower()):
-                if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
-                    WebHTTPHandler.logger.debug('{} Implementing {} tuners for {}'
-                        .format(cls.__name__,
-                        _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count'],
-                        plugin_name))
-                    tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
+            if plugin_name:
+                if _plugins.config_obj.data.get(plugin_name.lower()):
+                    if 'player-tuner_count' in _plugins.config_obj.data[plugin_name.lower()]:
+                        WebHTTPHandler.logger.debug('{} Implementing {} tuners for {}'
+                                                    .format(cls.__name__,
+                                                            _plugins.config_obj.data[plugin_name.lower()][
+                                                                'player-tuner_count'],
+                                                            plugin_name))
+                        tuner_count += _plugins.config_obj.data[plugin_name.lower()]['player-tuner_count']
         WebHTTPHandler.total_instances = tuner_count
         super(TunerHttpHandler, cls).init_class_var(_plugins, _hdhr_queue, _terminate_queue)
 
@@ -285,6 +326,7 @@ class TunerHttpServer(Thread):
         self.bind_ip = _plugins.config_obj.data['web']['bind_ip']
         self.bind_port = _plugins.config_obj.data['web']['plex_accessible_port']
         self.socket = server_socket
+        self.server_close = None
         self.start()
 
     def run(self):
@@ -299,10 +341,20 @@ def FactoryTunerHttpHandler():
     class CustomHttpHandler(TunerHttpHandler):
         def __init__(self, *args, **kwargs):
             super(CustomHttpHandler, self).__init__(*args, **kwargs)
+
     return CustomHttpHandler
 
+def child_exited(sig, frame):
+    logger = logging.getLogger(__name__)
+    try:
+        pid, exitcode = os.wait()
+        logger.warning('Child process {} exited with code {}'.format(pid, exitcode))
+    except ChildProcessError as ex:
+        logger.warning('Child exit error {}'.format(str(ex)))
 
 def start(_plugins, _hdhr_queue, _terminate_queue):
+    # uncomment this to find out about m3u8 subprocess exits
+    #signal.signal(signal.SIGCHLD, child_exited)
     TunerHttpHandler.start_httpserver(
         _plugins, _hdhr_queue, _terminate_queue,
         _plugins.config_obj.data['web']['plex_accessible_port'],

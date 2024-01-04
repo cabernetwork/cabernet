@@ -27,6 +27,7 @@ import ntpath
 import os
 import pathlib
 import platform
+import re
 import shutil
 import socket
 import struct
@@ -36,10 +37,11 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.9.8'
+VERSION = '0.9.14.03'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
-CABERNET_NAMESPACE = 'Cabernet'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0'
+CABERNET_ID = 'cabernet'
+CABERNET_REPO = 'manifest.json'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 
@@ -48,6 +50,20 @@ def get_version_str():
 
 logger = None
 LOG_LVL_NOTICE = 25
+LOG_LVL_TRACE = 5
+SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*(?:[\D]+(\d)+)*')
+
+def get_version_index(_ver):
+    """
+    Based on the version string will calculate a number representing the version,
+    which can be used to compare versions. Ignores any text after the fourth number
+    format a.b.c.d or a.b.c
+    """
+    m = re.findall(SEARCH_VERSION, _ver)
+    d1, d2, d3, d4, d5 = m[0]
+    v_int = ((((int(d1)*100)+int(d2 or 0))*100)+int(d3 or 0))*100+int(d4 or 0)+int(d5 or 0)/100 
+    return v_int
+
 
 def logging_setup(_config):
     global logger
@@ -65,6 +81,12 @@ def logging_setup(_config):
             if self.isEnabledFor(LOG_LVL_NOTICE):
                 self._log(LOG_LVL_NOTICE, message, args, **kws) 
         logging.Logger.notice = notice
+    if str(logging.getLevelName('TRACE')).startswith('Level'):
+        logging.addLevelName(LOG_LVL_TRACE, 'TRACE')
+        def trace(self, message, *args, **kws):
+            if self.isEnabledFor(LOG_LVL_TRACE):
+                self._log(LOG_LVL_TRACE, message, args, **kws) 
+        logging.Logger.trace = trace
     if str(logging.getLevelName('NOTUSED')).startswith('Level'):
         try:
             logging.config.fileConfig(fname=_config['paths']['config_file'])
@@ -227,7 +249,7 @@ def instance_config_section(_namespace, _instance):
 
 def process_image_url(_config, _thumbnail_url):
     global logger
-    if _thumbnail_url.startswith('file://'):
+    if _thumbnail_url is not None and _thumbnail_url.startswith('file://'):
         filename = ntpath.basename(_thumbnail_url)
         mime_lookup = mimetypes.guess_type(filename)
         new_filename = filename.replace(' ','')

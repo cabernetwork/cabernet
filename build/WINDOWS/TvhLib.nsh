@@ -28,7 +28,9 @@ Function DataFolderPage
         Abort
     ${EndIf}
     CreateDirectory "$DataFolder"
-    ${NSD_CreateLabel} 0 0 100% 24u "Please specify the Cabernet data folder. Writeable by the user: System"
+    ${NSD_CreateLabel} 0 0 100% 24u "Please specify the Cabernet data folder. \
+        Writeable by the user: System$\r$\nIt is highly recommended to have \
+        this folder be easy to access."
     ${NSD_CreateGroupBox} 0 40u 100% 34u "Data Folder"
         ${NSD_CreateText} 3% 54u 77% 12u "$DataFolder"
         Pop $txtDataFolder
@@ -183,10 +185,12 @@ Function AddFiles
     File "${SOURCEPATH}\TVHEADEND.md"
     File "${SOURCEPATH}\requirements.txt"
     Rename "$INSTDIR\TVHEADEND.md" "$INSTDIR\README.txt"
-    SetOutPath "$INSTDIR"
-    File /r /x __pycache__ /x development "${SOURCEPATH}\lib"
-    SetOutPath "$INSTDIR"
-    File /r /x __pycache__ "${SOURCEPATH}\plugins"
+
+    SetOutPath "$INSTDIR\lib"
+    File /r /x __pycache__ /x development "${SOURCEPATH}\lib\*.*"
+    SetOutPath "$INSTDIR\plugins"
+    File /r /x __pycache__ "${SOURCEPATH}\plugins\*.*"
+
     SetOutPath "$INSTDIR\build\WINDOWS"
     File "${SOURCEPATH}\build\WINDOWS\UpdateConfig.pyw"
 FunctionEnd

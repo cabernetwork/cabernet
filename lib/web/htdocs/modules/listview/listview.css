@@ -1,3 +1,83 @@
+.menuIconButton{
+    color: var(--theme-text-color); 
+    background-color: var(--card-background);
+    border-radius: 8px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    padding-right: 8px;
+    padding-left: 8px;
+}
+
+.menuSection{
+    min-width: inherit;
+    font-size: 1.7em;
+    background: var(--card-background);
+    border: 3px inset var(--docked-drawer-background);
+    display: inline-flex;
+    vertical-align: top;
+}
+
+.menuSection:hover{
+    opacity: 0.5;
+}
+
+.menuButton{
+    padding: 8px 8px;
+    padding-right: 1em;
+    width: 100%;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    position: relative;
+    background-color: inherit;
+    color: var(--theme-text-color);
+    border: 0;
+}
+.menuButton:hover {
+    background-color: var(--theme-button-hover-color);
+    cursor: pointer;    
+}
+.menuItem:{
+    position: relative;
+}
+
+.menuList{
+    margin: 0;
+    display: block;
+    padding: 0;
+    list-style-type: none;
+}
+.menuList + .menuList{
+        border-top: 1px solid #ddd;
+}
+.menuPanel{
+    display: flex;
+    flex-direction: column;
+}
+.menuCanvas{
+    position: absolute;
+    padding-top: 13px;
+    padding-bottom: 13px;
+    top: 0px;
+    left:0px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background-color: var(--drawer-background);
+    opacity: 1.0;
+    border: var(--line-size) solid var(--line-background) 
+}
+
+.listItemHide{
+    display: none;
+}
+.listItemShow{
+    display: flex;
+}
+
+
+
 .listItem{
   background:0 0;
   border:0;

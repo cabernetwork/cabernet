@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -16,54 +16,67 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-from .templates import hdhr_templates
-from lib.common.decorators import getrequest
-from lib.common.decorators import postrequest
 import lib.common.utils as utils
+import lib.clients.hdhr.hdhr_server as hdhr_server
 
 from lib.web.pages.templates import web_templates
+from lib.common.decorators import getrequest
+from lib.common.decorators import postrequest
+from .templates import hdhr_templates
 
 
 @getrequest.route('/discover.json')
 def discover_json(_webserver):
     ns_inst_path = _webserver.get_ns_inst_path(_webserver.query_data)
-    if _webserver.query_data['name'] is None:
+    name = _webserver.query_data['name']
+    if name is None:
         name = ''
+        hdhr_id =  _webserver.config['hdhomerun']['hdhr_id']
     else:
-        name = _webserver.query_data['name']+' '
+        namespace = name
+        name = namespace + ' '
+        hdhr_id = _webserver.config[namespace.lower()].get('hdhr_id')
+        if not hdhr_id:
+            hdhr_id = _webserver.config['hdhomerun']['hdhr_id']
         
     namespace = None
     for area, area_data in _webserver.config.items():
         if 'player-tuner_count' in area_data.keys():
             namespace = area
-
     _webserver.do_mime_response(200,
-        'application/json',
-        hdhr_templates['jsonDiscover'].format(
-            name+_webserver.config['hdhomerun']['reporting_friendly_name'],
-            _webserver.config['hdhomerun']['reporting_model'],
-            _webserver.config['hdhomerun']['reporting_firmware_name'],
-            _webserver.config['main']['version'],
-            _webserver.config['hdhomerun']['hdhr_id'],
-            _webserver.config[namespace]['player-tuner_count'],
-            _webserver.web_admin_url, ns_inst_path))
+                                'application/json',
+                                hdhr_templates['jsonDiscover'].format(
+                                    name + _webserver.config['hdhomerun']['reporting_friendly_name'],
+                                    _webserver.config['hdhomerun']['reporting_model'],
+                                    _webserver.config['hdhomerun']['reporting_firmware_name'],
+                                    _webserver.config['main']['version'],
+                                    hdhr_id,
+                                    _webserver.config[namespace]['player-tuner_count'],
+                                    _webserver.web_admin_url, ns_inst_path))
 
 
 @getrequest.route('/device.xml')
 def device_xml(_webserver):
-    if _webserver.query_data['name'] is None:
+    name = _webserver.query_data['name']
+    if name is None:
         name = ''
+        hdhr_id =  _webserver.config['hdhomerun']['hdhr_id']
     else:
-        name = _webserver.query_data['name']+' '
+        namespace = name
+        name = namespace + ' '
+        hdhr_id = _webserver.config[namespace.lower()].get('hdhr_id')
+        if not hdhr_id:
+            hdhr_id = _webserver.config['hdhomerun']['hdhr_id']
+
     _webserver.do_mime_response(200,
-        'application/xml',
-        hdhr_templates['xmlDevice'].format(
-            name+_webserver.config['hdhomerun']['reporting_friendly_name'],
-            _webserver.config['hdhomerun']['reporting_model'],
-            _webserver.config['hdhomerun']['hdhr_id'],
-            _webserver.config['main']['uuid'],
-            utils.CABERNET_URL
-        ))
+                                'application/xml',
+                                hdhr_templates['xmlDevice'].format(
+                                    name + _webserver.config['hdhomerun']['reporting_friendly_name'],
+                                    _webserver.config['hdhomerun']['reporting_model'],
+                                    hdhr_id,
+                                    _webserver.config['main']['uuid'],
+                                    utils.CABERNET_URL
+                                ))
 
 
 @getrequest.route('/lineup_status.json')
@@ -76,7 +89,7 @@ def lineup_status_json(_webserver):
         _webserver.scan_state += 20
         if _webserver.scan_state > 100:
             _webserver.scan_state = 100
-        num_of_channels = len(_webserver.channels_db.get_channels(_webserver.query_data['name'], None))
+        num_of_channels = len(_webserver.channels_db.get_channels(_webserver.query_data['name'], None, True))
         return_json = hdhr_templates['jsonLineupStatusScanning'].format(
             _webserver.scan_state,
             int(num_of_channels * _webserver.scan_state / 100))
@@ -99,6 +112,7 @@ def lineup_post(_webserver):
         _webserver.update_scan_status(_webserver.query_data['name'], 'Idle')
     else:
         _webserver.logger.warning("Unknown scan command " + _webserver.query_data['scan'])
-        _webserver.do_mime_response(400, 'text/html',
+        _webserver.do_mime_response(
+            400, 'text/html',
             web_templates['htmlError'].format(
                 _webserver.query_data['scan'] + ' is not a valid scan command'))

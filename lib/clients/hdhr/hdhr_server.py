@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -30,7 +30,6 @@ from multiprocessing import Process
 from threading import Thread
 
 import lib.common.utils as utils
-
 
 HDHR_PORT = 65001
 HDHR_ADDR = '224.0.0.255'  # multicast to local addresses only
@@ -77,13 +76,13 @@ def hdhr_process(config, _tuner_queue):
         return
 
     try:
-        net = IPv4Network(config['hdhomerun']['udp_netmask'])
+        IPv4Network(config['hdhomerun']['udp_netmask'])
     except (ipaddress.AddressValueError, ValueError) as err:
         logger.error(
             'Illegal value in [hdhomerun][udp_netmask].  '
             'Format must be #.#.#.#/#. Exiting hdhr service. ERROR: {}'.format(err))
         return
-        
+
     hdhr = HDHRServer(config, _tuner_queue)
     # startup the multicast thread first which will exit when this function exits
     p_multi = Process(target=hdhr.run_multicast, args=(config["web"]["bind_ip"],))
@@ -97,6 +96,7 @@ def hdhr_process(config, _tuner_queue):
 
 
 def hdhr_validate_device_id(_device_id):
+    global logger
     hex_digits = set(string.hexdigits)
     if len(_device_id) != 8:
         logger.error('ERROR: HDHR Device ID must be 8 hexidecimal values')
@@ -121,6 +121,7 @@ def hdhr_validate_device_id(_device_id):
 
 # given a device id, will adjust the last 4 bits to make it valid and return the integer value
 def hdhr_get_valid_device_id(_device_id):
+    global logger
     hex_digits = set(string.hexdigits)
     if len(_device_id) != 8:
         logger.error('ERROR: HDHR Device ID must be 8 hexadecimal values')
@@ -179,7 +180,7 @@ class HDHRServer:
         self.sock_listener.listen(3)
 
         self._t = Thread(target=self.process_queue,
-            args=(self.tuner_queue,))
+                         args=(self.tuner_queue,))
         self._t.daemon = True
         self._t.start()
 
@@ -410,7 +411,7 @@ class HDHRServer:
                        self.config['web']['plex_accessible_ip'] + \
                        ':' + str(self.config['web']['web_admin_port'])
             base_url_msg = b'\x2a' + utils.set_str(base_url.encode(), False)
-            
+
             namespace = None
             for area, area_data in self.config.items():
                 if 'player-tuner_count' in area_data.keys():

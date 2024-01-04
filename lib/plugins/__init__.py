@@ -1,1 +1,1 @@
-# location to install plugins
+import lib.plugins.plugin_manager

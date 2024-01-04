@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -17,26 +17,28 @@ substantial portions of the Software.
 """
 
 import importlib
+import importlib.resources
 import json
 import logging
-import pathlib
 import re
 import time
-import urllib.request
 from threading import Thread
 
 import lib.common.utils as utils
-import lib.updater.cabernet as cabernet
 from lib.db.db_scheduler import DBScheduler
 from lib.db.db_plugins import DBPlugins
 from lib.common.decorators import getrequest
 from lib.web.pages.templates import web_templates
 from lib.updater.cabernet import CabernetUpgrade
+from lib.updater.plugins import PluginsUpgrade
 from lib.common.string_obj import StringObj
 from lib.common.tmp_mgmt import TMPMgmt
+from lib.updater import cabernet
+from lib.plugins.repo_handler import RepoHandler
 
 STATUS = StringObj()
 IS_UPGRADING = False
+
 
 @getrequest.route('/api/upgrade')
 def upgrade(_webserver):
@@ -45,9 +47,9 @@ def upgrade(_webserver):
     v = Updater(_webserver.plugins)
     try:
         if 'id' in _webserver.query_data:
-            if _webserver.query_data['id'] != utils.CABERNET_NAMESPACE:
-                _webserver.do_mime_response(501, 'text/html', 
-                    web_templates['htmlError'].format('501 - Invalid ID'))
+            if _webserver.query_data['id'] != utils.CABERNET_ID:
+                _webserver.do_mime_response(501, 'text/html',
+                                            web_templates['htmlError'].format('501 - Invalid ID'))
                 return
             if not IS_UPGRADING:
                 IS_UPGRADING = True
@@ -59,10 +61,10 @@ def upgrade(_webserver):
             return
         else:
             _webserver.do_mime_response(501, 'text/html',
-                web_templates['htmlError'].format('404 - Unknown action'))
+                                        web_templates['htmlError'].format('404 - Unknown action'))
     except KeyError:
-        _webserver.do_mime_response(501, 'text/html', 
-            web_templates['htmlError'].format('501 - Badly formed request'))
+        _webserver.do_mime_response(501, 'text/html',
+                                    web_templates['htmlError'].format('501 - Badly formed request'))
 
 
 def check_for_updates(plugins):
@@ -91,23 +93,27 @@ class Updater:
                 'internal',
                 None,
                 'lib.updater.updater.check_for_updates',
-                20,
-                'thread',
+                99,
+                'inline',
                 'Checks cabernet and all plugins for updated versions'
-                ):
+        ):
             scheduler_db.save_trigger(
                 'Applications',
                 'Check for Updates',
                 'interval',
                 interval=2850,
                 randdur=60
-                )
+            )
             scheduler_db.save_trigger(
                 'Applications',
                 'Check for Updates',
                 'startup')
 
     def update_version_info(self):
+        self.logger.info('Updating Repo Cabernet-Repository versions')
+        self.repos = RepoHandler(self.config_obj)
+        self.repos.load_cabernet_repo()
+        self.logger.info('Updating Cabernet versions')
         c = CabernetUpgrade(self.plugins)
         c.update_version_info()
 
@@ -115,7 +121,7 @@ class Updater:
         """
         Loads the manifest for cabernet from a file
         """
-        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], MANIFEST_FILE)
+        json_settings = importlib.resources.read_text(self.config['paths']['resources_pkg'], utils.CABERNET_REPO)
         settings = json.loads(json_settings)
         return settings
 
@@ -123,14 +129,14 @@ class Updater:
         """
         Loads the cabernet manifest from DB
         """
-        return self.plugin_db.get_plugins(_manifest)[0]
+        return self.plugin_db.get_plugins(_installed=True, _namespace=_manifest)[0]
 
     def save_manifest(self, _manifest):
         """
         Saves to DB the manifest for cabernet
         """
         self.plugin_db.save_plugin(_manifest)
- 
+
     def upgrade_app(self, _id):
         """
         Initial request to perform an upgrade
@@ -140,6 +146,7 @@ class Updater:
 
         STATUS.data = 'Starting upgrade...<br>\r\n'
 
+        # upgrade the main cabernet app
         app = CabernetUpgrade(self.plugins)
         if not app.upgrade_app(STATUS):
             STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'
@@ -147,15 +154,21 @@ class Updater:
             IS_UPGRADING = False
             return
 
-        # what do we do with plugins?  They go here if necessary
-        STATUS.data += '(TBD) Upgrading plugins...<br>\r\n'
+        # upgrade the installed external plugins
+        p = PluginsUpgrade(self.plugins)
+        if not p.upgrade_plugins(STATUS):
+            STATUS.data += '<script type="text/javascript">upgrading = "failed"</script>'
+            time.sleep(1)
+            IS_UPGRADING = False
+            return
 
         STATUS.data += 'Entering Maintenance Mode...<br>\r\n'
+        # make sure the config_handler really has the config data uploaded
+        self.config_obj.config_handler.read(self.config_obj.data['paths']['config_file'])
         self.config_obj.write('main', 'maintenance_mode', True)
 
         STATUS.data += 'Restarting app in 3...<br>\r\n'
         self.tmp_mgmt.cleanup_tmp()
-        IS_UPGRADING = False
         time.sleep(0.8)
         STATUS.data += '2...<br>\r\n'
         time.sleep(0.8)
@@ -163,9 +176,10 @@ class Updater:
         STATUS.data += '<script type="text/javascript">upgrading = "success"</script>'
         time.sleep(1)
         self.restart_app()
-        
+        IS_UPGRADING = False
+
     def restart_app(self):
         # get schedDB and find restart taskid.
         scheduler_db = DBScheduler(self.config)
         task = scheduler_db.get_tasks('Applications', 'Restart')[0]
-        self.sched_queue.put({'cmd': 'runtask', 'taskid': task['taskid'] })
+        self.sched_queue.put({'cmd': 'runtask', 'taskid': task['taskid']})

@@ -16,22 +16,17 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import ast
-import json
 import datetime
 import sqlite3
-import threading
 import uuid
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
 
-
 DB_TASK_TABLE = 'task'
 DB_TRIGGER_TABLE = 'trigger'
 DB_CONFIG_NAME = 'db_files-scheduler_db'
-
 
 sqlcmds = {
     'ct': [
@@ -79,8 +74,8 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS task
         """
-        ],
-    
+    ],
+
     'task_add':
         """
         INSERT INTO task (
@@ -154,7 +149,7 @@ sqlcmds = {
         FROM task
         WHERE active='1'
         """,
-        
+
     'task_del':
         """
         DELETE FROM task WHERE
@@ -208,18 +203,18 @@ sqlcmds = {
 class DBScheduler(DB):
 
     def __init__(self, _config):
-        super().__init__(_config, _config['datamgmt'][DB_CONFIG_NAME], sqlcmds)        
+        super().__init__(_config, _config['datamgmt'][DB_CONFIG_NAME], sqlcmds)
 
-    def save_task(self, _area, _title, _namespace, _instance, _funccall, 
-            _priority, _threadtype, _description):
+    def save_task(self, _area, _title, _namespace, _instance, _funccall,
+                  _priority, _threadtype, _description):
         """
         Returns true if the record was saved.  If the record already exists,
         it will return false.
         """
         try:
-            id = str(uuid.uuid1()).upper()
+            id_ = str(uuid.uuid1()).upper()
             self.add(DB_TASK_TABLE, (
-                id,
+                id_,
                 _area,
                 _title,
                 _namespace,
@@ -280,7 +275,7 @@ class DBScheduler(DB):
         if len(task) == 1:
             return task[0]
         else:
-            return None    
+            return None
 
     def get_task_names(self):
         return self.get_dict(DB_TASK_TABLE + '_name')
@@ -315,13 +310,17 @@ class DBScheduler(DB):
         ))
 
     def get_active_status(self, _taskid):
-        return self.get_dict(DB_TASK_TABLE + '_active', (_taskid,))[0]['active']
+        res = self.get_dict(DB_TASK_TABLE + '_active', (_taskid,))
+        if res:
+            return res[0]['active']
+        else:
+            return None
 
     def get_num_active(self):
         return self.get(DB_TASK_TABLE + '_num_active')[0][0]
 
-    def save_trigger(self, _area, _title, _timetype, timeofday=None, 
-            dayofweek=None, interval=-1, timelimit=-1, randdur=-1):
+    def save_trigger(self, _area, _title, _timetype, timeofday=None,
+                     dayofweek=None, interval=-1, timelimit=-1, randdur=-1):
         """
         timetype: daily, weekly, interval, startup
         timelimit: maximum time it can run before terminating. -1 is not used
@@ -331,9 +330,9 @@ class DBScheduler(DB):
         randdur: maximum in minutes. Interval only. Will add a randum amount 
         to the event start time up to the maximum minutes.  -1 is not used.
         """
-        id = str(uuid.uuid1()).upper()
+        id_ = str(uuid.uuid1()).upper()
         self.add(DB_TRIGGER_TABLE, (
-            id,
+            id_,
             _area,
             _title,
             _timetype,
@@ -343,7 +342,7 @@ class DBScheduler(DB):
             interval,
             randdur,
         ))
-        return id
+        return id_
 
     def get_triggers_by_type(self, _timetype):
         """
@@ -359,7 +358,7 @@ class DBScheduler(DB):
         if len(trigger) == 1:
             return trigger[0]
         else:
-            return None    
+            return None
 
     def get_triggers(self, _taskid=None):
         """

@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -34,8 +34,15 @@ try:
         pip(['install', 'cryptography'])
     except ModuleNotFoundError:
         print('Unable to install required cryptography module')
+    try:
+        import httpx
+    except ImportError:
+        pip(['install', 'httpx[http2]'])
+    except ModuleNotFoundError:
+        print('Unable to install required httpx[http2] module')
 except (ImportError, ModuleNotFoundError):
-    print('Unable to load pip module to install cryptography module')
+    print('Unable to load pip module to install required modules')
+
 
 
 import lib.clients.hdhr.hdhr_server as hdhr_server
@@ -48,6 +55,7 @@ import lib.db.datamgmt.backups as backups
 import lib.updater.updater as updater
 import lib.config.user_config as user_config
 from lib.db.db_scheduler import DBScheduler
+from lib.db.db_temp import DBTemp
 from lib.common.utils import clean_exit
 from lib.common.pickling import Pickling
 from lib.schedule.scheduler import Scheduler
@@ -106,28 +114,42 @@ def main(script_dir):
     # Get Operating system
     opersystem = platform.system()
     config_obj = None
+    scheduler = None
+    terminate_queue = None
     try:
         RESTART_REQUESTED = False
 
         config_obj = user_config.get_config(script_dir, opersystem, args)
         config = config_obj.data
         LOGGER = logging.getLogger(__name__)
+        # reduce logging for httpx modules
+        logging.getLogger("hpack").setLevel(logging.WARNING)
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("httpcore").setLevel(logging.WARNING)
 
         LOGGER.warning('#########################################')
         LOGGER.warning('MIT License, Copyright (C) 2021 ROCKY4546')
         LOGGER.notice('Cabernet v{}'.format(utils.get_version_str()))
+    except KeyboardInterrupt:
+        if LOGGER:
+            LOGGER.warning('^C received, shutting down the server')
+        return
 
+    try:
         # use this until 0.9.3 due to maintenance mode not being enabled in 0.9.1
-        if args.restart and config['main']['maintenance_mode']:
+        if config['main']['maintenance_mode']:
             LOGGER.info('In maintenance mode, applying patches')
             patcher.patch_upgrade(config_obj, utils.VERSION)
-            config_obj.write('main', 'maintenance_mode', False)
             time.sleep(0.01)
+        config_obj.write('main', 'maintenance_mode', False)
 
         utils.cleanup_web_temp(config)
+        dbtemp = DBTemp(config)
+        dbtemp.cleanup_temp(None, None)
         plugins = init_plugins(config_obj)
         config_obj.defn_json = None
         init_versions(plugins)
+
         if opersystem in ['Windows']:
             pickle_it = Pickling(config)
             pickle_it.to_pickle(plugins)
@@ -158,7 +180,8 @@ def main(script_dir):
         terminate_processes(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj)
 
     except KeyboardInterrupt:
-        LOGGER.warning('^C received, shutting down the server')
+        if LOGGER:
+            LOGGER.warning('^C received, shutting down the server')
         shutdown(config, hdhr_serverx, ssdp_serverx, webadmin, tuner, scheduler, config_obj, terminate_queue)
 
 
@@ -234,9 +257,11 @@ def init_hdhr(_config, _hdhr_queue):
 
 
 def shutdown(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj, _terminate_queue):
-    _terminate_queue.put('shutdown')
-    time.sleep(2)
-    terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
+    if _terminate_queue:
+        _terminate_queue.put('shutdown')
+        time.sleep(0.01)
+        terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner, _scheduler, _config_obj)
+    LOGGER.debug('main process terminated')
     clean_exit()
 
 
@@ -263,3 +288,4 @@ def terminate_processes(_config, _hdhr_serverx, _ssdp_serverx, _webadmin, _tuner
     if _config_obj and _config_obj.defn_json:
         _config_obj.defn_json.terminate()
         del _config_obj
+    time.sleep(0.5)

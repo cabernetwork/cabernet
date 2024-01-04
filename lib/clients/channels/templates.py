@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -20,11 +20,10 @@ ch_templates = {
 
     'jsonLineup':
         """{{
-            "ChannelId": "{}",
             "CallSign": "{}",
             "GuideNumber": "{}",
             "GuideName": "{}",
-            "URL": "http://{}",
+            "URL": "{}",
             "HD": {}
         }}""",
 
@@ -32,7 +31,7 @@ ch_templates = {
         """<Program>
             <GuideNumber>{}</GuideNumber>
             <GuideName>{}</GuideName>
-            <URL>http://{}</URL>
+            <URL>{}</URL>
             <HD>{}</HD>
         </Program>"""
 

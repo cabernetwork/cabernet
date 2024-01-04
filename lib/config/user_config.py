@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -22,9 +22,8 @@ import json
 import logging
 import pathlib
 import os
+import re
 import shutil
-import time
-import urllib
 
 import lib.common.utils as utils
 import lib.config.config_defn as config_defn
@@ -35,9 +34,9 @@ from lib.web.pages.templates import web_templates
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
 
-
 CONFIG_BKUP_NAME = 'backups-config_ini'
 CONFIG_FILENAME = 'config.ini'
+
 
 def get_config(script_dir, opersystem, args):
     return TVHUserConfig(script_dir, opersystem, args)
@@ -47,22 +46,24 @@ def get_config(script_dir, opersystem, args):
 def config_json(_webserver):
     if _webserver.config['web']['disable_web_config']:
         _webserver.do_mime_response(501, 'text/html', web_templates['htmlError']
-            .format('501 - Config pages disabled.'
-                    ' Set [web][disable_web_config] to False in the config file to enable'))
+                                    .format('501 - Config pages disabled.'
+                                            ' Set [web][disable_web_config] to False in the config file to enable'))
     else:
-        _webserver.do_mime_response(200, 'application/json', json.dumps(_webserver.plugins.config_obj.filter_config_data()))
+        _webserver.do_mime_response(200, 'application/json',
+                                    json.dumps(_webserver.plugins.config_obj.filter_config_data()))
 
 
 class TVHUserConfig:
 
-    config_handler = configparser.ConfigParser(interpolation=None)
-
     def __init__(self, _script_dir=None, _opersystem=None, _args=None, _config=None):
         self.logger = None
         self.defn_json = None
+        self.db = None
         self.script_dir = str(_script_dir)
         self.defn_json = config_defn.load_default_config_defns()
         self.data = self.defn_json.get_default_config()
+        self.config_handler = configparser.ConfigParser(interpolation=None)
+
         if _script_dir is not None:
             config_file = TVHUserConfig.get_config_path(_script_dir, _args)
             self.import_config(config_file)
@@ -78,7 +79,7 @@ class TVHUserConfig:
             self.defn_json.garbage_collect()
         self.db = DBConfigDefn(self.data)
         self.db.add_config(self.data)
-        
+
     def refresh_config_data(self):
         self.data = self.db.get_config()
 
@@ -89,8 +90,8 @@ class TVHUserConfig:
 
     def init_logger_config(self):
         log_sections = ['loggers', 'logger_root', 'handlers', 'formatters',
-            'handler_filehandler', 'handler_loghandler', 
-            'formatter_extend', 'formatter_simple']
+                        'handler_filehandler', 'handler_loghandler',
+                        'formatter_extend', 'formatter_simple']
         for section in log_sections:
             try:
                 self.config_handler.add_section(section)
@@ -112,8 +113,20 @@ class TVHUserConfig:
         self.logger = logging.getLogger(__name__)
         self.logger.info("Loading Configuration File: " + str(config_file))
 
+        search_section_name = re.compile('^[a-zA-Z0-9]+_?[a-zA-Z0-9]+$')
+
         for each_section in self.config_handler.sections():
             lower_section = each_section.lower()
+            if each_section != lower_section:
+                self.logger.error('ERROR: ALL SECTIONS IN THE config.ini MUST BE LOWER CASE. Found: {}'
+                    .format(each_section))
+                continue
+            m = re.match(search_section_name, each_section)
+            if m is None:
+                self.logger.error('ERROR: INVALID SECTION NAME IN THE config.ini. Found: {}'
+                    .format(each_section))
+                continue
+
             if lower_section not in self.data.keys():
                 self.data.update({lower_section: {}})
             for (each_key, each_val) in self.config_handler.items(each_section):
@@ -124,14 +137,27 @@ class TVHUserConfig:
     @staticmethod
     def get_config_path(_script_dir, args=None):
         config_file = None
+        poss_config = None
         if args is not None and args.cfg:
             config_file = pathlib.Path(str(args.cfg))
         else:
-            for x in [CONFIG_FILENAME, 'data/'+CONFIG_FILENAME]:
+            for x in [CONFIG_FILENAME, 'data/' + CONFIG_FILENAME]:
                 poss_config = pathlib.Path(_script_dir).joinpath(x)
                 if os.path.exists(poss_config):
                     config_file = poss_config
                     break
+            if not config_file:
+                # create one in the data folder
+                try:
+                    data_folder = pathlib.Path(_script_dir).joinpath('data')
+                    if not data_folder.exists():
+                        os.mkdir(data_folder)
+                    f = open('data/' + CONFIG_FILENAME, 'wb')
+                    config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
+                    f.close()
+                except PermissionError as e:
+                    print('ERROR: {} unable to create {}'.format(str(e), poss_config))
+                    
         if config_file and os.path.exists(config_file):
             return config_file
         else:
@@ -148,7 +174,7 @@ class TVHUserConfig:
                     _value = int(_value)
                 if not self.defn_json.validate_list_item(_section, _key, _value):
                     logging.info('INVALID VALUE ({}) FOR CONFIG ITEM [{}][{}]'
-                        .format(_value, _section, _key))
+                                 .format(_value, _section, _key))
                 return _value
             elif val_type == 'integer':
                 return int(_value)
@@ -184,7 +210,7 @@ class TVHUserConfig:
             pass
         else:
             self.logger.debug('unknown value type for [{}][{}]  type is {}'
-                .format(_section, _key, type(self.data[_section][_key])))
+                              .format(_section, _key, type(self.data[_section][_key])))
 
         if self.data[_section][_key] != _updated_data[_section][_key][0]:
             if len(_updated_data[_section][_key]) > 1:
@@ -203,6 +229,8 @@ class TVHUserConfig:
     def update_config(self, _area, _updated_data):
         # make sure the config_handler has all the data from the file
         self.config_handler.read(self.data['paths']['config_file'])
+
+        results = '<hr><h3>Status Results</h3><ul>'
 
         area_data = self.defn_json.get_defn(_area)
         for section, section_data in area_data['sections'].items():
@@ -224,17 +252,17 @@ class TVHUserConfig:
                             self.detect_change(section, setting, _updated_data)
 
         # save the changes to config.ini and self.data
-        results = '<hr><h3>Status Results</h3><ul>'
-
         config_defaults = self.defn_json.get_default_config_area(_area)
         for key in _updated_data.keys():
             results += self.save_config_section(key, _updated_data, config_defaults)
+
+        results += self.defn_json.call_onchange(_area, _updated_data, self)
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
 
         # need to inform things that changes occurred...
         restart = False
-        results += self.defn_json.call_onchange(_area, _updated_data, self)
+
         self.db.add_config(self.data)
         if restart:
             results += '</ul><b>Service may need to be restarted if not all changes were implemented</b><hr><br>'
@@ -245,7 +273,7 @@ class TVHUserConfig:
     def save_config_section(self, _section, _updated_data, _config_defaults):
         results = ''
         for (key, value) in _updated_data[_section].items():
-            if value[1]:
+            if len(value) > 1 and value[1]:
                 if value[0] is None:
                     # use default and remove item from config.ini
                     try:
@@ -256,19 +284,18 @@ class TVHUserConfig:
                         = _config_defaults[_section][key]
                     self.logger.debug(
                         'Config Update: Removed [{}][{}]'.format(_section, key))
-                    results += \
-                        '<li>Removed [{}][{}] from {}, using default value</li>' \
+                    results += '<li>Removed [{}][{}] from {}, using default value</li>'\
                         .format(_section, key, CONFIG_FILENAME)
                 else:
                     # set new value
                     if len(_updated_data[_section][key]) == 3:
                         self.logger.debug(
                             'Config Update: Changed [{}][{}] updated'
-                                .format(_section, key))
+                            .format(_section, key))
                     else:
                         self.logger.debug(
                             'Config Update: Changed [{}][{}] to {}'
-                                .format(_section, key, _updated_data[_section][key][0]))
+                            .format(_section, key, _updated_data[_section][key][0]))
 
                     try:
                         self.config_handler.set(
@@ -277,13 +304,14 @@ class TVHUserConfig:
                         self.config_handler.add_section(_section)
                         self.config_handler.set(
                             _section, key, str(_updated_data[_section][key][0]))
-                    self.data[_section][key] = _updated_data[_section][key][0]
-                    if len(_updated_data[_section][key]) == 3:
-                        results += '<li>Updated [{}][{}] updated</li>' \
-                            .format(_section, key)
-                    else:
-                        results += '<li>Updated [{}][{}] to {}</li>' \
-                            .format(_section, key, _updated_data[_section][key][0])
+                    if self.data.get(_section) is not None:
+                        self.data[_section][key] = _updated_data[_section][key][0]
+                        if len(_updated_data[_section][key]) == 3:
+                            results += '<li>Updated [{}][{}] updated</li>' \
+                                .format(_section, key)
+                        else:
+                            results += '<li>Updated [{}][{}] to {}</li>' \
+                                .format(_section, key, _updated_data[_section][key][0])
         return results
 
     def write(self, _section, _key, _value):
@@ -301,6 +329,9 @@ class TVHUserConfig:
             self.config_handler.set(_section, _key, str(_value))
         with open(self.data['paths']['config_file'], 'w') as config_file:
             self.config_handler.write(config_file)
+        if self.db:
+            self.db.add_config(self.data)
+
 
 class BackupConfig:
 
@@ -315,8 +346,8 @@ class BackupConfig:
             if not os.path.isdir(backup_folder):
                 os.mkdir(backup_folder)
             backup_file = pathlib.Path(backup_folder, CONFIG_FILENAME)
-            shutil.copyfile(self.config['paths']['config_file'], 
-                backup_file)
+            shutil.copyfile(self.config['paths']['config_file'],
+                            backup_file)
         except PermissionError as e:
             self.logger.warning(e)
             self.logger.warning('Unable to make backups')
@@ -333,6 +364,6 @@ class BackupConfig:
             msg = 'Backup file does not exist, skipping: {}'.format(backup_file)
             self.logger.info(msg)
             return msg
-        shutil.copyfile(backup_file, 
-            self.config['paths']['config_file'])
-        return CONFIG_FILENAME+' restored, please restart the app'
+        shutil.copyfile(backup_file,
+                        self.config['paths']['config_file'])
+        return CONFIG_FILENAME + ' restored, please restart the app'

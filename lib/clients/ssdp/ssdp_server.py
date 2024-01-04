@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -37,10 +37,10 @@ SERVER_ID = 'HDHomeRun/1.0 UPnP/1.0'
 def ssdp_process(config):
     ssdp = SSDPServer(config)
     ssdp.register('local',
-        'uuid:' + config["main"]["uuid"] + '::upnp:rootdevice',
-        'upnp:rootdevice',
-        'http://' + config["web"]["plex_accessible_ip"] + ':' +
-        str(config["web"]["web_admin_port"]) + '/device.xml')
+                  'uuid:' + config["main"]["uuid"] + '::upnp:rootdevice',
+                  'upnp:rootdevice',
+                  'http://' + config["web"]["plex_accessible_ip"] + ':' +
+                  str(config["web"]["web_admin_port"]) + '/device.xml')
 
     ssdp.run(config["web"]["bind_ip"])
 
@@ -58,16 +58,18 @@ class SSDPServer:
         self.logger = logging.getLogger(__name__)
 
     def run(self, _bind_ip=''):
-    
+
         if self.config['ssdp']['udp_netmask'] is None:
             self.logger.error('Config setting [ssdp][udp_netmask] required. Exiting ssdp service')
             return
         try:
-            net = IPv4Network(self.config['ssdp']['udp_netmask'])
+            IPv4Network(self.config['ssdp']['udp_netmask'])
         except (ipaddress.AddressValueError, ValueError) as err:
-            self.logger.error('Illegal value in [ssdp][udp_netmask].  Format must be #.#.#.#/#. Exiting hdhr service. ERROR: {}'.format(err))
+            self.logger.error(
+                'Illegal value in [ssdp][udp_netmask].  Format must be #.#.#.#/#. Exiting hdhr service. ERROR: {}'
+                .format(err))
             return
-    
+
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         if hasattr(socket, "SO_REUSEPORT"):
@@ -146,7 +148,7 @@ class SSDPServer:
             self.logger.debug('Unknown SSDP command %s %s' % (cmd[0], cmd[1]))
 
     def register(self, manifestation, usn, st, location, server=SERVER_ID,
-            cache_control='max-age=1800', silent=False, host=None):
+                 cache_control='max-age=1800', silent=False, host=None):
         """Register a service or device that this SSDP server will
         respond to."""
 

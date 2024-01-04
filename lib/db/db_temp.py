@@ -18,12 +18,10 @@ substantial portions of the Software.
 
 import json
 import datetime
-import threading
 
 from lib.db.db import DB
 from lib.common.decorators import Backup
 from lib.common.decorators import Restore
-
 
 DB_TEMP_TABLE = 'temp'
 DB_CONFIG_NAME = 'db_files-temp_db'
@@ -45,7 +43,7 @@ sqlcmds = {
         """
         DROP TABLE IF EXISTS temp
         """,
-        ],
+    ],
 
     'temp_add':
         """
@@ -88,13 +86,14 @@ class DBTemp(DB):
 
     def cleanup_temp(self, _namespace, _instance, _hours='-6 hours'):
         """
-        Removes all records for this namespace/instance that are over 1 hour old
+        Removes all records for this namespace/instance that are over 6 hour old
         """
         if not _namespace:
             _namespace = '%'
         if not _instance:
             _instance = '%'
-        deleted = self.delete(DB_TEMP_TABLE +'_by_day', (_namespace, _instance, _hours,))
+        deleted = self.delete(DB_TEMP_TABLE + '_by_day', (_namespace, _instance, _hours,))
+        self.sql_exec('VACUUM')
 
     def del_instance(self, _namespace, _instance):
         """
@@ -107,7 +106,6 @@ class DBTemp(DB):
     def get_record(self, _namespace, _instance, _value):
         return self.get_dict(DB_TEMP_TABLE, (_namespace, _instance, _value))
 
-        
     @Backup(DB_CONFIG_NAME)
     def backup(self, backup_folder):
         self.export_sql(backup_folder)

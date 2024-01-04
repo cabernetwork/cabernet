@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -15,8 +15,6 @@ is furnished to do so, subject to the following conditions:
 The above copyright notice and this permission notice shall be included in all copies or
 substantial portions of the Software.
 """
-
-import json
 
 from lib.common.decorators import getrequest
 
@@ -34,6 +32,7 @@ class ChannelsHTML:
         self.db = _channels_db
         self.config = None
         self.active_tab_name = None
+        self.tab_names = None
 
     def get(self):
         self.tab_names = self.get_channels_tabs()
@@ -53,7 +52,7 @@ class ChannelsHTML:
             '<link rel="stylesheet" type="text/css" href="/modules/table/table.css">',
             '<script src="/modules/tabs/tabs.js"></script>',
             '<script src="/modules/channels/channels.js"></script></head>'
-            ])
+        ])
 
     @property
     def title(self):
@@ -64,25 +63,25 @@ class ChannelsHTML:
 
     @property
     def tabs(self):
-        active_tab = ' activeTab'
-        tabs_html = ''.join(['<ul class="tabs">',
-                '<li><a id="none" class="',
-                ' configTab activeTab', 
-                '" href="#" ',
-                '>',
-                '</a></li>'
-            ])
+        tabs_html = ''.join([
+            '<ul class="tabs">',
+            '<li><a id="none" class="',
+            ' configTab activeTab',
+            '" href="#" ',
+            '>',
+            '</a></li>'
+        ])
         for name in self.tab_names.keys():
-            tabs_html = ''.join([tabs_html,
+            tabs_html = ''.join([
+                tabs_html,
                 '<li><a id="tab', name, '" class="form',
                 name, ' configTab',
-                '" href="#" onclick=\'load_form_url("/api/channels_form?name=',
+                '" href="#" onclick=\'load_form_url("/api/channelsform?name=',
                 name, '")\'>',
                 '<i class="md-icon tabIcon">view_list',
                 '</i>',
                 name, '</a></li>'
             ])
-            active_tab = ''
             self.active_tab_name = name
         tabs_html = ''.join([tabs_html, '</ul>'])
         return tabs_html
@@ -93,7 +92,7 @@ class ChannelsHTML:
             self.title,
             self.tabs,
             '<div id="tablecontent">Select Tab to Edit</div>'
-            ])
+        ])
 
     def get_channels_tabs(self):
         ch_list = self.db.get_channel_names()
@@ -101,4 +100,3 @@ class ChannelsHTML:
         for ch_names in ch_list:
             return_list[ch_names['namespace']] = None
         return return_list
-

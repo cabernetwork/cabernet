@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -20,13 +20,11 @@ import datetime
 import json
 import logging
 import threading
-import urllib.request
 
 import lib.common.utils as utils
 from lib.db.db_epg import DBepg
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
-
 
 
 class PluginEPG:
@@ -39,24 +37,37 @@ class PluginEPG:
         self.plugin_obj = _instance_obj.plugin_obj
         self.db = DBepg(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
-        self.episode_adj = self.config_obj.data \
-            [self.instance_obj.config_section].get('epg-episode_adjustment')
+        self.episode_adj = self.config_obj.data[self.instance_obj.config_section]\
+            .get('epg-episode_adjustment')
         if self.episode_adj is None:
             self.episode_adj = 0
         else:
             self.episode_adj = int(self.episode_adj)
-            
+
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.logger = None
+        self.instance_obj = None
+        self.config_obj = None
+        self.instance_key = None
+        self.plugin_obj = None
+        self.db = None
+        self.config_section = None
+        self.episode_adj = None
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
-    def get_uri_data(self, _uri, _header=None):
+    def get_uri_data(self, _uri, _retries, _header=None):
         if _header is None:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        req = urllib.request.Request(_uri, headers=header)
-        with urllib.request.urlopen(req, timeout=10.0) as resp:
-            x = json.load(resp)
+        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
+        x = resp.json()
+        resp.raise_for_status()
         return x
 
     def refresh_epg(self):
@@ -65,7 +76,7 @@ class PluginEPG:
             return False
         if not self.config_obj.data[self.instance_obj.config_section]['epg-enabled']:
             self.logger.info('EPG Collection not enabled for {} {}'
-                .format(self.plugin_obj.name, self.instance_key))
+                             .format(self.plugin_obj.name, self.instance_key))
             return False
         forced_dates, aging_dates = self.dates_to_pull()
         self.db.del_old_programs(self.plugin_obj.name, self.instance_key)
@@ -90,9 +101,6 @@ class PluginEPG:
         This interface is for the epg plugins
         """
         pass
-
-
-
 
     def dates_to_pull(self):
         """
@@ -127,4 +135,4 @@ class PluginEPG:
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))

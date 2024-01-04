@@ -5,7 +5,6 @@
 
     <meta name="viewport"
         content="viewport-fit=cover, width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
-    <link rel="manifest" href="manifest.json">
     <meta name="format-detection" content="telephone=no">
     <meta name="msapplication-tap-highlight" content="no">
 
@@ -41,6 +40,7 @@
     <link rel="stylesheet" type="text/css" href="/modules/emby-elements/emby-button/emby-button.css">
     <link rel="stylesheet" type="text/css" href="/modules/backdrop/style.css">
     <link rel="stylesheet" type="text/css" href="/modules/flexstyles.css">
+    <link rel="stylesheet" type="text/css" href="/modules/listview/listview.css">
     <title>cabernet</title>
 
     <style>
@@ -87,7 +87,7 @@
     <div class="mainDrawer scrollY hiddenScrollY-hover scrollY-mini drawer-docked drawer-open"
         style="will-change: transform;">
         <div class="navDrawerHeader flex flex-direction-row align-items-center">
-            <div class="navDrawerLogo pageTitleWithDefaultLogo flex-grow" href="/" title="Home">
+            <div class="navDrawerLogo pageTitleWithDefaultLogo flex-grow" title="Home">
             </div>
             <button type="button" 
                 class="navClosePanel btnPinNavDrawer paper-icon-button-light " 
@@ -106,7 +106,7 @@
                 <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
                     <a 
                         class="navMenuOption navButton"
-                        href="#" onclick='load_url("/html/links.html")' 
+                        href="#" onclick='load_url("/html/links.html", "Cabernet Links")' 
                         title="Home Screen">
                         <i class="md-icon navMenuOptionIcon">message</i>
                         <span class="navMenuOptionText">XML/JSON Links</span>
@@ -121,26 +121,26 @@
             <div title="Configuration" class="collapsible-content">
                 <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=general")' title="Display">
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=general", "Cabernet Settings:Internal")' title="Display">
                         <i class="md-icon navMenuOptionIcon">settings</i>
                         <span class="navMenuOptionText">Internal</span>
                     </a>
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=streams")' title="Stream Providers">
-                        <i class="md-icon navMenuOptionIcon">cast</i>
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=streams", "Cabernet Settings:Streams")' title="Stream Providers">
+                        <i class="md-icon navMenuOptionIcon">extension</i>
                         <span class="navMenuOptionText">Stream Providers</span>
                     </a>
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=epg")' title="EPG Providers">
-                        <i class="md-icon navMenuOptionIcon">cast</i>
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=epg", "Cabernet Settings:EPG")' title="EPG Providers">
+                        <i class="md-icon navMenuOptionIcon">extension</i>
                         <span class="navMenuOptionText">EPG Providers</span>
                     </a>
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=clients")' title="Providers">
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=clients", "Cabernet Settings:Clients")' title="Providers">
                         <i class="md-icon navMenuOptionIcon">tv</i>
                         <span class="navMenuOptionText">Clients</span>
                     </a>
-                    <a class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=logging")' title="Logging">
+                    <a class="navMenuOption navButton" href="#" onclick='load_url("/api/configform?area=logging", "Cabernet Settings:Logging")' title="Logging">
                         <i class="md-icon navMenuOptionIcon">article</i>
                         <span class="navMenuOptionText">Logging</span>
                     </a>
@@ -154,23 +154,31 @@
             <div title="Configuration" class="collapsible-content">
                 <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/channels")' title="Channel Editor">
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/channels", "Cabernet Channel Editor")' title="Channel Editor">
                         <i class="md-icon navMenuOptionIcon">build</i>
                         <span class="navMenuOptionText">Channel Editor</span>
                     </a>
                 </div>
                 <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/schedulehtml")' title="Scheduled Tasks">
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/schedulehtml", "Cabernet Scheduler")' title="Scheduled Tasks">
                         <i class="md-icon navMenuOptionIcon">schedule</i>
                         <span class="navMenuOptionText">Scheduled Tasks</span>
                     </a>
                 </div>
                 <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
                     <a
-                        class="navMenuOption navButton" href="#" onclick='load_url("/api/data_mgmt")' title="Data Management">
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/datamgmt", "Cabernet Data Management")' title="Data Management">
                         <i class="md-icon navMenuOptionIcon">inventory_2</i>
                         <span class="navMenuOptionText">Data Mgmt</span>
+                    </a>
+                </div>
+                <div class="collapseContent navDrawerCollapseContent content-inner" style="height: auto;">
+                    <a
+                        class="navMenuOption navButton" href="#" onclick='load_url("/api/plugins", "Cabernet Plugins")' title="Plugins">
+                        <i class="md-icon navMenuOptionIcon">shopping_cart</i>
+                        <span class="navMenuOptionText">Plugins</span>
+                        <div id="pluginStatus" class="status-note"></div>
                     </a>
                 </div>
                 <hr>

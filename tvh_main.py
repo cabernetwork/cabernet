@@ -1,10 +1,28 @@
 #!/usr/bin/env python3
+"""
+MIT License
+
+Copyright (C) 2023 ROCKY4546
+https://github.com/rocky4546
+
+This file is part of Cabernet
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+and associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software
+is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
+"""
+
 import os
 import sys
 from inspect import getsourcefile
 
-if sys.version_info.major == 2 or sys.version_info < (3, 7):
-    print('Error: cabernet requires python 3.7+.')
+if sys.version_info.major == 2 or sys.version_info < (3, 8):
+    print('Error: cabernet requires python 3.8+.')
     sys.exit(1)
 
 from lib import main

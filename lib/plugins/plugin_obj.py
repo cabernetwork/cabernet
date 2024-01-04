@@ -1,7 +1,7 @@
 """
 MIT License
 
-Copyright (C) 2021 ROCKY4546
+Copyright (C) 2023 ROCKY4546
 https://github.com/rocky4546
 
 This file is part of Cabernet
@@ -19,6 +19,7 @@ substantial portions of the Software.
 import base64
 import binascii
 import datetime
+import httpx
 import logging
 import string
 import threading
@@ -34,6 +35,8 @@ class PluginObj:
     def __init__(self, _plugin):
         self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
+        self.plugins = None
+        self.http_session = PluginObj.HttpSession()
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.def_trans = ''.join([
@@ -41,21 +44,41 @@ class PluginObj:
             string.ascii_lowercase,
             string.digits,
             '+/'
-            ]).encode()
+        ]).encode()
         self.instances = {}
         self.scheduler_db = DBScheduler(self.config_obj.data)
         self.scheduler_tasks()
         self.enabled = True
         self.logger.debug('Initializing plugin {}'.format(self.namespace))
 
+    def terminate(self):
+        """
+        Removes all has a object from the object and calls any subclasses to also terminate
+        Not calling inherited class at this time
+        """
+        self.enabled = False
+        for key, instance in self.instances.items():
+            return instance.terminate()
+        self.logger = None
+        self.plugin = None
+        self.plugins = None
+        self.http_session = None
+        self.config_obj = None
+        self.namespace = None
+        self.def_trans = None
+        self.instances = None
+        self.scheduler_db = None
+
+    
+
     # INTERFACE METHODS
     # Plugin may have the following methods
     # used to interface to the app.
 
     ##############################
-    ### EXTERNAL STREAM METHODS
+    # ## EXTERNAL STREAM METHODS
     ##############################
-    
+
     def is_time_to_refresh_ext(self, _last_refresh, _instance):
         """
         External request to determine if the m3u8 stream uri needs to 
@@ -74,7 +97,7 @@ class PluginObj:
         return self.instances[_instance].get_channel_uri(_sid)
 
     ##############################
-    ### EXTERNAL EPG METHODS
+    # ## EXTERNAL EPG METHODS
     ##############################
 
     def get_channel_day_ext(self, _zone, _uid, _day, _instance='default'):
@@ -104,59 +127,80 @@ class PluginObj:
 
     # END OF INTERFACE METHODS
 
-
     def scheduler_tasks(self):
         """
         dummy routine that will be overridden by subclass
         """
         pass
 
-    def enable_instance(self, _namespace, _instance):
+    def enable_instance(self, _namespace, _instance, _instance_name='Instance'):
         """
         When one plugin is tied to another and requires it to be enabled,
         this method will enable the other instance and set this plugin to disabled until 
         everything is up
+        Also used to create a new instance if missing.  When _instance is None, 
+        will look for any instance, if not will create a default one.
         """
         name_config = _namespace.lower()
-        instance_config = name_config + '_' + _instance
+        # if _instance is None and config has no instance for namespace, add one
+        if _instance is None:
+            x = [ k for k in self.config_obj.data.keys() if k.startswith(name_config+'_')]
+            if len(x):
+                return
+            else:
+                _instance = 'Default'
+        instance_config = name_config + '_' + _instance.lower()
+        
         if self.config_obj.data.get(name_config):
             if self.config_obj.data.get(instance_config):
                 if not self.config_obj.data[instance_config]['enabled']:
-                    self.logger.notice('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
-                        .format(_namespace, _instance, self.namespace))
+                    self.logger.warning('1. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                                       .format(_namespace, _instance, self.namespace))
                     self.config_obj.write(
-                            instance_config, 'enabled', True)
-                    raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
-                        .format(_namespace, self.namespace))
-            else:
-                self.logger.notice('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
-                        .format(_namespace, _instance, self.namespace))
-                self.config_obj.write(
-                        instance_config, 'Label', _namespace + ' Instance')
-                self.config_obj.write(
                         instance_config, 'enabled', True)
+                    raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
+                                                       .format(_namespace, self.namespace))
+            else:
+                if _namespace != self.namespace:
+                    self.logger.warning('2. Enabling {}:{} plugin instance. Required by {}. Restart Required'
+                                       .format(_namespace, _instance, self.namespace))
+                else:
+                    self.logger.warning('3. Enabling {}:{} plugin instance. Restart Required'
+                                       .format(_namespace, _instance, self.namespace))
+                
+                self.config_obj.write(
+                    instance_config, 'Label', _namespace + ' ' + _instance_name)
+                self.config_obj.write(
+                    instance_config, 'enabled', True)
                 raise exceptions.CabernetException('{} plugin requested by {}.  Restart Required'
-                    .format(_namespace, self.namespace))
+                                                   .format(_namespace, self.namespace))
         else:
             self.logger.error('Requested Plugin {} by {} Missing'
-                .format(_namespace, self.namespace))
+                              .format(_namespace, self.namespace))
             raise exceptions.CabernetException('Requested Plugin {} by {} Missing'
-                .format(_namespace, self.namespace))
+                                               .format(_namespace, self.namespace))
+        if _namespace not in self.plugins.keys():
+            self.logger.warning('{}:{} not installed and requested by {} settings. Restart Required'
+                               .format(_namespace, _instance, self.namespace))
+            raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
+                                               .format(_namespace, _instance, self.namespace))
+
         if not self.plugins[_namespace].enabled:
-            self.logger.notice('{}:{} not enabled and requested by {}. Restart Required'
-                .format(_namespace, _instance, self.namespace))
-            raise exceptions.CabernetException('{}:{} not enabled and requested by {}. Restart Required'
-                .format(_namespace, _instance, self.namespace))
+            self.logger.warning('{}:{} not enabled and requested by {} settings. Restart Required'
+                               .format(_namespace, _instance, self.namespace))
+            raise exceptions.CabernetException('{}:{} not enabled and requested by {} settings. Restart Required'
+                                               .format(_namespace, _instance, self.namespace))
 
     def refresh_obj(self, _topic, _task_name):
         if not self.enabled:
-            self.logger.debug('{} Plugin disabled, not refreshing {}' \
+            self.logger.debug(
+                '{} Plugin disabled, not refreshing {}'
                 .format(self.plugin.name, _topic))
             return
-        self.web_admin_url = 'http://localhost:' + \
-            str(self.config_obj.data['web']['web_admin_port'])
+        web_admin_url = 'http://localhost:' + \
+                        str(self.config_obj.data['web']['web_admin_port'])
         task = self.scheduler_db.get_tasks(_topic, _task_name)[0]
-        url = ( self.web_admin_url + '/api/scheduler?action=runtask&taskid={}'
+        url = (web_admin_url + '/api/scheduler?action=runtask&taskid={}'
                .format(task['taskid']))
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req) as resp:
@@ -177,7 +221,6 @@ class PluginObj:
         Called from the scheduler
         """
         return self.refresh_it('Channels', _instance)
-        
 
     def refresh_epg(self, _instance=None):
         """
@@ -191,20 +234,22 @@ class PluginObj:
         """
         try:
             if not self.enabled:
-                self.logger.debug('{} Plugin disabled, not refreshing {}' \
+                self.logger.debug(
+                    '{} Plugin disabled, not refreshing {}'
                     .format(self.plugin.name, _what_to_refresh))
                 return False
             if _instance is None:
                 for key, instance in self.instances.items():
                     if _what_to_refresh == 'EPG':
-                        return instance.refresh_epg()
+                        instance.refresh_epg()
                     elif _what_to_refresh == 'Channels':
-                        return instance.refresh_channels()
+                        instance.refresh_channels()
             else:
                 if _what_to_refresh == 'EPG':
-                    return self.instances[_instance].refresh_epg()
+                    self.instances[_instance].refresh_epg()
                 elif _what_to_refresh == 'Channels':
-                    return self.instances[_instance].refresh_channels()
+                    self.instances[_instance].refresh_channels()
+            return True
         except exceptions.CabernetException:
             self.logger.debug('Setting plugin {} to disabled'.format(self.plugin.name))
             self.enabled = False
@@ -216,7 +261,7 @@ class PluginObj:
         Used for scheduler on events
         """
         tz_delta = datetime.datetime.now() - datetime.datetime.utcnow()
-        tz_hours = round(tz_delta.total_seconds()/3610)
+        tz_hours = round(tz_delta.total_seconds() / 3610)
         local_hours = tz_hours + _hours
         if local_hours < 0:
             local_hours += 24
@@ -229,29 +274,46 @@ class PluginObj:
             _data = _data.encode()
         return base64.b64encode(_data).translate(
             _data.maketrans(self.def_trans,
-            self.config_obj.data['main']['plugin_data'].encode()))
+                            self.config_obj.data['main']['plugin_data'].encode()))
 
     def uncompress(self, _data):
         if type(_data) is str:
             _data = _data.encode()
-        a = self.config_obj.data['main']['plugin_data'].encode()
+        self.config_obj.data['main']['plugin_data'].encode()
         try:
             return base64.b64decode(_data.translate(_data.maketrans(
                 self.config_obj.data['main']['plugin_data']
                 .encode(), self.def_trans))) \
                 .decode()
-        except (binascii.Error, UnicodeDecodeError) as ex:
-            self.logger.error('Uncompression Error, invalid string {}' \
-                .format(_data))
+        except (binascii.Error, UnicodeDecodeError):
+            self.logger.error('Uncompression Error, invalid string {}'.format(_data))
             return None
 
     def check_logger_refresh(self):
         if not self.logger.isEnabledFor(40):
-            self.logger = logging.getLogger(__name__+str(threading.get_ident()))
+            self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
             for inst, inst_obj in self.instances.items():
                 inst_obj.check_logger_refresh()
 
     @property
     def name(self):
         return self.namespace
+
+    class HttpSession:
+        """
+        This class handles the management of the httpx session since
+        pickling of the httpx Client throws an exception.
+        """
+        def __init__(self):
+            self.http_session = None
+
+        def get(self, uri, headers=None, timeout=8):
+            if self.http_session is None:
+                self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+            return self.http_session.get(uri, headers=headers, timeout=timeout)
+
+        def post(self, uri, headers=None, data=None, timeout=8):
+            if self.http_session is None:
+                self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+            return self.http_session.post(uri, headers=headers, data=data, timeout=timeout)
 

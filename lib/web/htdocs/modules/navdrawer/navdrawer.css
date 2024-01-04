@@ -360,3 +360,14 @@
     text-decoration: none;
     line-height: inherit;
 }
+
+.status-note {
+    bottom: 8px;
+    background: yellow;
+    color: blue;
+    border-radius: 8px;
+    padding-left: 5px;
+    padding-right: 5px;
+    font-size: 70%;
+    margin-left: 5px;
+}
