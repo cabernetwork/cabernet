@@ -15,18 +15,9 @@ By default this app doesn't provide any video sources, only the plugins access t
 - Launch the app by running the command "python3 tvh_main.py". This should create a data folder and a config.ini inside that folder
 - Bring up browser and go to http://ip address:6077/
 - From Plugins, install PlutoTV plugin
-- Stop the app
-- Edit the data/config.ini and add the following lines (Update: This is suppose to automatically happen in 0.9.14)
-<pre>
-[plutotv_default]
-label = PlutoTV Instance
-</pre>
-- Launch the app by running the command "python3 tvh_main.py"
-- Bring up browser and go to http://ip address:6077/
+- Restart Cabernet twice from   Scheduled Tasks > Applications > Restart
 - Go to settings and make changes you want.
     - Logging: Change log level from warning to info if needed
-- Enable the PlutoTV instance in the Settings page
-- Restart the app (from the Scheduler/Applications) to have the plugin fully activate
 - From XML/JSON Links try some of the links
 
 ### 3. Services
@@ -50,28 +41,16 @@ You can either use docker-compose or the docker cli.
 - armhf not available due to python cryptography only supports 64bit systems.
 [Cryptography supported platforms](https://cryptography.io/en/latest/installation/#supported-platforms)
 
-#### docker-compose
+#### a. Using docker-compose
+To install Cabernet:
 ```
-version: '2.4'
-services:
-    cabernet:
-        container_name: cabernet
-        image: ghcr.io/cabernetwork/cabernet:latest
-        environment:
-          - TZ="Etc/UTC"  # optional
-          - PUID=1000     # optional
-          - PGID=1000     # optional
-        ports:
-          - "6077:6077"
-          - "5004:5004"
-        restart: unless-stopped
-        volumes:
-          - /path/to/cabernet/data:/app/data      # optional
-          - /path/to/cabernet/plugins_ext:/app/plugins_ext # optional
-          - /path/to/cabernet/secrets:/app/.cabernet # optional
+1. Grab the cabernet source and unpack into a folder
+2. Edit docker-compose.yml and set the volume folder locations
+3. docker-compose pull cabernet
+4. docker-compose up -d cabernet
 ```
 
-#### docker cli
+#### b. docker cli
 ```
 docker run -d \
   --name=cabernet \
@@ -87,8 +66,7 @@ docker run -d \
   ghcr.io/cabernetwork/cabernet:latest
 ```
 
-#### Parameters
-
+##### Parameters
 | Parameter | Function |
 | :----: | :----: |
 | -p 6077 | Cabernet WebUI |
@@ -100,7 +78,11 @@ docker run -d \
 | -v /app/plugins_ext | External Plugins |
 | -v /app/.cabernet | Where encryption key is stored |
 
-#### Updating Info
+#### c. Other Docker Info
+Cabernet configuration setting Clients > Web Sites > plex_docker_ip should be set to your computers IP address and not the internal IP inside the docker container.  This will allow the channels.m3u file to have the correct IP address for streaming.
+
+
+#### d. Updating Info
 **Via Docker Compose:**
 
 - Update the image:
@@ -124,7 +106,7 @@ docker-compose up -d cabernet
 - You can also remove the old dangling images:
 ```docker image prune```
 
-#### Via Watchtower auto-updater
+#### e. Via Watchtower auto-updater
 ```
 docker run --rm \
   -v /var/run/docker.sock:/var/run/docker.sock \

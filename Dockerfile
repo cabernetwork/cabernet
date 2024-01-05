@@ -11,4 +11,4 @@ RUN apk add --no-cache --update bash tzdata ffmpeg curl su-exec && \
 
 VOLUME /app/data /app/plugins_ext /app/.cabernet
 EXPOSE 6077 5004
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["Docker_entrypoint.sh"]

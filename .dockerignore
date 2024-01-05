@@ -3,4 +3,5 @@
 !lib
 !plugins
 !requirements.txt
-!entrypoint.sh
+!Docker_entrypoint.sh
+!LICENSE

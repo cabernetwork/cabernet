@@ -335,7 +335,7 @@ class DataMgmtHTML:
         return html
 
     def del_backup(self, _folder):
-        valid_regex = re.compile('^([a-zA-Z0-9_.]+$)')
+        valid_regex = re.compile('^([a-zA-Z0-9_.-]+$)')
         if not valid_regex.match(_folder):
             self.logger.info('Invalid backup folder to delete: {}'.format(_folder))
             return

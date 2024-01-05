@@ -11,7 +11,7 @@ echo "Starting with UID : $USER_ID"
 addgroup -S -g $GROUP_ID $USERNAME
 adduser -S -D -H -h /app -u $USER_ID -G $USERNAME $USERNAME
 
-blockUpdate="/app/do_not_updagrade_from_WEBUI_on_Docker"
+blockUpdate="/app/Do_Not_Upgrade_from_WEBUI_on_Docker"
 
 oldKeyFile="/root/.cabernet/key.txt"
 newKeyFile="/app/.cabernet/key.txt"

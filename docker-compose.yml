@@ -1,8 +1,19 @@
+# Things to review/change:
+#    PUID/PGID change to the user running Cabernet
+#    Volumes: All volume paths are to be updated.  The secrets folder
+#    contains the private key for encryption and should be protected.
+#    example volumes:
+#          - ../docker/cabernet/data:/app/data                # App data (Optional)
+#          - ../docker/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
+#          - ../docker/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)
+#    This will add a docker folder at the same level as the cabernet source
+#    with the external folders for docker
+
 version: '2.4'
 services:
     cabernet:
         container_name: cabernet
-        image: ghcr.io/cabernetwork/cabernet:latest
+        image: ghcr.io/cabernetwork/cabernet:dev
         environment:
           - TZ="Etc/UTC"  # Timezone (Optional)
           - PUID=1000     # UserID (Optional)
@@ -12,6 +23,6 @@ services:
           - "5004:5004"    # Port used to stream
         restart: unless-stopped
         volumes:
-          - /path/to/cabernet/data:/app/data                # App data (Optional)
-          - /path/to/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
-          - /path/to/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)
+          - ../docker/cabernet/data:/app/data                # App data (Optional)
+          - ../docker/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
+          - ../docker/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)
