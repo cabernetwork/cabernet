@@ -6,7 +6,7 @@ RUN apk add --no-cache --update bash tzdata ffmpeg curl su-exec && \
     pip3 install -r requirements.txt --no-cache-dir && \
     apk del builddeps && \
     touch /app/is_container && \
-    mv entrypoint.sh /usr/local/bin && \
+    mv Docker_entrypoint.sh /usr/local/bin && \
     rm -rf /tmp/* $HOME/.cache $HOME/.cargo
 
 VOLUME /app/data /app/plugins_ext /app/.cabernet
