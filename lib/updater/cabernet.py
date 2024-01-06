@@ -215,7 +215,7 @@ class CabernetUpgrade:
         """
         files_present = ['build', 'lib', 'misc',
                          '.dockerignore', '.gitignore', 'CHANGELOG.md', 'CONTRIBUTING.md',
-                         'Dockerfile', 'Dockerfile_l2p', 'Dockerfile_tvh', 'Dockerfile_tvh_crypt.alpine',
+                         'Docker_entrypoint.sh', 'Dockerfile', 'Dockerfile_tvh_crypt.alpine',
                          'Dockerfile_tvh_crypt.slim-buster', 'LICENSE', 'README.md',
                          'TVHEADEND.md', 'docker-compose.yml', 'requirements.txt', 'tvh_main.py',
                          'data', 'config.ini', 'is_container', '.git', 'cabernet.url', 'ffmpeg',
