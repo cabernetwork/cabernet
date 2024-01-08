@@ -18,6 +18,9 @@ services:
           - TZ="Etc/UTC"  # Timezone (Optional)
           - PUID=1000     # UserID (Optional)
           - PGID=1000     # GroupID (Optional)
+          - IP_ADDRESS="$(hostname -i | awk '{print $1}')" # (Optional)
+          - NETMASK="$(hostname -i | awk '{print $1}')/32" # (Optional)
+          - PLUGINS="plutotv m3u"                          # (Optional)
         ports:
           - "6077:6077"    # Web Interface Port
           - "5004:5004"    # Port used to stream

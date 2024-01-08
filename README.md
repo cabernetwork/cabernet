@@ -1,4 +1,4 @@
-## NOTICE: 
+## NOTICE:
 By default this app doesn't provide any video sources, only the plugins access the providers streams for personal use.
 
 ## Installation
@@ -36,7 +36,7 @@ You can either use docker-compose or the docker cli.
 | arm64 | ✅ |
 | armhf | ❌ |
 
-**NOTES:** 
+**NOTES:**
 - Volume for ```/app/.cabernet``` must be provided before enabling encryption.
 - armhf not available due to python cryptography only supports 64bit systems.
 [Cryptography supported platforms](https://cryptography.io/en/latest/installation/#supported-platforms)
@@ -57,6 +57,9 @@ docker run -d \
   -e PUID=1000 `#optional` \
   -e PGID=1000 `#optional` \
   -e TZ=Etc/UTC `#optional` \
+  -e IP_ADDRESS="$(hostname -i | awk '{print $1}')" `#optional` \
+  -e NETMASK="$(hostname -i | awk '{print $1}')/32" `#optional` \
+  -e PLUGINS="plutotv m3u"  `#optional` \
   -p 6077:6077 \
   -p 5004:5004 \
   -v /path/to/cabernet/data:/app/data `#optional` \
@@ -69,11 +72,14 @@ docker run -d \
 ##### Parameters
 | Parameter | Function |
 | :----: | :----: |
-| -p 6077 | Cabernet WebUI |
+| -p 6077 | Cabernet WebUI port |
 | -p 5004 | Cabernet stream port |
 | -e PUID=1000  | for UserID    |
 | -e PGID=1000  | for GroupID   |
 | -e TZ=Etc/UTC | specify a timezone to use, see this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List).|
+| -e IP_ADDRESS | Machine IP.<br>Default: container IP |
+| -e NETMASK    | Network Netmask.<br>Default: container netmask |
+| -e PLUGINS    | Cabernet Plugins.<br>Options: ```plutotv``` ```m3u``` ```daddylive``` ```xumo``` ```tvguide```
 | -v /app/data | Where Cabernet should store its database and config. |
 | -v /app/plugins_ext | External Plugins |
 | -v /app/.cabernet | Where encryption key is stored |
@@ -94,13 +100,13 @@ docker-compose up -d cabernet
 
 **Via Docker Run:**
 
-- Update the image:   
+- Update the image:
 ```docker pull ghcr.io/cabernetwork/cabernet:latest```
 
-- Stop the running container:  
+- Stop the running container:
 ```docker stop cabernet```
 
-- Delete the container:   
+- Delete the container:
 ```docker rm cabernet```
 
 - You can also remove the old dangling images:
@@ -114,7 +120,7 @@ docker run --rm \
   --run-once cabernet
 ```
 
-- For regulary updates follow Watchtower instructions 
+- For regulary updates follow Watchtower instructions
 https://containrrr.dev/watchtower/
 
 
