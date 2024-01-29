@@ -198,6 +198,7 @@ class PluginChannels:
         if self.config_obj.data[self.config_section]['player-stream_type'] == 'm3u8redirect':
             return _url
 
+
         self.logger.debug(
             '{}: Getting best video stream info for {} {}'
             .format(self.plugin_obj.name, _channel_id, _url))

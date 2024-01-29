@@ -1,8 +1,13 @@
-# NOTE: Cabernet tends to maintain versions on its own and will conflict with docker's
-# versioning system.
-# The recommendation is to have the entire cabernet source folder be in its own volume.
-# whether you mount /app or /app/cabernet, the whole cabernet folder should be a volume.
-# then run the python script tvh_main.py at the top level Caberent folder to start Cabernet.
+# Things to review/change:
+#    PUID/PGID change to the user running Cabernet
+#    Volumes: All volume paths are to be updated.  The secrets folder
+#    contains the private key for encryption and should be protected.
+#    example volumes:
+#          - ../docker/cabernet/data:/app/data                # App data (Optional)
+#          - ../docker/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
+#          - ../docker/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)
+#    This will add a docker folder at the same level as the cabernet source
+#    with the external folders for docker
 
 version: '2.4'
 services:
@@ -10,13 +15,14 @@ services:
         container_name: cabernet
         image: ghcr.io/cabernetwork/cabernet:latest
         environment:
-          - TZ="America/New_York"
-          - PUID=1000
-          - PGID=1000
+          - TZ="Etc/UTC"  # Timezone (Optional)
+          - PUID=1000     # UserID (Optional)
+          - PGID=1000     # GroupID (Optional)
         ports:
-          - "5004:5004"    # Port used to stream
           - "6077:6077"    # Web Interface Port
+          - "5004:5004"    # Port used to stream
         restart: unless-stopped
         volumes:
-          - ./docker/cabernet/config/app:/app
-          - ./.cabernet/key.txt:/root/.cabernet/key.txt
+          - /path/to/cabernet/data:/app/data                # App data (Optional)
+          - /path/to/cabernet/plugins_ext:/app/plugins_ext  # Plugins Data (Optional)
+          - /path/to/cabernet/secrets:/app/.cabernet        # Ecryption key data (Optional)

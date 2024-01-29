@@ -1,15 +1,14 @@
 FROM python:3.8-alpine
-LABEL maintainer="Thomas Gorgolione <thomas@tgorg.com>"
+WORKDIR /app
+COPY . .
+RUN apk add --no-cache --update bash tzdata ffmpeg curl su-exec && \
+    apk add --no-cache --virtual builddeps gcc musl-dev python3-dev libffi-dev openssl-dev cargo && \
+    pip3 install -r requirements.txt --no-cache-dir && \
+    apk del builddeps && \
+    touch /app/is_container && \
+    mv Docker_entrypoint.sh /usr/local/bin && \
+    rm -rf /tmp/* $HOME/.cache $HOME/.cargo
 
-RUN apk add --no-cache --update ffmpeg
-COPY *.ini /app/
-COPY *.py /app/
-COPY cache/ /app/cache/
-COPY data/ /app/data/
-COPY lib/ /app/lib/
-COPY plugins /app/plugins
-COPY plugins_ext /app/plugins_ext
-COPY known_stations.json /app/
-RUN touch /app/is_container
-
-ENTRYPOINT ["python3", "/app/tvh_main.py"]
+VOLUME /app/data /app/plugins_ext /app/.cabernet
+EXPOSE 6077 5004
+ENTRYPOINT ["Docker_entrypoint.sh"]

@@ -195,7 +195,7 @@ class DataMgmtHTML:
         self.logger = logging.getLogger(__name__)
         self.config = _plugins.config_obj.data
         self.bkups = backups.Backups(_plugins)
-        self.search_date = re.compile('[^_]+(_([\d.]+[-RC\d]*))?_(\d*?_\d*)')
+        self.search_date = re.compile('[^_]+(_([\d.]+[-DEV\d]+[-RC\d]))?_(\d*?_\d*)')
 
     def get(self):
         return ''.join([self.header, self.body])
@@ -335,7 +335,7 @@ class DataMgmtHTML:
         return html
 
     def del_backup(self, _folder):
-        valid_regex = re.compile('^([a-zA-Z0-9_.]+$)')
+        valid_regex = re.compile('^([a-zA-Z0-9_.-]+$)')
         if not valid_regex.match(_folder):
             self.logger.info('Invalid backup folder to delete: {}'.format(_folder))
             return

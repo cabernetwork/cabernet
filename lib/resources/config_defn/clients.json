@@ -20,11 +20,11 @@
                         "help": "Default: 0.0.0.0. Use instead of plex_accessible_ip. 0.0.0.0 means bind to all IPs and use the main IP address for json data"
                     },
                     "plex_accessible_ip":{
-                        "label": "plex_accessible_ip",
+                        "label": "plex_docker_ip",
                         "type": "string",
                         "default": "0.0.0.0",
                         "level": 1,
-                        "help": "The IP provided to the clients for http requests"
+                        "help": "The IP provided to the clients for http requests.  If using docker and video does not play, try changing this to your computer's IP"
                     },
                     "bind_ip":{
                         "label": "bind_ip",
@@ -35,7 +35,7 @@
                         "help": null
                     },
                     "plex_accessible_port":{
-                        "label": "plex_accessible_port",
+                        "label": "streaming_port",
                         "type": "integer",
                         "default": 5004,
                         "level": 1,
