@@ -137,6 +137,7 @@ https://containrrr.dev/watchtower/
     - [plutotv_mychannels]
 
 ### 7. Forum
-https://tvheadend.org/boards/5/topics/43052
+Archived Legacy Forum: https://web.archive.org/web/20221015111333/https://tvheadend.org/boards/5/topics/43052
+New Forum: TBD
 
 Enjoy
