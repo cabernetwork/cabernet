@@ -99,9 +99,9 @@ class PluginChannels:
         else:
             header = _header
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=8)
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=8, verify=False)
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8, verify=False)
         x = resp.content
         return x
 

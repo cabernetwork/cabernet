@@ -16,10 +16,10 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
-import httpx
 import logging
 import os
 import re
+import requests
 import socket
 import sys
 import threading
@@ -52,6 +52,7 @@ STREAM_QUEUE = Queue()
 OUT_QUEUE_LIST = []
 HTTP_TIMEOUT=8
 HTTP_RETRIES=3
+MAINTAIN_HTTP_SESSION=True
 PARALLEL_DOWNLOADS=3
 IS_VOD = False
 UID_COUNTER = 1
@@ -97,7 +98,12 @@ class M3U8GetUriData(Thread):
         _retries is used by the decorator when a HTTP failure occurs
         """
         global HTTP_TIMEOUT
-        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT)
+        global MAINTAIN_HTTP_SESSION
+        if not MAINTAIN_HTTP_SESSION:
+            M3U8Queue.http_session.close()
+            time.sleep(0.01)
+            M3U8Queue.http_session = requests.session()
+        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, verify=False)
         x = resp.content
         resp.raise_for_status()
         return x
@@ -260,7 +266,7 @@ class M3U8Queue(Thread):
     output to the client.
     """
     is_stuck = None
-    http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+    http_session = requests.session()
     http_header = None
     key_list = {}
     config_section = None
@@ -272,7 +278,10 @@ class M3U8Queue(Thread):
 
 
     def __init__(self, _config, _channel_dict):
+        global MAINTAIN_HTTP_SESSION
         Thread.__init__(self)
+        # Disable the CERT unverified warnings
+        requests.packages.urllib3.disable_warnings()
         self.video = Video(_config)
         self.q_action = None
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
@@ -280,6 +289,7 @@ class M3U8Queue(Thread):
         self.namespace = _channel_dict['namespace'].lower()
         M3U8Queue.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         M3U8Queue.channel_dict = _channel_dict
+        MAINTAIN_HTTP_SESSION = self.config[_channel_dict['namespace'].lower()]['stream-g_http_session']
         M3U8Queue.atsc_msg = ATSCMsg()
         self.channel_dict = _channel_dict
         M3U8Queue.atsc = _channel_dict['atsc']
@@ -329,7 +339,7 @@ class M3U8Queue(Thread):
                 self.logger.debug('**** Running check_processed_list {}  Received: {}  Processed: {}  Processed_Queue: {}  Incoming_Queue: {}'
                     .format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
                 self.check_processed_list()
-                while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > PARALLEL_DOWNLOADS+1:
+                while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > PARALLEL_DOWNLOADS:
                     self.logger.debug('Slowed Processing: {}  Received: {}  Processed: {}  Processed_Queue: {}  Incoming_Queue: {}'
                         .format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
                     time.sleep(.5)
@@ -383,16 +393,18 @@ class M3U8Queue(Thread):
         if len(PROCESSED_URLS) > 0:
             first_key = sorted(PROCESSED_URLS.keys())[0]
             if first_key == UID_PROCESSED:
-                self.video.data = PROCESSED_URLS[first_key]['stream']
-                M3U8Queue.pts_resync.resequence_pts(self.video)
-                if self.video.data is None and self.q_action != 'check_processed_list':
-                    PLAY_LIST[self.q_action]['played'] = True
-                PROCESSED_URLS[first_key]['stream'] = self.video.data
-                
-                out_queue_put(PROCESSED_URLS[first_key])
-                del PROCESSED_URLS[first_key]
-                UID_PROCESSED += 1
-
+                try:
+                    self.video.data = PROCESSED_URLS[first_key]['stream']
+                    M3U8Queue.pts_resync.resequence_pts(self.video)
+                    if self.video.data is None and self.q_action != 'check_processed_list':
+                        PLAY_LIST[self.q_action]['played'] = True
+                    PROCESSED_URLS[first_key]['stream'] = self.video.data
+                    out_queue_put(PROCESSED_URLS[first_key])
+                    del PROCESSED_URLS[first_key]
+                    UID_PROCESSED += 1
+                except TypeError as ex:
+                    # If the first_key is null, then skip it and move on.
+                    UID_PROCESSED += 1
 
 class M3U8Process(Thread):
     """
@@ -424,6 +436,7 @@ class M3U8Process(Thread):
         self.plugins = _plugins
         HTTP_TIMEOUT = self.config[_channel_dict['namespace'].lower()]['stream-g_http_timeout']
         HTTP_RETRIES = self.config[_channel_dict['namespace'].lower()]['stream-g_http_retries']
+        
         PARALLEL_DOWNLOADS = self.config[_channel_dict['namespace'].lower()]['stream-g_concurrent_downloads']
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
@@ -532,6 +545,11 @@ class M3U8Process(Thread):
     @handle_url_except()
     def get_m3u8_data(self, _uri, _retries):
         # it sticks here.  Need to find a work around for the socket.timeout per process
+        global MAINTAIN_HTTP_SESSION
+        if not MAINTAIN_HTTP_SESSION:
+            M3U8Queue.http_session.close()
+            time.sleep(0.01)
+            M3U8Queue.http_session = requests.session()
         return m3u8.load(_uri, headers=self.header, http_session=M3U8Queue.http_session)
 
     def segment_date_time(self, _segment):
@@ -796,7 +814,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                 elif q_item['uri'] == 'restart_http':
                     logger.debug('HTTP Session restarted {}'.format(os.getpid()))
                     temp_session = M3U8Queue.http_session
-                    M3U8Queue.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
+                    M3U8Queue.http_session = requests.session()
                     temp_session.close()
                     temp_session = None
                     time.sleep(0.01)

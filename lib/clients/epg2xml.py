@@ -149,10 +149,13 @@ class EPG:
                     epg_dom = ''
             else:
                 epg_dom = minidom.parseString(ElementTree.tostring(_xml, encoding='UTF-8', method='xml')).toprettyxml()
+                epg_dom = epg_dom.replace('<?xml version="1.0" ?>\n','<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "xmltv.dtd">\n',1) 
+                self.logger.warning('#### {}\n'.format(epg_dom[0:180]))
                 if epg_dom.endswith('</tv>\n'):
                     epg_dom = re.sub('</tv>\n$', '', epg_dom)
                 else:
                     epg_dom = re.sub('"/>\n$', '">', epg_dom)
+            self.logger.warning('$$$$ {}\n'.format(epg_dom[0:180]))
             self.webserver.wfile.write(epg_dom.encode())
         else:
             if not keep_xml_prolog:
@@ -163,11 +166,15 @@ class EPG:
                     epg_dom = epg_dom.replace(b'<tv>', b'', 1)
                     epg_dom = epg_dom.replace(b'</tv>', b'', 1)
             else:
-                epg_dom = ElementTree.tostring(_xml)
+                epg_dom = b'<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE tv SYSTEM "xmltv.dtd">'
+                epg_dom = epg_dom + ElementTree.tostring(_xml)
+                self.logger.warning('**** {}\n'.format(epg_dom[0:180]))
                 if epg_dom.endswith(b'</tv>'):
                     epg_dom = re.sub(b'</tv>$', b'', epg_dom)
                 else:
                     epg_dom = re.sub(b'" />$', b'">', epg_dom)
+                self.logger.warning('#### {}\n'.format(epg_dom[0:180]))
+            self.logger.warning('$$$$ {}\n'.format(epg_dom[0:180]))
             self.webserver.wfile.write(epg_dom + b'\r\n')
         epg_dom = None      # clear to help garbage collection
         return True
@@ -349,6 +356,7 @@ class EPG:
             website = self.plugins.plugins[self.namespace].plugin_settings['website']
             name = self.plugins.plugins[self.namespace].plugin_settings['name']
 
+        xml_out = ElementTree.Element('!DOCTYPE')
         xml_out = ElementTree.Element('tv')
         xml_out.set('source-info-url', website)
         xml_out.set('source-info-name', name)

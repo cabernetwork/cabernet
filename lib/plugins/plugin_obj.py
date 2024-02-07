@@ -19,8 +19,8 @@ substantial portions of the Software.
 import base64
 import binascii
 import datetime
-import httpx
 import logging
+import requests
 import string
 import threading
 import time
@@ -36,7 +36,9 @@ class PluginObj:
         self.logger = logging.getLogger(__name__)
         self.plugin = _plugin
         self.plugins = None
-        self.http_session = PluginObj.HttpSession()
+        self.http_session = requests.session()
+        # Disable the CERT unverified warnings
+        requests.packages.urllib3.disable_warnings()
         self.config_obj = _plugin.config_obj
         self.namespace = _plugin.namespace
         self.def_trans = ''.join([
@@ -298,22 +300,3 @@ class PluginObj:
     @property
     def name(self):
         return self.namespace
-
-    class HttpSession:
-        """
-        This class handles the management of the httpx session since
-        pickling of the httpx Client throws an exception.
-        """
-        def __init__(self):
-            self.http_session = None
-
-        def get(self, uri, headers=None, timeout=8):
-            if self.http_session is None:
-                self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
-            return self.http_session.get(uri, headers=headers, timeout=timeout)
-
-        def post(self, uri, headers=None, data=None, timeout=8):
-            if self.http_session is None:
-                self.http_session = httpx.Client(http2=True, verify=False, follow_redirects=True)
-            return self.http_session.post(uri, headers=headers, data=data, timeout=timeout)
-

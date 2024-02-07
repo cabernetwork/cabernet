@@ -2,7 +2,7 @@ FROM python:3.8-alpine
 #RUN apk add --no-cache --update bash tzdata ffmpeg py3-cryptography py-requests && \
 RUN apk add --no-cache --update bash tzdata ffmpeg curl && \
     apk add --no-cache --virtual builddeps gcc musl-dev python3-dev libffi-dev openssl-dev cargo && \
-    pip3 install httpx[http2] && \
+    pip3 install requests && \
     pip3 install streamlink && \
     pip3 install cryptography --no-binary=cryptography && \
     apk del builddeps

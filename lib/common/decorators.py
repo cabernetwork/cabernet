@@ -19,12 +19,11 @@ substantial portions of the Software.
 import functools
 import http
 import http.client
-import httpcore
-import httpx
 import json
 import logging
 import os
 import re
+import requests.exceptions
 import sys
 import socket
 import time
@@ -74,12 +73,18 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("ConnectionResetError in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-            except (socket.timeout, httpx.ReadTimeout, httpx.ConnectTimeout, httpcore.ReadTimeout) as ex:
+
+            except requests.exceptions.InvalidURL as ex:
+                ex_save = ex
+                self.logger.info("InvalidURL Error in function {}(), retrying {} {} {}"
+                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+
+            except (socket.timeout, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout) as ex:
                 ex_save = ex
                 self.logger.info("Socket Timeout Error in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
 
-            except (httpx.ConnectError) as ex:
+            except requests.exceptions.ConnectionError as ex:
                 ex_save = ex
                 if hasattr(ex.args[0], 'reason'):
                     reason = ex.args[0].reason
@@ -92,7 +97,7 @@ def handle_url_except(f=None, timeout=None):
                 else:
                     self.logger.info("ConnectionError in function {}(), retrying (): {} {} {}"
                                      .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-            except (http.client.RemoteDisconnected, httpcore.RemoteProtocolError) as ex:
+            except http.client.RemoteDisconnected as ex:
                 ex_save = ex
                 self.logger.info('Remote Server Disconnect Error in function {}(), retrying {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
@@ -111,7 +116,8 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info('InvalidURL Error, encoding and trying again. In function {}() {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-            except (urllib.error.HTTPError, httpx.HTTPError) as ex:
+
+            except (requests.exceptions.HTTPError, urllib.error.HTTPError) as ex:
                 ex_save = ex
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
@@ -143,7 +149,20 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info('ValueError in function {}(), aborting. {} {} {}'
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
-
+            except (requests.exceptions.ProxyError, requests.exceptions.SSLError, \
+                    requests.exceptions.TooManyRedirects, requests.exceptions.InvalidHeader, \
+                    requests.exceptions.InvalidProxyURL, requests.exceptions.ChunkedEncodingError, \
+                    requests.exceptions.ContentDecodingError, requests.exceptions.StreamConsumedError, \
+                    requests.exceptions.RetryError, requests.exceptions.UnrewindableBodyError, \
+                    requests.exceptions.RequestsWarning, requests.exceptions.FileModeWarning, \
+                    requests.exceptions.RequestsDependencyWarning) as ex:
+                ex_save = ex
+                self.logger.info('General Requests Error in function {}(), retrying. {} {} {}'
+                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
+            except (requests.exceptions.MissingSchema, requests.exceptions.InvalidSchema) as ex:
+                ex_save = ex
+                self.logger.info('Missing Schema Error in function {}(), retrying. {} {} {}'
+                                 .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))
             time.sleep(1.0)
         self.logger.notice('Multiple HTTP Errors, unable to get url data, skipping {}() {} {} {}'
                            .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0)))

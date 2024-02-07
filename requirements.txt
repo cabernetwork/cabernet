@@ -1,3 +1,3 @@
 cryptography
-httpx[http2]
+requests
 streamlink

@@ -29,7 +29,7 @@ from .stream_queue import StreamQueue
 from .pts_validation import PTSValidation
 
 IDLE_TIMER = 20      # Duration for no video causing a refresh
-MAX_IDLE_TIMER = 59  # duration for no video causing stream termination
+MAX_IDLE_TIMER = 120  # duration for no video causing stream termination
 
 class StreamlinkProxy(Stream):
 
