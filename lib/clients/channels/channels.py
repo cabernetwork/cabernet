@@ -124,7 +124,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             fakefile.write(
                 '%s\n' % (
                         record_marker + ':-1' + ' ' +
-                        'channel-id="' + sid + '" ' +
+                        'channelID="' + sid + '" ' +
                         'tvg-num="' + updated_chnum + '" ' +
                         'tvg-chno="' + updated_chnum + '" ' +
                         'tvg-name="' + sid_data['display_name'] + '" ' +
