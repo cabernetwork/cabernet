@@ -195,7 +195,7 @@ class DataMgmtHTML:
         self.logger = logging.getLogger(__name__)
         self.config = _plugins.config_obj.data
         self.bkups = backups.Backups(_plugins)
-        self.search_date = re.compile('[^_]+(_([\d.]+[-DEV\d]+[-RC\d]))?_(\d*?_\d*)')
+        self.search_date = re.compile('[^_]+(_([\d.]+[-DEVRC\d]*))?_(\d*?_\d*)')
 
     def get(self):
         return ''.join([self.header, self.body])

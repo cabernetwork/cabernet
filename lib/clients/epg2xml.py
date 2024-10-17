@@ -17,6 +17,7 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import traceback
 import datetime
 import errno
 import logging
@@ -150,12 +151,10 @@ class EPG:
             else:
                 epg_dom = minidom.parseString(ElementTree.tostring(_xml, encoding='UTF-8', method='xml')).toprettyxml()
                 epg_dom = epg_dom.replace('<?xml version="1.0" ?>\n','<?xml version="1.0" encoding="UTF-8"?>\n<!DOCTYPE tv SYSTEM "xmltv.dtd">\n',1) 
-                self.logger.warning('#### {}\n'.format(epg_dom[0:180]))
                 if epg_dom.endswith('</tv>\n'):
                     epg_dom = re.sub('</tv>\n$', '', epg_dom)
                 else:
                     epg_dom = re.sub('"/>\n$', '">', epg_dom)
-            self.logger.warning('$$$$ {}\n'.format(epg_dom[0:180]))
             self.webserver.wfile.write(epg_dom.encode())
         else:
             if not keep_xml_prolog:
@@ -168,13 +167,10 @@ class EPG:
             else:
                 epg_dom = b'<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE tv SYSTEM "xmltv.dtd">'
                 epg_dom = epg_dom + ElementTree.tostring(_xml)
-                self.logger.warning('**** {}\n'.format(epg_dom[0:180]))
                 if epg_dom.endswith(b'</tv>'):
                     epg_dom = re.sub(b'</tv>$', b'', epg_dom)
                 else:
                     epg_dom = re.sub(b'" />$', b'">', epg_dom)
-                self.logger.warning('#### {}\n'.format(epg_dom[0:180]))
-            self.logger.warning('$$$$ {}\n'.format(epg_dom[0:180]))
             self.webserver.wfile.write(epg_dom + b'\r\n')
         epg_dom = None      # clear to help garbage collection
         return True
@@ -222,6 +218,7 @@ class EPG:
         return _et_root
 
     def gen_program_xml(self, _et_root, _prog_list, _channel_list, _ns, _inst):
+
         for prog_data in _prog_list:
             proginfo = prog_data['start'] + prog_data['channel']
             if proginfo in self.prog_processed:
@@ -244,8 +241,9 @@ class EPG:
                         if not self.config[config_section]['epg-enabled']:
                             skip = True
                             break
-            except KeyError:
+            except KeyError as ex:
                 skip = True
+            
             if skip:
                 continue
             self.prog_processed.append(proginfo)
