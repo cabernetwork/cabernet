@@ -440,6 +440,7 @@ class M3U8Process(Thread):
         PARALLEL_DOWNLOADS = self.config[_channel_dict['namespace'].lower()]['stream-g_concurrent_downloads']
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
+        self.use_pathonly_checking = self.config[self.config_section].get('player-enable_pathonly_checking')
 
         self.is_running = True
         self.duration = 6
@@ -599,6 +600,8 @@ class M3U8Process(Thread):
                 for index, segment in enumerate(reversed(_playlist.segments)):
                     if self.use_full_duplicate_checking:
                         uri = segment.absolute_uri
+                    elif self.use_pathonly_checking:
+                        uri = urllib.parse.urlparse(segment.absolute_uri).path
                     else:
                         uri = segment.get_path_from_uri()
                     dt = self.segment_date_time(segment)
@@ -622,8 +625,13 @@ class M3U8Process(Thread):
         self.set_cue_status(_segment)
         if self.use_full_duplicate_checking:
             uri = _segment.absolute_uri
+        elif self.use_pathonly_checking:
+            uri = urllib.parse.urlparse(_segment.absolute_uri).path
         else:
             uri = _segment.get_path_from_uri()
+
+
+
         uri_full = _segment.absolute_uri
         dt = self.segment_date_time(_segment)
         if self.use_date_on_key:
@@ -664,7 +672,7 @@ class M3U8Process(Thread):
                 # queue is closed, terminating
                 pass
         else:
-            self.logger.warning('DUPICATE FOUND {}'.format(uri_dt))
+            self.logger.warning('DUPLICATE FOUND {}'.format(uri_dt))
 
         return 0
 
@@ -682,6 +690,8 @@ class M3U8Process(Thread):
             for segment in _playlist.segments[disc_index:total_index]:
                 if self.use_full_duplicate_checking:
                     s_uri = segment.absolute_uri
+                elif self.use_pathonly_checking:
+                    s_uri = urllib.parse.urlparse(segment.absolute_uri).path
                 else:
                     s_uri = segment.get_path_from_uri()
                 s_dt = self.segment_date_time(segment)
@@ -705,6 +715,8 @@ class M3U8Process(Thread):
             for segment_m3u8 in _playlist.segments:
                 if self.use_full_duplicate_checking:
                     s_uri = segment_m3u8.absolute_uri
+                elif self.use_pathonly_checking:
+                    s_uri = urllib.parse.urlparse(segment_m3u8.absolute_uri).path
                 else:
                     s_uri = segment_m3u8.get_path_from_uri()
                 s_dt = self.segment_date_time(segment_m3u8)
