@@ -197,6 +197,8 @@ class XMLTV:
                 elif elem.tag == 'date':
                     p_date = self.get_p_date(elem)
                     if p_date:
+                        if '-' in p_date:                                     
+                            p_date = p_date.replace('-', '')                         
                         _program['air_date'] = p_date
                         if len(p_date) == 4:
                             _program['formatted_date'] = p_date
