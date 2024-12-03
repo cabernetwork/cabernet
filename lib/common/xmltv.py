@@ -323,9 +323,12 @@ class XMLTV:
         return {'actors': actors, 'directors': directors}
 
     def get_p_date(self, elem):
-        # 2 formats: YYYY or YYYYMMDD
+        # formats: YYYY or YYYYMMDD that can include dashes that are removed
         event, elem = next(self.iterator, (None, None))
-        return elem.text
+        p_date = elem.text
+        if '-' in p_date:
+            p_date = p_date.replace('-', '')
+        return p_date
 
     def get_p_video_quality(self, elem):
         event, elem = next(self.iterator, (None, None))
