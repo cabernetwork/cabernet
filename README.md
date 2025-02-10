@@ -136,7 +136,10 @@ https://containrrr.dev/watchtower/
     - Do not change the instance name unless you go into data management and remove the instance first.
     - [plutotv_mychannels]
 
-### 7. Forum
+### 7. Guides
+Beginners Setup: https://github.com/cabernetwork/cabernet/issues/78
+
+### 8. Forum
 Latest Forum: https://tvheadend.org/d/7455-daddylive-plutotv-xumo-m3u-xmltv-samsungtv-plex-tvguide-interfaces-appliance
 Archived Legacy Forum: https://web.archive.org/web/20221015111333/https://tvheadend.org/boards/5/topics/43052
 
