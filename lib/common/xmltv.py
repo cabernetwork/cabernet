@@ -198,11 +198,15 @@ class XMLTV:
                     p_date = self.get_p_date(elem)
                     if p_date:
                         _program['air_date'] = p_date
-                        if len(p_date) == 4:
-                            _program['formatted_date'] = p_date
-                        else:
-                            _program['formatted_date'] = datetime.datetime.strptime(
-                                p_date, '%Y%m%d').strftime('%Y/%m/%d')
+                        try:
+                            if len(p_date) == 4:
+                                _program['formatted_date'] = p_date
+                            else:
+                                _program['formatted_date'] = datetime.datetime.strptime(
+                                    p_date, '%Y%m%d').strftime('%Y/%m/%d')
+                        except ValueError:
+                            # Invalid date format, use today's date instead
+                            _program['formatted_date'] = datetime.datetime.today().strftime('%Y/%m/%d')
                     return True
                 elif elem.tag == 'episode-num':
                     episode_num = self.get_p_episode_num(elem)
