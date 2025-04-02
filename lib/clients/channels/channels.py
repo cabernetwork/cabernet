@@ -117,6 +117,12 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             elif sid_data['json']['group_sdtv']:
                 groups += '|' + sid_data['json']['group_sdtv']
 
+            # get EXTVLCOPT value from database to add it to the m3u file.
+            if 'extvlcopt' in sid_data['json']:                                           
+                vlcopt = sid_data['json']['extvlcopt']                         
+            else:                                                              
+                vlcopt = ''
+            
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
@@ -133,7 +139,18 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
                          if sid_data['thumbnail'] else '') +
                         'group-title=\'' + groups + '\',' + service_name
                 )
-            )
+            )            
+            
+            # add extvlcopt line to the channel data in m3u
+            if vlcopt:                                                     
+                 fakefile.write(                                           
+                     '%s\n' % (                                            
+                        (                                                  
+                             '#EXTVLCOPT:'+vlcopt[0]                       
+                        )                                                  
+                     )                                                     
+                 )          
+            
             fakefile.write(
                 '%s\n' % (
                     (
