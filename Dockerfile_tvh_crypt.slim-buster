@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=python:3.8.8-slim-buster
+ARG BASE_IMAGE=python:3.10.12-slim-buster
 FROM $BASE_IMAGE as base
 WORKDIR /app
 ENV PYTHONPATH "${PYTHONPATH}:/app"
