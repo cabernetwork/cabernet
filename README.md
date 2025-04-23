@@ -3,7 +3,7 @@ By default this app doesn't provide any video sources, only the plugins access t
 
 ## Installation
 ### 1. Requirements
-- Python 3.8+
+- Python 3.10.12+
 - python cryptography module
 - python httpx[http2] module
 - (optional) streamlink module
