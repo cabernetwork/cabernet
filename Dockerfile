@@ -1,4 +1,4 @@
-FROM python:3.8-alpine
+FROM python:3.10.12-alpine
 WORKDIR /app
 COPY . .
 RUN apk add --no-cache --update bash tzdata ffmpeg curl su-exec && \
