@@ -211,7 +211,8 @@ class EPG:
                 EPG.sub_el(c_out, 'display-name', _text=ch_data['json']['callsign'])
                 EPG.sub_el(c_out, 'display-name', _text='%s %s' %
                                                         (updated_chnum, ch_data['json']['callsign']))
-
+                EPG.sub_el(c_out, 'lcn', _text='%s' %
+                                                        (updated_chnum))
                 if self.config['epg']['epg_channel_icon'] and ch_data['thumbnail'] is not None:
                     EPG.sub_el(c_out, 'icon', src=ch_data['thumbnail'])
                 break
