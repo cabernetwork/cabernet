@@ -91,7 +91,7 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             if not _plugins[sid_data['namespace']] \
                     .plugin_obj.instances[sid_data['instance']].enabled:
                 continue
-            config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])
+            config_section = utils.instance_config_section(sid_data['namespace'], sid_data['instance'])            
             if not _config[config_section]['enabled']:
                 continue
             sids_processed.append(sid)
@@ -105,18 +105,35 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             # either 'group-title' or 'tvh-tags'
             # if a ';' is used in group-title, tvheadend will use the 
             # entire string as a tag
-            groups = sid_data['namespace']
+            groups = "" 
+            namespace_in_m3u = _config.get(config_section, {}).get('channel-namespace_in_groups')            
             inst_group = _config[config_section]['channel-group_name']
+            if namespace_in_m3u is not None:
+               if namespace_in_m3u == 'True':
+                   groups = sid_data['namespace']
+            else:
+                groups = sid_data['namespace']
             if inst_group is not None:
-                groups += '|' + inst_group
+               if groups:
+                   groups += '|' + inst_group
+               else:
+                   groups += inst_group
             if sid_data['group_tag']:
-                groups += '|' + '|'.join([sid_data['group_tag']])
+                if groups:
+                    groups += '|' + '|'.join([sid_data['group_tag']])
+                else:
+                    groups += '|'.join([sid_data['group_tag']])
             if sid_data['json']['HD']:
                 if sid_data['json']['group_hdtv']:
-                    groups += '|' + sid_data['json']['group_hdtv']
+                    if groups:
+                        groups += '|' + sid_data['json']['group_hdtv']
+                    else:
+                        groups += sid_data['json']['group_hdtv']
             elif sid_data['json']['group_sdtv']:
-                groups += '|' + sid_data['json']['group_sdtv']
-
+                if groups:
+                    groups += '|' + sid_data['json']['group_sdtv']
+                else:
+                    groups += sid_data['json']['group_sdtv']
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)
