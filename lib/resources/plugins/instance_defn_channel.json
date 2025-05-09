@@ -25,6 +25,13 @@
                         "level": 1,
                         "help": "Imports groups from M3U into the group other column"
                     },
+                    "channel-namespace_in_groups":{
+                        "label": "Namespace in m3u channel",
+                        "type": "boolean",
+                        "default": true,
+                        "level": 1,
+                        "help": "Namespace is included in M3U file"
+                    },
                     "channel-start_ch_num":{
                         "label": "Starting Ch Number",
                         "type": "integer",
