@@ -108,7 +108,7 @@ class TVHUserConfig:
         self.data['paths']['config_file'] = str(config_file)
         try:
             utils.logging_setup(self.data)
-        except KeyError:
+        except (KeyError, RuntimeError):
             self.init_logger_config()
         self.logger = logging.getLogger(__name__)
         self.logger.info("Loading Configuration File: " + str(config_file))
@@ -146,22 +146,30 @@ class TVHUserConfig:
                 if os.path.exists(poss_config):
                     config_file = poss_config
                     break
-            if not config_file:
-                # create one in the data folder
+        if config_file:
+            if not os.path.exists(config_file):
                 try:
-                    data_folder = pathlib.Path(_script_dir).joinpath('data')
-                    if not data_folder.exists():
-                        os.mkdir(data_folder)
-                    f = open('data/' + CONFIG_FILENAME, 'wb')
-                    config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
+                    # config file missing, create it
+                    f = open(config_file, 'wb')
                     f.close()
                 except PermissionError as e:
-                    print('ERROR: {} unable to create {}'.format(str(e), poss_config))
+                    print('1 ERROR: {} unable to create {}'.format(str(e), config_file))
+        else:
+            # create one in the data folder
+            try:
+                data_folder = pathlib.Path(_script_dir).joinpath('data')
+                if not data_folder.exists():
+                    os.mkdir(data_folder)
+                f = open('data/' + CONFIG_FILENAME, 'wb')
+                config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
+                f.close()
+            except PermissionError as e:
+                print('2 ERROR: {} unable to create {}'.format(str(e), poss_config))
                     
         if config_file and os.path.exists(config_file):
             return config_file
         else:
-            print('ERROR: Config file missing {}, Exiting...'.format(poss_config))
+            print('ERROR: Config file missing {} {}, Exiting...'.format(config_file, poss_config))
             clean_exit(1)
 
     def fix_value_type(self, _section, _key, _value):
