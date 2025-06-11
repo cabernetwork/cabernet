@@ -37,7 +37,7 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.15.00-RC04'
+VERSION = '0.9.15.01'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
@@ -51,7 +51,7 @@ def get_version_str():
 logger = None
 LOG_LVL_NOTICE = 25
 LOG_LVL_TRACE = 5
-SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*(?:[\D]+(\d)+)*')
+SEARCH_VERSION = re.compile('^([\\d]+)\\.([\\d]+)\\.([\\d]+)(?:\\.([\\d]+))*(?:[\\D]+(\\d)+)*')
 
 def get_version_index(_ver):
     """

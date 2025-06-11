@@ -92,16 +92,16 @@ class PluginChannels:
         return x
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _retries, _header=None, _data=None):
+    def get_uri_data(self, _uri, _retries, _header=None, _data=None, _cookies=None):
         if _header is None:
             header = {
                 'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=8, verify=False)
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=18, verify=False, cookies=_cookies)
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8, verify=False)
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=18, verify=False, cookies=_cookies)
         x = resp.content
         return x
 

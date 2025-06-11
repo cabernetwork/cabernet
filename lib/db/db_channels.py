@@ -221,7 +221,7 @@ class DBChannels(DB):
                 self.add(DB_CHANNELS_TABLE, (
                     _namespace,
                     _instance,
-                    True,
+                    ch['enabled'],
                     ch['id'],
                     ch['number'],
                     ch['number'],
@@ -232,12 +232,15 @@ class DBChannels(DB):
                     True,
                     json.dumps(ch)))
             except sqlite3.IntegrityError as ex:
-                # record already present.  Check the thumbnail and update as needed
+                # record already present.  Check the editable fields and update as needed
                 ch_stored = self.get_channel(ch['id'], _namespace, _instance)
-                if ch_stored['thumbnail'] is None and ch['thumbnail'] is not None:
-                    ch_stored['thumbnail'] = ch['thumbnail']
-                    ch_stored['thumbnail_size'] = ch['thumbnail_size']
-                    self.update_channel(ch_stored)
+
+                ch_stored['enabled'] = ch['enabled']
+                ch_stored['display_name'] = ch['display_name']
+                ch_stored['group_tag'] = ch['groups_other']
+                ch_stored['thumbnail'] = ch['thumbnail']
+                ch_stored['thumbnail_size'] = ch['thumbnail_size']
+                self.update_channel(ch_stored)
                 self.update(DB_CHANNELS_TABLE, (
                     ch['number'],
                     True,
@@ -246,9 +249,15 @@ class DBChannels(DB):
                     _instance,
                     ch['id']
                 ))
+            except sqlite3.InterfaceError as ex:
+                self.logger.warning('InterfaceError: Bind data: {} : {} : ({}){} : {} : {} : {}'.format( \
+                    ch['id'], ch['number'], type(ch['name']), ch['name'], edit_groups, \
+                    ch['thumbnail'], str(ch['thumbnail_size']) ))
+                raise ex
 
             self.add(DB_STATUS_TABLE, (
                 _namespace, _instance, datetime.datetime.now()))
+
         self.delete(DB_CHANNELS_TABLE, (False, _namespace, _instance,))
 
     def update_channel(self, _ch):

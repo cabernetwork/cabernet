@@ -124,14 +124,14 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             fakefile.write(
                 '%s\n' % (
                         record_marker + ':-1' + ' ' +
-                        'channelID=\'' + sid + '\' ' +
-                        'tvg-num=\'' + updated_chnum + '\' ' +
-                        'tvg-chno=\'' + updated_chnum + '\' ' +
-                        'tvg-name=\'' + sid_data['display_name'] + '\' ' +
-                        'tvg-id=\'' + sid + '\' ' +
-                        (('tvg-logo=\'' + sid_data['thumbnail'] + '\' ')
+                        'channelID="' + sid + '" ' +
+                        'tvg-num="' + updated_chnum + '" ' +
+                        'tvg-chno="' + updated_chnum + '" ' +
+                        'tvg-name="' + sid_data['display_name'] + '" ' +
+                        'tvg-id="' + sid + '" ' +
+                        (('tvg-logo="' + sid_data['thumbnail'] + '" ')
                          if sid_data['thumbnail'] else '') +
-                        'group-title=\'' + groups + '\',' + service_name
+                        'group-title="' + groups + '",' + service_name
                 )
             )
             fakefile.write(

@@ -103,6 +103,7 @@ class M3U8GetUriData(Thread):
             M3U8Queue.http_session.close()
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
+        self.logger.trace('HTTP HEADER: {}'.format(M3U8Queue.http_header))
         resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, verify=False)
         x = resp.content
         resp.raise_for_status()
@@ -118,7 +119,8 @@ class M3U8GetUriData(Thread):
                 self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
                 return False
             else:
-                key_data = self.get_uri_data(_data['key']['uri'], HTTP_RETRIES)
+                key_uri = _data['key']['uri']
+                key_data = self.get_uri_data(key_uri, HTTP_RETRIES)
 
             if key_data is not None:
                 M3U8Queue.key_list[_data['key']['uri']] = key_data
@@ -485,7 +487,8 @@ class M3U8Process(Thread):
                     self.logger.warning('[{}]][player-enable_url_filter]'
                                         ' enabled but [player-url_filter] not set'
                                         .format(self.config_section))
-            while not TERMINATE_REQUESTED:
+            count = 2
+            while not TERMINATE_REQUESTED and count > 0:
                 added = 0
                 removed = 0
                 self.logger.debug('Reloading m3u8 stream queue {}'.format(os.getpid()))
@@ -493,7 +496,9 @@ class M3U8Process(Thread):
                 if playlist is None:
                     self.logger.debug('M3U Playlist is None, retrying')
                     self.sleep(self.duration+0.5)
+                    count = count - 1
                     continue
+                count = 2
                 if playlist.playlist_type == 'vod' or self.config[self.config_section]['player-play_all_segments']:
                     if not IS_VOD:
                         self.logger.debug('Setting stream type to VOD {}'.format(os.getpid()))

@@ -68,8 +68,8 @@ class Backups:
         self.logger = logging.getLogger(__name__)
         self.plugins = _plugins
         self.config = _plugins.config_obj.data
-        if self.config['paths']['external_plugins_pkg'] not in CODE_DIRS_TO_IGNORE:
-            CODE_DIRS_TO_IGNORE.append(self.config['paths']['external_plugins_pkg'])
+        #if self.config['paths']['external_plugins_pkg'] not in CODE_DIRS_TO_IGNORE:
+        #    CODE_DIRS_TO_IGNORE.append(self.config['paths']['external_plugins_pkg'])
 
     def backup_data(self):
         # get the location where the backups will be stored

@@ -21,8 +21,8 @@ import os
 import sys
 from inspect import getsourcefile
 
-if sys.version_info.major == 2 or sys.version_info < (3, 12):
-    print('Error: cabernet requires python 3.12+.')
+if sys.version_info.major == 2 or sys.version_info < (3, 10):
+    print('Error: cabernet requires python 3.10+.')
     sys.exit(1)
 
 from lib import main

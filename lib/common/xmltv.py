@@ -211,7 +211,7 @@ class XMLTV:
                                 episode_num['system'] == 'SxxExx':
                             ep_num = episode_num['text']
                             _program['se_common'] = ep_num
-                            nums = re.findall('\d+', ep_num)
+                            nums = re.findall('\\d+', ep_num)
                             if len(nums) < 2:
                                 _program['episode'] = nums[0]
                             else:
@@ -222,7 +222,7 @@ class XMLTV:
                             _program['se_progid'] = ep_num
                             _program['progid'] = ep_num.replace('.', '')
                             if _program['episode'] is None:
-                                nums = int(re.findall('\d+$', ep_num)[0])
+                                nums = int(re.findall('\\d+$', ep_num)[0])
                                 if nums != 0:
                                     _program['episode'] = nums
                         elif episode_num['system'] == 'xmltv_ns':
