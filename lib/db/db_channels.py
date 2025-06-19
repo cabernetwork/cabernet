@@ -236,8 +236,6 @@ class DBChannels(DB):
                 ch_stored = self.get_channel(ch['id'], _namespace, _instance)
 
                 ch_stored['enabled'] = ch['enabled']
-                ch_stored['display_name'] = ch['display_name']
-                ch_stored['group_tag'] = ch['groups_other']
                 ch_stored['thumbnail'] = ch['thumbnail']
                 ch_stored['thumbnail_size'] = ch['thumbnail_size']
                 self.update_channel(ch_stored)
