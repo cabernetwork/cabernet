@@ -27,6 +27,24 @@ import base64
 import binascii
 import logging
 
+# install required libraries
+try:
+    from pip._internal import main as pip
+    try:
+        import cryptography
+    except ImportError:
+        pip(['install', 'cryptography'])
+    except ModuleNotFoundError:
+        print('Unable to install required cryptography module')
+    try:
+        import requests
+    except ImportError:
+        pip(['install', 'requests'])
+    except ModuleNotFoundError:
+        print('Unable to install required requests module')
+except (ImportError, ModuleNotFoundError):
+    print('Unable to load pip module to install required modules')
+
 from lib.config.user_config import get_config
 
 

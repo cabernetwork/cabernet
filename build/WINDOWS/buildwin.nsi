@@ -83,7 +83,7 @@ Section "Install Python3" SEC01
     SetOutPath "$INSTDIR"
     SetOverwrite ifnewer
     inetc::get /BANNER "Python3 download in progress..." \
-        "https://www.python.org/ftp/python/3.9.5/python-3.9.5-amd64.exe" \
+        "https://www.python.org/ftp/python/3.13.5/python-3.13.5-amd64.exe" \
         "$TEMP\python.exe" /END
         Pop $0
         StrCmp $0 "OK" dlok

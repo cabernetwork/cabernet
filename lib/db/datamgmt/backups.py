@@ -68,8 +68,8 @@ class Backups:
         self.logger = logging.getLogger(__name__)
         self.plugins = _plugins
         self.config = _plugins.config_obj.data
-        #if self.config['paths']['external_plugins_pkg'] not in CODE_DIRS_TO_IGNORE:
-        #    CODE_DIRS_TO_IGNORE.append(self.config['paths']['external_plugins_pkg'])
+        if self.config['paths']['external_plugins_pkg'] not in CODE_DIRS_TO_IGNORE:
+            CODE_DIRS_TO_IGNORE.append(self.config['paths']['external_plugins_pkg'])
 
     def backup_data(self):
         # get the location where the backups will be stored
@@ -141,9 +141,18 @@ class Backups:
                 logging.warning('Unexpected folder count exceeded, aborting code backup')
                 return False
 
+            # make sure that the external plugins are backed up
+            # but not part of delete or restore methods
+            if self.config['paths']['external_plugins_pkg'] in subdirs:
+                re_add_external_plugins_path = True
+            else:
+                re_add_external_plugins_path = False
             for d in CODE_DIRS_TO_IGNORE:
                 if d in subdirs:
                     subdirs.remove(d)
+            if re_add_external_plugins_path:
+                subdirs.append(self.config['paths']['external_plugins_pkg'])
+
             rel_dirname = dirname.replace(base_path, '.')
             zf.write(dirname, arcname=rel_dirname)
             for filename in files:
