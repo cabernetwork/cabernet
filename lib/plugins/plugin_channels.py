@@ -85,6 +85,7 @@ class PluginChannels:
     def get_uri_json_data(self, _uri, _retries):
         header = {
             'Content-Type': 'application/json',
+            'Accept-Language': 'en-US',
             'User-agent': utils.DEFAULT_USER_AGENT}
         resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
         x = resp.json()
