@@ -49,7 +49,7 @@ def config_json(_webserver):
                                     .format('501 - Config pages disabled.'
                                             ' Set [web][disable_web_config] to False in the config file to enable'))
     else:
-        _webserver.do_mime_response(200, 'application/json',
+        _webserver.do_mime_response(200, None,
                                     json.dumps(_webserver.plugins.config_obj.filter_config_data()))
 
 
