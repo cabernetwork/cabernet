@@ -57,7 +57,10 @@ class PluginPrograms:
     @handle_json_except
     def get_uri_data(self, _uri, _retries, _header=None):
         if _header is None:
-            header = {'User-agent': utils.DEFAULT_USER_AGENT}
+            header = {
+                'User-agent': utils.DEFAULT_USER_AGENT,
+                'Accept-Language': 'en-US'
+            }
         else:
             header = _header
         resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
