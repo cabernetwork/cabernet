@@ -556,6 +556,7 @@ class M3U8Process(Thread):
             M3U8Queue.http_session.close()
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
+        self.logger.trace('HEADER: {}'.format(self.header))
         return m3u8.load(_uri, headers=self.header, http_session=M3U8Queue.http_session)
 
     def segment_date_time(self, _segment):
