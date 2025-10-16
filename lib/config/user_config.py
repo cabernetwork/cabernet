@@ -133,6 +133,7 @@ class TVHUserConfig:
                 lower_key = each_key.lower()
                 self.data[lower_section][lower_key] = \
                     self.fix_value_type(lower_section, lower_key, each_val)
+                    
 
     @staticmethod
     def get_config_path(_script_dir, args=None):
@@ -210,6 +211,9 @@ class TVHUserConfig:
         if type(current_value) is int:
             if _updated_data[_section][_key][0] is not None:
                 _updated_data[_section][_key][0] = int(_updated_data[_section][_key][0])
+        elif type(current_value) is float:
+            if _updated_data[_section][_key][0] is not None:
+                _updated_data[_section][_key][0] = float(_updated_data[_section][_key][0])
         elif type(current_value) is bool:
             _updated_data[_section][_key][0] = bool(int(_updated_data[_section][_key][0]))
         elif type(current_value) is str:
