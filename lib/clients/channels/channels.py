@@ -59,7 +59,7 @@ def lineup_xml(_webserver):
 
 @getrequest.route('/lineup.json')
 def lineup_json(_webserver):
-    _webserver.do_mime_response(200, 'application/json', get_channels_json(
+    _webserver.do_mime_response(200, None, get_channels_json(
         _webserver.config, _webserver.stream_url,
         _webserver.query_data['name'],
         _webserver.query_data['instance'],
@@ -130,14 +130,14 @@ def get_channels_m3u(_config, _base_url, _namespace, _instance, _plugins):
             fakefile.write(
                 '%s\n' % (
                         record_marker + ':-1' + ' ' +
-                        'channelID=\'' + sid + '\' ' +
-                        'tvg-num=\'' + updated_chnum + '\' ' +
-                        'tvg-chno=\'' + updated_chnum + '\' ' +
-                        'tvg-name=\'' + sid_data['display_name'] + '\' ' +
-                        'tvg-id=\'' + sid + '\' ' +
-                        (('tvg-logo=\'' + sid_data['thumbnail'] + '\' ')
+                        'channelID="' + sid + '" ' +
+                        'tvg-num="' + updated_chnum + '" ' +
+                        'tvg-chno="' + updated_chnum + '" ' +
+                        'tvg-name="' + sid_data['display_name'] + '" ' +
+                        'tvg-id="' + sid + '" ' +
+                        (('tvg-logo="' + sid_data['thumbnail'] + '" ')
                          if sid_data['thumbnail'] else '') +
-                        'group-title=\'' + groups + '\',' + service_name
+                        'group-title="' + groups + '",' + service_name
                 )
             )            
             
@@ -171,12 +171,9 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
         for sid_data in sid_data_list:
             if sid in sids_processed:
                 continue
-            sids_processed.append(sid)
-            if not sid_data['enabled']:
-                continue
-            if not _plugins.get(sid_data['namespace']):
-                continue
-            if not _plugins[sid_data['namespace']].enabled:
+            if not sid_data['enabled'] \
+                    or not _plugins.get(sid_data['namespace']) \
+                    or not _plugins[sid_data['namespace']].enabled:
                 continue
             if not _plugins[sid_data['namespace']] \
                     .plugin_obj.instances[sid_data['instance']].enabled:
@@ -186,10 +183,11 @@ def get_channels_json(_config, _base_url, _namespace, _instance, _plugins):
                 continue
             sids_processed.append(sid)
             stream = _config[config_section]['player-stream_type']
-            if stream == 'm3u8redirect':
+            if stream == 'm3u8redirect' and sid_data['json'].get('stream_url'):
                 uri = sid_data['json']['stream_url']
             else:
                 uri = ch_obj.set_uri(sid_data)
+
             updated_chnum = utils.wrap_chnum(
                 str(sid_data['display_number']), sid_data['namespace'],
                 sid_data['instance'], _config)

@@ -37,11 +37,11 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.15.00-RC04'
+VERSION = '0.9.15.08'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:127.0) Gecko/20100101 Firefox/131.0'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 
@@ -51,7 +51,7 @@ def get_version_str():
 logger = None
 LOG_LVL_NOTICE = 25
 LOG_LVL_TRACE = 5
-SEARCH_VERSION = re.compile('^([\d]+)\.([\d]+)\.([\d]+)(?:\.([\d]+))*(?:[\D]+(\d)+)*')
+SEARCH_VERSION = re.compile('^([\\d]+)\\.([\\d]+)\\.([\\d]+)(?:\\.([\\d]+))*(?:[\\D]+(\\d)+)*')
 
 def get_version_index(_ver):
     """

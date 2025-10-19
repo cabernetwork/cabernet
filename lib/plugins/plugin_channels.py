@@ -82,39 +82,46 @@ class PluginChannels:
 
     @handle_url_except()
     @handle_json_except
-    def get_uri_json_data(self, _uri, _retries):
-        header = {
-            'Content-Type': 'application/json',
-            'User-agent': utils.DEFAULT_USER_AGENT}
+    def get_uri_json_data(self, _uri, _retries, _header=None):
+        if _header is None:
+            header = {
+                'Content-Type': 'application/json',
+                'Accept-Language': 'en-US,en',
+                'User-agent': utils.DEFAULT_USER_AGENT}
+        else:
+            header = _header
+        self.logger.trace('HEADER: {}'.format(header))
         resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
         x = resp.json()
         resp.raise_for_status()
         return x
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _retries, _header=None, _data=None):
+    def get_uri_data(self, _uri, _retries, _header=None, _data=None, _cookies=None):
         if _header is None:
             header = {
+                'Accept-Language': 'en-US',
                 'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
+        self.logger.trace('HEADER: {}'.format(header))
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=8, verify=False)
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=18, verify=False, cookies=_cookies)
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8, verify=False)
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=18, verify=False, cookies=_cookies)
         x = resp.content
         return x
 
     @handle_url_except()
     def get_m3u8_data(self, _uri, _retries, _header=None):
         if _header is None:
-            return m3u8.load(_uri,
-                             headers={'User-agent': utils.DEFAULT_USER_AGENT},
-                             http_session=self.plugin_obj.http_session)
+            header={'User-agent': utils.DEFAULT_USER_AGENT}
         else:
-            return m3u8.load(_uri,
-                             headers=_header,
-                             http_session=self.plugin_obj.http_session)
+            header = _header
+        self.logger.trace('HEADER: {}'.format(header))
+        return m3u8.load(_uri,
+                         headers=header,
+                         http_session=self.plugin_obj.http_session)
 
     def refresh_channels(self, force=False):
         self.ch_num_enum = self.config_obj.data[self.config_section].get('channel-start_ch_num')
@@ -180,6 +187,7 @@ class PluginChannels:
              'Accept-Encoding': 'identity',
              'Connection': 'Keep-Alive'
              }
+        self.logger.trace('HEADER: {}'.format(h))
         resp = self.plugin_obj.http_session.get(_thumbnail, headers=h, timeout=8)
         resp.raise_for_status()
         img_blob = resp.content
@@ -209,7 +217,7 @@ class PluginChannels:
                 'Referer': _referer}
         else:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
-
+        self.logger.trace('HEADER: {}'.format(header))
         ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
         ch_json = ch_dict['json']
         best_resolution = -1

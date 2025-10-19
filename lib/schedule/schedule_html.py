@@ -419,6 +419,8 @@ class ScheduleHTML:
             '<option value="1380">23 hours</option>',
             '<option value="1410">23:30</option>',
             '<option value="1440">24 hours</option>',
+            '<option value="1500">25 hours</option>',
+            '<option value="1560">26 hours</option>',
             '<option value="2820">47 hours</option>',
             '<option value="2880">2 days</option>',
             '<option value="8640">6 days</option>',

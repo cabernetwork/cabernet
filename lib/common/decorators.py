@@ -178,6 +178,7 @@ def handle_json_except(f):
             return f(self, *args, **kwargs)
         except (json.JSONDecodeError) as jsonError:
             self.logger.error("JSONError in function {}(): {}".format(f.__qualname__, str(jsonError)))
+            time.sleep(2)
             return None
 
     return update_wrapper(wrapper_func, f)

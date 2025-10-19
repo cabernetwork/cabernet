@@ -92,11 +92,19 @@ class PluginObj:
 
     def get_channel_uri_ext(self, _sid, _instance=None):
         """
-        External request to return the uri for a m3u8 stream.
+        External request to return the reference uri for a m3u8 stream.
         Called from stream object.
         """
         self.check_logger_refresh()
         return self.instances[_instance].get_channel_uri(_sid)
+
+    def get_channel_ref_ext(self, _sid, _instance=None):
+        """
+        External request to return the uri for a m3u8 stream.
+        Called from stream object.
+        """
+        self.check_logger_refresh()
+        return self.instances[_instance].get_channel_ref(_sid)
 
     ##############################
     # ## EXTERNAL EPG METHODS

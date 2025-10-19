@@ -174,13 +174,16 @@ class ConfigFormHTML:
                     background_color, ';"  type="password"', readonly,
                     ' name="', section_data['name'], '-', setting, '">'])
 
-            elif setting_data['type'] == 'integer' \
-                    or setting_data['type'] == 'float':
+            elif setting_data['type'] == 'integer':
                 input_html = ''.join([
                     '<input STYLE="background-color: ',
                     background_color, ';" type="number"', readonly,
                     ' name="', section_data['name'], '-', setting, '">'])
-
+            elif setting_data['type'] == 'float':
+                input_html = ''.join([
+                    '<input STYLE="background-color: ',
+                    background_color, ';" type="number" step="0.1" ', readonly,
+                    ' name="', section_data['name'], '-', setting, '">'])
             elif setting_data['type'] == 'boolean':
                 if 'writable' in setting_data and not setting_data['writable']:
                     readonly = ' disabled'

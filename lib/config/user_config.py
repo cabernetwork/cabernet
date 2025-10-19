@@ -49,7 +49,7 @@ def config_json(_webserver):
                                     .format('501 - Config pages disabled.'
                                             ' Set [web][disable_web_config] to False in the config file to enable'))
     else:
-        _webserver.do_mime_response(200, 'application/json',
+        _webserver.do_mime_response(200, None,
                                     json.dumps(_webserver.plugins.config_obj.filter_config_data()))
 
 
@@ -108,7 +108,7 @@ class TVHUserConfig:
         self.data['paths']['config_file'] = str(config_file)
         try:
             utils.logging_setup(self.data)
-        except KeyError:
+        except (KeyError, RuntimeError):
             self.init_logger_config()
         self.logger = logging.getLogger(__name__)
         self.logger.info("Loading Configuration File: " + str(config_file))
@@ -133,6 +133,7 @@ class TVHUserConfig:
                 lower_key = each_key.lower()
                 self.data[lower_section][lower_key] = \
                     self.fix_value_type(lower_section, lower_key, each_val)
+                    
 
     @staticmethod
     def get_config_path(_script_dir, args=None):
@@ -146,22 +147,30 @@ class TVHUserConfig:
                 if os.path.exists(poss_config):
                     config_file = poss_config
                     break
-            if not config_file:
-                # create one in the data folder
+        if config_file:
+            if not os.path.exists(config_file):
                 try:
-                    data_folder = pathlib.Path(_script_dir).joinpath('data')
-                    if not data_folder.exists():
-                        os.mkdir(data_folder)
-                    f = open('data/' + CONFIG_FILENAME, 'wb')
-                    config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
+                    # config file missing, create it
+                    f = open(config_file, 'wb')
                     f.close()
                 except PermissionError as e:
-                    print('ERROR: {} unable to create {}'.format(str(e), poss_config))
+                    print('1 ERROR: {} unable to create {}'.format(str(e), config_file))
+        else:
+            # create one in the data folder
+            try:
+                data_folder = pathlib.Path(_script_dir).joinpath('data')
+                if not data_folder.exists():
+                    os.mkdir(data_folder)
+                f = open('data/' + CONFIG_FILENAME, 'wb')
+                config_file = pathlib.Path(data_folder).joinpath(CONFIG_FILENAME)
+                f.close()
+            except PermissionError as e:
+                print('2 ERROR: {} unable to create {}'.format(str(e), poss_config))
                     
         if config_file and os.path.exists(config_file):
             return config_file
         else:
-            print('ERROR: Config file missing {}, Exiting...'.format(poss_config))
+            print('ERROR: Config file missing {} {}, Exiting...'.format(config_file, poss_config))
             clean_exit(1)
 
     def fix_value_type(self, _section, _key, _value):
@@ -202,6 +211,9 @@ class TVHUserConfig:
         if type(current_value) is int:
             if _updated_data[_section][_key][0] is not None:
                 _updated_data[_section][_key][0] = int(_updated_data[_section][_key][0])
+        elif type(current_value) is float:
+            if _updated_data[_section][_key][0] is not None:
+                _updated_data[_section][_key][0] = float(_updated_data[_section][_key][0])
         elif type(current_value) is bool:
             _updated_data[_section][_key][0] = bool(int(_updated_data[_section][_key][0]))
         elif type(current_value) is str:

@@ -237,8 +237,8 @@ class StreamlinkProxy(Stream):
             '--stdout',
             '--loglevel', sl_llevel,
             '--ffmpeg-fout', 'mpegts',
-            '--hls-segment-attempts', '2',
-            '--hls-segment-timeout', '5',
+            '--stream-segment-attempts', '2',
+            '--stream-segment-timeout', '5',
             uri,
             '720,best'
         ]

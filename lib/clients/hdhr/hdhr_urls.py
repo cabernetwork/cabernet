@@ -44,7 +44,7 @@ def discover_json(_webserver):
         if 'player-tuner_count' in area_data.keys():
             namespace = area
     _webserver.do_mime_response(200,
-                                'application/json',
+                                None,
                                 hdhr_templates['jsonDiscover'].format(
                                     name + _webserver.config['hdhomerun']['reporting_friendly_name'],
                                     _webserver.config['hdhomerun']['reporting_model'],
@@ -97,7 +97,7 @@ def lineup_status_json(_webserver):
         if _webserver.scan_state == 100:
             _webserver.scan_state = -1
             _webserver.update_scan_status(_webserver.query_data['name'], 'Idle')
-    _webserver.do_mime_response(200, 'application/json', return_json)
+    _webserver.do_mime_response(200, None, return_json)
 
 
 @postrequest.route('/lineup.post')
