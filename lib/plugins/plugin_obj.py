@@ -106,6 +106,15 @@ class PluginObj:
         self.check_logger_refresh()
         return self.instances[_instance].get_channel_ref(_sid)
 
+    def stream_terminated_ext(self, _sid, _instance=None):
+        """
+        External request to return the uri for a m3u8 stream.
+        Called from stream object.
+        """
+        self.check_logger_refresh()
+        return self.instances[_instance].stream_terminated(_sid)
+
+
     ##############################
     # ## EXTERNAL EPG METHODS
     ##############################

@@ -62,6 +62,31 @@ class PluginChannels:
         self.config_section = None
         self.ch_num_enum = None
 
+    ##############################
+    # ## EXTERNAL STREAM METHODS
+    ##############################
+
+    def get_channel_uri(self, sid):
+        """
+        Should be overridden in the plugin specific method
+        """
+        return None
+
+    def stream_terminated(self, sid):
+        """
+        This is called when the stream is terminated. Used to stop
+        any polling processing that the plugin is doing during the
+        stream.
+        """
+        return None
+
+
+
+    ##############################
+    # ## NORMAL METHODS
+    ##############################
+
+
     def set_channel_num(self, _number):
         """
         if _number is None then will set the channel number based

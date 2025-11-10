@@ -541,6 +541,8 @@ class M3U8Process(Thread):
         try:
             STREAM_QUEUE.put({'uri_dt': 'terminate'})
             time.sleep(0.01)
+            self.plugins.plugins[self.channel_dict['namespace']] \
+                .plugin_obj.stream_terminated_ext(self.channel_dict['uid'], self.channel_dict['instance'])
         except ValueError as ex:
             pass
 
@@ -591,10 +593,11 @@ class M3U8Process(Thread):
             # total_added += self.add_segment(_playlist.segments[0], keys[0])
 
             for m3u8_segment, key in zip(_playlist.segments[0:skipped_seg], keys[0:skipped_seg]):
-                total_added += self.add_segment(m3u8_segment, key, _default_played=True)
+                key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                total_added += self.add_segment(m3u8_segment, key2, _default_played=True)
             for i in range(skipped_seg, num_segments):
-                total_added += self.add_segment(
-                    _playlist.segments[i], keys[i])
+                key = {"uri": _playlist.segments[i].key.absolute_uri, "method": _playlist.segments[i].key.method, "iv": _playlist.segments[i].key.iv}
+                total_added += self.add_segment(_playlist.segments[i], key)
             self.is_starting = False
         else:
             key_list = list(PLAY_LIST.keys())
@@ -619,7 +622,8 @@ class M3U8Process(Thread):
                         i = num_segments - index
             for m3u8_segment, key in zip(
                     _playlist.segments[i:num_segments], keys[i:num_segments]):
-                added = self.add_segment(m3u8_segment, key)
+                key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                added = self.add_segment(m3u8_segment, key2)
                 total_added += added
                 if added == 0 or TERMINATE_REQUESTED:
                     break

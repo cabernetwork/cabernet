@@ -89,6 +89,14 @@ class PluginInstanceObj:
                 .format(self.plugin_obj.name, self.instance_key))
             return None
 
+    def stream_terminated(self, sid):
+        """
+        This is called when the stream is terminated. Used to stop
+        any polling processing that the plugin is doing during the
+        stream.
+        """
+        return self.channels.stream_terminated(sid)
+
     ##############################
     # ## EXTERNAL EPG METHODS
     ##############################

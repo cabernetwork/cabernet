@@ -79,7 +79,8 @@ class InternalProxy(Stream):
         self.cue = False
 
     def terminate(self, *args):
-        self.t_queue.del_thread(threading.get_ident())
+        if self.t_queue:
+            self.t_queue.del_thread(threading.get_ident())
         time.sleep(0.01)
         self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'terminate'})
         time.sleep(0.01)
@@ -93,7 +94,7 @@ class InternalProxy(Stream):
             time.sleep(1.0)
             count -= 1
         
-        if not self.t_queue.is_alive():
+        if self.t_queue and not self.t_queue.is_alive():
             self.t_m3u8.join(timeout=15)
             if self.t_m3u8.is_alive():
                 # this is not likely but if t_m3u8 does not self terminate then force it to terminate
