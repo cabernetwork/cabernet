@@ -593,10 +593,16 @@ class M3U8Process(Thread):
             # total_added += self.add_segment(_playlist.segments[0], keys[0])
 
             for m3u8_segment, key in zip(_playlist.segments[0:skipped_seg], keys[0:skipped_seg]):
-                key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                if m3u8_segment.key:
+                    key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                else:
+                    key2=None
                 total_added += self.add_segment(m3u8_segment, key2, _default_played=True)
             for i in range(skipped_seg, num_segments):
-                key = {"uri": _playlist.segments[i].key.absolute_uri, "method": _playlist.segments[i].key.method, "iv": _playlist.segments[i].key.iv}
+                if _playlist.segments[i].key:
+                    key = {"uri": _playlist.segments[i].key.absolute_uri, "method": _playlist.segments[i].key.method, "iv": _playlist.segments[i].key.iv}
+                else:
+                    key=None
                 total_added += self.add_segment(_playlist.segments[i], key)
             self.is_starting = False
         else:
@@ -622,7 +628,10 @@ class M3U8Process(Thread):
                         i = num_segments - index
             for m3u8_segment, key in zip(
                     _playlist.segments[i:num_segments], keys[i:num_segments]):
-                key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                if m3u8_segment.key:
+                    key2 = {"uri": m3u8_segment.key.absolute_uri, "method": m3u8_segment.key.method, "iv": m3u8_segment.key.iv}
+                else:
+                    key2 = None
                 added = self.add_segment(m3u8_segment, key2)
                 total_added += added
                 if added == 0 or TERMINATE_REQUESTED:
