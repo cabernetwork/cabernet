@@ -293,6 +293,7 @@ class InternalProxy(Stream):
         a short.  It is currently set to at least 20 seconds of data 
         before it stops transmitting
         """
+        x = 0
         try:
             bytes_written = 0
             count = 0

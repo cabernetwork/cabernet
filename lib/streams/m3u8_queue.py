@@ -93,7 +93,7 @@ class M3U8GetUriData(Thread):
 
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _retries):
+    def get_uri_data(self, _uri, _retries, _header=None):
         """
         _retries is used by the decorator when a HTTP failure occurs
         """
@@ -103,8 +103,12 @@ class M3U8GetUriData(Thread):
             M3U8Queue.http_session.close()
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
-        self.logger.trace('HTTP HEADER: {}'.format(M3U8Queue.http_header))
-        resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, verify=False)
+        if _header:
+            self.logger.trace('1HTTP HEADER: {}'.format(_header))
+            resp = M3U8Queue.http_session.get(_uri, headers=_header, timeout=HTTP_TIMEOUT, verify=False)
+        else:
+            self.logger.trace('2HTTP HEADER: {}'.format(M3U8Queue.http_header))
+            resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, verify=False)
         x = resp.content
         resp.raise_for_status()
         return x
@@ -114,13 +118,17 @@ class M3U8GetUriData(Thread):
         if _data['key'] and _data['key']['uri']:
             if _data['key']['uri'] in M3U8Queue.key_list.keys():
                 key_data = M3U8Queue.key_list[_data['key']['uri']]
-                self.logger.debug('Reusing key {} {}'.format(os.getpid(), _data['key']['uri']))
+                self.logger.trace('Reusing key {} {}'.format(os.getpid(), _data['key']['uri']))
             elif not _data['key']['uri'].startswith('http'):
                 self.logger.warning('Unknown protocol, aborting {} {}'.format(os.getpid(), _data['key']['uri']))
                 return False
             else:
                 key_uri = _data['key']['uri']
                 key_data = self.get_uri_data(key_uri, HTTP_RETRIES)
+                if key_data:
+                    self.logger.debug('New Key {} {} {}'.format(os.getpid(), key_uri, _data['uri']))
+                else:
+                    self.logger.notice('Encryption Key Error. No data provided {} {}'.format(key_uri, _data['uri']))
 
             if key_data is not None:
                 M3U8Queue.key_list[_data['key']['uri']] = key_data
@@ -134,6 +142,7 @@ class M3U8GetUriData(Thread):
                 cipher = Cipher(algorithms.AES(key_data), modes.CBC(iv), default_backend())
                 decryptor = cipher.decryptor()
                 self.video.data = decryptor.update(self.video.data)
+                
         if len(M3U8Queue.key_list.keys()) > 20:
             del M3U8Queue.key_list[list(M3U8Queue.key_list)[0]]
         return True
@@ -206,7 +215,8 @@ class M3U8GetUriData(Thread):
             else:
                 count = 1
             while count > 0:
-                self.video.data = self.get_uri_data(data['uri'], HTTP_RETRIES)
+                header = M3U8Queue.http_header.copy()
+                self.video.data = self.get_uri_data(data['uri'], HTTP_RETRIES, header)
                 if self.video.data:
                     break
 
@@ -229,6 +239,7 @@ class M3U8GetUriData(Thread):
                                'atsc': None
                                }
             if not self.decrypt_stream(data):
+                self.logger.warning('UNABLE TO DECRYPT STREAM, TERMINATING')
                 # terminate if stream is not decryptable
                 TERMINATE_REQUESTED = True
                 M3U8Queue.pts_resync.terminate()
@@ -240,6 +251,7 @@ class M3U8GetUriData(Thread):
                                'stream': None,
                                'atsc': None}
             if not self.is_pts_valid():
+                self.logger.warning('PTS IS NOT VALID')
                 PLAY_LIST[uri_dt]['played'] = True
                 return {'uri': data['uri'],
                                'data': data,
@@ -351,6 +363,8 @@ class M3U8Queue(Thread):
                 self.process_queue = M3U8GetUriData(queue_item, UID_COUNTER, self.config)
                 if IS_VOD:
                     time.sleep(0.1)
+                elif queue_item['data']['duration']:
+                    time.sleep(queue_item['data']['duration']/3)
                 else:
                     time.sleep(1.0)
                 UID_COUNTER += 1
@@ -487,18 +501,19 @@ class M3U8Process(Thread):
                     self.logger.warning('[{}]][player-enable_url_filter]'
                                         ' enabled but [player-url_filter] not set'
                                         .format(self.config_section))
-            count = 2
+            count = 4
             while not TERMINATE_REQUESTED and count > 0:
                 added = 0
                 removed = 0
                 self.logger.debug('Reloading m3u8 stream queue {}'.format(os.getpid()))
                 playlist = self.get_m3u8_data(self.stream_uri, 2)
                 if playlist is None:
-                    self.logger.debug('M3U Playlist is None, retrying')
-                    self.sleep(self.duration+0.5)
+                    self.logger.debug('M3U Playlist is None, retrying after {}'.format(self.duration/2 + 0.5))
+                    self.sleep(self.duration/2 + 0.5)
                     count = count - 1
                     continue
-                count = 2
+                self.logger.trace('M3U8: {}'.format(playlist.segments))
+                count = 4
                 if playlist.playlist_type == 'vod' or self.config[self.config_section]['player-play_all_segments']:
                     if not IS_VOD:
                         self.logger.debug('Setting stream type to VOD {}'.format(os.getpid()))
@@ -559,7 +574,7 @@ class M3U8Process(Thread):
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
         self.logger.trace('HEADER: {}'.format(self.header))
-        return m3u8.load(_uri, headers=self.header, http_session=M3U8Queue.http_session)
+        return m3u8.load(_uri, timeout=4, headers=self.header, http_session=M3U8Queue.http_session)
 
     def segment_date_time(self, _segment):
         if _segment:

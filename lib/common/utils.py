@@ -37,11 +37,11 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.15.10'
+VERSION = '0.9.15.11'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:144.0) Gecko/20100101 Firefox/144.0'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 
@@ -78,14 +78,22 @@ def logging_setup(_config):
     if str(logging.getLevelName('NOTICE')).startswith('Level'):
         logging.addLevelName(LOG_LVL_NOTICE, 'NOTICE')
         def notice(self, message, *args, **kws):
-            if self.isEnabledFor(LOG_LVL_NOTICE):
-                self._log(LOG_LVL_NOTICE, message, args, **kws) 
+            try:
+                if self.isEnabledFor(LOG_LVL_NOTICE):
+                    self._log(LOG_LVL_NOTICE, message, args, **kws) 
+            except FileNotFoundError as ex:
+                # This seems to occur when the logger engine moves to the next log file
+                print('ERROR: Log file not found. {}'.format(ex))
         logging.Logger.notice = notice
     if str(logging.getLevelName('TRACE')).startswith('Level'):
         logging.addLevelName(LOG_LVL_TRACE, 'TRACE')
         def trace(self, message, *args, **kws):
-            if self.isEnabledFor(LOG_LVL_TRACE):
-                self._log(LOG_LVL_TRACE, message, args, **kws) 
+            try:
+                if self.isEnabledFor(LOG_LVL_TRACE):
+                    self._log(LOG_LVL_TRACE, message, args, **kws) 
+            except FileNotFoundError as ex:
+                # This seems to occur when the logger engine moves to the next log file
+                print('ERROR: Log file not found. {}'.format(ex))
         logging.Logger.trace = trace
     if str(logging.getLevelName('NOTUSED')).startswith('Level'):
         try:
