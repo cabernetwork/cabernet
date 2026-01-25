@@ -178,19 +178,18 @@ class Plugin:
     def import_manifest(self, _is_external):
         try:
             json_settings = self.plugin_db.get_plugins(_installed=None, _repo_id=None, _plugin_id=self.plugin_id)
-
             local_settings = importlib.resources.read_text(self.plugin_path, PLUGIN_MANIFEST_FILE)
             local_settings = json.loads(local_settings)
             local_settings = local_settings['plugin']
 
             if not json_settings:
                 json_settings = local_settings
-                json_settings['repoid'] = None
+                json_settings['repoid'] = self.plugin_settings['repoid']
             else:
                 json_settings = json_settings[0]
-                self.repo_id = json_settings['repoid']
                 if local_settings['version']['current']:
                     json_settings['version']['current'] = local_settings['version']['current']
+            self.repo_id = json_settings['repoid']
             json_settings['external'] = _is_external
             json_settings['version']['installed'] = True
             self.namespace = json_settings['name']

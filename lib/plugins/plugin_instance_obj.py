@@ -76,26 +76,39 @@ class PluginInstanceObj:
         """
         return False
 
-    def get_channel_uri(self, sid):
+    def get_channel_uri(self, _sid):
         """
         External request to return the uri for a m3u8 stream.
         Called from stream object.
         """
         if self.enabled and self.config_obj.data[self.config_section]['enabled']:
-            return self.channels.get_channel_uri(sid)
+            return self.channels.get_channel_uri(_sid)
         else:
             self.logger.debug(
                 '{}:{} Plugin instance disabled, not getting Channel uri'
                 .format(self.plugin_obj.name, self.instance_key))
             return None
 
-    def stream_terminated(self, sid):
+    def get_channel_key_header(self, _sid, _key_uri, _header):
+        """
+        External request to return the uri for a m3u8 stream.
+        Called from stream object.
+        """
+        if self.enabled and self.config_obj.data[self.config_section]['enabled']:
+            return self.channels.get_channel_key_header(_sid, _key_uri, _header)
+        else:
+            self.logger.debug(
+                '{}:{} Plugin instance disabled, not getting Channel Key URI updates'
+                .format(self.plugin_obj.name, self.instance_key))
+            return None
+
+    def stream_terminated(self, _sid):
         """
         This is called when the stream is terminated. Used to stop
         any polling processing that the plugin is doing during the
         stream.
         """
-        return self.channels.stream_terminated(sid)
+        return self.channels.stream_terminated(_sid)
 
     ##############################
     # ## EXTERNAL EPG METHODS

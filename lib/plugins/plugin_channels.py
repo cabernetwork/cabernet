@@ -72,6 +72,13 @@ class PluginChannels:
         """
         return None
 
+    def get_channel_key_header(self, _sid, _key_uri, _header):
+        """
+        Override when provider requires unique header for key uri.
+        Returns no change if not overridden
+        """
+        return {'uri': _key_uri, 'header': _header}
+
     def stream_terminated(self, sid):
         """
         This is called when the stream is terminated. Used to stop
@@ -129,11 +136,11 @@ class PluginChannels:
                 'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        self.logger.trace('HEADER: {}'.format(header))
+        self.logger.trace('HEADER: {} {} {}'.format(header, _uri, _data))
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=18, verify=False, cookies=_cookies)
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=6, verify=False, cookies=_cookies)
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=18, verify=False, cookies=_cookies)
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=6, verify=False, cookies=_cookies)
         x = resp.content
         return x
 
@@ -238,8 +245,9 @@ class PluginChannels:
         best_stream = None
         if _referer:
             header = {
-                'User-agent': utils.DEFAULT_USER_AGENT,
-                'Referer': _referer}
+                'user-agent': utils.DEFAULT_USER_AGENT,
+                'referer': _referer,
+                'origin': _referer[:-1]}
         else:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         self.logger.trace('HEADER: {}'.format(header))

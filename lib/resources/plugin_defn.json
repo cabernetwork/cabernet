@@ -111,5 +111,12 @@
         "default": null,
         "level": 0,
         "help": "List of images displayed in the information view"
+    },
+    "repoid": {
+        "label": "Repo ID",
+        "type": "string",
+        "default": "local",
+        "level": 3,
+        "help": "Default: local. The name of the repo config dataset. Local means no repo."
     }
 }

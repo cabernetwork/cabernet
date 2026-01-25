@@ -121,6 +121,10 @@ def handle_url_except(f=None, timeout=None):
                 ex_save = ex
                 self.logger.info("HTTPError in function {}(), retrying {} {} {}"
                                  .format(f.__qualname__, os.getpid(), str(ex_save), str(arg0), ))
+                if ex.response.status_code == 400:
+                    # May need to sleep a while to allow catchup for provider
+                    time.sleep(0.1)
+
             except urllib.error.URLError as ex:
                 ex_save = ex
                 if isinstance(ex.reason, ConnectionRefusedError):

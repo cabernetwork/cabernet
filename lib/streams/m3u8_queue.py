@@ -20,10 +20,12 @@ import logging
 import os
 import re
 import requests
+import requests.exceptions
 import socket
 import sys
 import threading
 import time
+import urllib.error
 import urllib.parse
 from collections import OrderedDict
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -34,6 +36,7 @@ from threading import Thread
 
 import lib.common.utils as utils
 import lib.m3u8 as m3u8
+from lib.db.db_channels import DBChannels
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 from lib.streams.atsc import ATSCMsg
@@ -104,13 +107,21 @@ class M3U8GetUriData(Thread):
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
         if _header:
-            self.logger.trace('1HTTP HEADER: {}'.format(_header))
-            resp = M3U8Queue.http_session.get(_uri, headers=_header, timeout=HTTP_TIMEOUT, verify=False)
+            header = _header.copy()
         else:
-            self.logger.trace('2HTTP HEADER: {}'.format(M3U8Queue.http_header))
-            resp = M3U8Queue.http_session.get(_uri, headers=M3U8Queue.http_header, timeout=HTTP_TIMEOUT, verify=False)
+            header = M3U8Queue.http_header.copy()
+        self.logger.trace('HTTP HEADER: {}'.format(header))
+        resp = M3U8Queue.http_session.get(_uri, headers=header, timeout=HTTP_TIMEOUT, verify=False)
         x = resp.content
-        resp.raise_for_status()
+        try:
+            resp.raise_for_status()
+        except (requests.exceptions.HTTPError, urllib.error.HTTPError) as ex:
+            self.logger.warning('Error: Will refreshing session   {}'.format(ex))
+            M3U8Queue.http_session.close()
+            time.sleep(0.01)
+            M3U8Queue.http_session = requests.session()
+            time.sleep(2.0)
+            raise ex
         return x
 
     def decrypt_stream(self, _data):
@@ -124,7 +135,19 @@ class M3U8GetUriData(Thread):
                 return False
             else:
                 key_uri = _data['key']['uri']
-                key_data = self.get_uri_data(key_uri, HTTP_RETRIES)
+                self.logger.trace('New key uri found  {}  {}'.format(key_uri, M3U8Queue.channel_dict['uid']))
+                key_updates = M3U8Process.plugins.plugins[M3U8Queue.channel_dict['namespace']] \
+                    .plugin_obj.get_channel_key_header_ext(
+                        M3U8Queue.channel_dict['uid'], key_uri, M3U8Queue.http_header,
+                        M3U8Queue.channel_dict['instance'])
+                if not key_updates:
+                    self.logger.warning('Remote Method Error: Unable to obtain key URI updates. Continuing with old data')
+                    key_header = M3U8Queue.http_header
+                else:
+                    key_uri = key_updates['uri']
+                    key_header = key_updates['header']
+                key_data = self.get_uri_data(key_uri, HTTP_RETRIES, key_header)
+
                 if key_data:
                     self.logger.debug('New Key {} {} {}'.format(os.getpid(), key_uri, _data['uri']))
                 else:
@@ -356,17 +379,18 @@ class M3U8Queue(Thread):
                 while UID_COUNTER - UID_PROCESSED - len(PROCESSED_URLS) > PARALLEL_DOWNLOADS:
                     self.logger.debug('Slowed Processing: {}  Received: {}  Processed: {}  Processed_Queue: {}  Incoming_Queue: {}'
                         .format(os.getpid(), UID_COUNTER, UID_PROCESSED, len(PROCESSED_URLS), STREAM_QUEUE.qsize()))
-                    time.sleep(.5)
+                    time.sleep(0.1)
                     self.check_processed_list()
                     if TERMINATE_REQUESTED:
                         break
+
                 self.process_queue = M3U8GetUriData(queue_item, UID_COUNTER, self.config)
                 if IS_VOD:
                     time.sleep(0.1)
                 elif queue_item['data']['duration']:
-                    time.sleep(queue_item['data']['duration']/3)
+                    time.sleep(queue_item['data']['duration']/4)
                 else:
-                    time.sleep(1.0)
+                    time.sleep(0.1)
                 UID_COUNTER += 1
         except (KeyboardInterrupt, EOFError) as ex:
             TERMINATE_REQUESTED = True
@@ -428,6 +452,7 @@ class M3U8Process(Thread):
     Includes managing the processing queue and providing
     the M3U8Queue with what to process.
     """
+    plugins = None
 
     def __init__(self, _config, _plugins, _channel_dict):
         global HTTP_TIMEOUT
@@ -436,20 +461,12 @@ class M3U8Process(Thread):
         Thread.__init__(self)
         self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
         self.config = _config
-        self.channel_dict = _channel_dict
-        if _channel_dict['json'].get('Header') is None:
-            self.header = {'User-agent': utils.DEFAULT_USER_AGENT}
-        else:
-            self.header = _channel_dict['json']['Header']
-        if _channel_dict['json'].get('use_date_on_m3u8_key') is None:
-            self.use_date_on_key = True
-        else:
-            self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
+        M3U8Process.plugins = _plugins
+        self.db = DBChannels(self.config)
 
         self.ch_uid = _channel_dict['uid']
         self.is_starting = True
         self.last_refresh = time.time()
-        self.plugins = _plugins
         HTTP_TIMEOUT = self.config[_channel_dict['namespace'].lower()]['stream-g_http_timeout']
         HTTP_RETRIES = self.config[_channel_dict['namespace'].lower()]['stream-g_http_retries']
         
@@ -457,6 +474,17 @@ class M3U8Process(Thread):
         self.config_section = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
         self.use_full_duplicate_checking = self.config[self.config_section]['player-enable_full_duplicate_checking']
         self.use_pathonly_checking = self.config[self.config_section].get('player-enable_pathonly_checking')
+
+        # Refresh channel settings in case things changed
+        self.channel_dict = _channel_dict
+        self.stream_uri = self.get_stream_uri()
+        _channel_dict = self.db.get_channel(self.ch_uid, _channel_dict['namespace'], _channel_dict['instance'])
+
+        self.channel_dict = _channel_dict
+        if _channel_dict['json'].get('use_date_on_m3u8_key') is None:
+            self.use_date_on_key = True
+        else:
+            self.use_date_on_key = _channel_dict['json']['use_date_on_m3u8_key']
 
         self.is_running = True
         self.duration = 6
@@ -471,7 +499,6 @@ class M3U8Process(Thread):
         global OUT_QUEUE
         global TERMINATE_REQUESTED
 
-        self.stream_uri = self.get_stream_uri()
         if not self.stream_uri:
             self.logger.warning('Unknown Channel {}'.format(self.ch_uid))
             out_queue_put({'uri': 'terminate',
@@ -502,15 +529,19 @@ class M3U8Process(Thread):
                                         ' enabled but [player-url_filter] not set'
                                         .format(self.config_section))
             count = 4
+            zero_added = 0
             while not TERMINATE_REQUESTED and count > 0:
                 added = 0
                 removed = 0
+                start_cycle_duration = time.time()
                 self.logger.debug('Reloading m3u8 stream queue {}'.format(os.getpid()))
                 playlist = self.get_m3u8_data(self.stream_uri, 2)
                 if playlist is None:
-                    self.logger.debug('M3U Playlist is None, retrying after {}'.format(self.duration/2 + 0.5))
-                    self.sleep(self.duration/2 + 0.5)
+                    self.logger.debug('M3U Playlist is None, retrying')
                     count = count - 1
+                    M3U8Queue.http_session.close()
+                    time.sleep(0.01)
+                    M3U8Queue.http_session = requests.session()
                     continue
                 self.logger.trace('M3U8: {}'.format(playlist.segments))
                 count = 4
@@ -522,16 +553,30 @@ class M3U8Process(Thread):
                     self.logger.debug('Setting stream type to non-VOD {}'.format(os.getpid()))
                     IS_VOD = False
                 removed += self.remove_from_stream_queue(playlist)
-                added += self.add_to_stream_queue(playlist)
+                num_added = self.add_to_stream_queue(playlist)
+                # Reset HTTP session if m3u8 is not changing
+                if num_added == 0:
+                    zero_added += 1
+                    if zero_added == 2:
+                        zero_added = 0
+                        self.logger.warning('No change in m3u8 load, resetting session')
+                        M3U8Queue.http_session.close()
+                        time.sleep(0.01)
+                        M3U8Queue.http_session = requests.session()
+                added += num_added
+
                 if self.plugins.plugins[self.channel_dict['namespace']].plugin_obj \
                         .is_time_to_refresh_ext(self.last_refresh, self.channel_dict['instance']):
                     self.stream_uri = self.get_stream_uri()
                     self.logger.debug('M3U8: {} {}'
                                       .format(self.stream_uri, os.getpid()))
                     self.last_refresh = time.time()
-                    time.sleep(0.3)
+                    time.sleep(0.1)
                 elif self.duration > 0.5:
-                    self.sleep(self.duration+0.5)
+                    end_cycle_duration = time.time()
+                    extra_time_to_sleep = self.duration - (end_cycle_duration - start_cycle_duration)
+                    if extra_time_to_sleep > 0:
+                        self.sleep(extra_time_to_sleep)
         except Exception as ex:
             self.logger.exception('{}'.format(
                 'UNEXPECTED EXCEPTION M3U8Process='))
@@ -546,7 +591,7 @@ class M3U8Process(Thread):
         start_ttw = time.time()
         for i in range(round(_time * 5)):
             if not TERMINATE_REQUESTED:
-                time.sleep(self.duration * 0.2)
+                time.sleep(0.2)
             delta_ttw = time.time() - start_ttw
             if delta_ttw > _time:
                 break
@@ -573,8 +618,8 @@ class M3U8Process(Thread):
             M3U8Queue.http_session.close()
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
-        self.logger.trace('HEADER: {}'.format(self.header))
-        return m3u8.load(_uri, timeout=4, headers=self.header, http_session=M3U8Queue.http_session)
+        self.logger.trace('M3U8 HEADER: {} {}'.format(M3U8Queue.http_header, _uri))
+        return m3u8.load(_uri, timeout=3, headers=M3U8Queue.http_header, http_session=M3U8Queue.http_session)
 
     def segment_date_time(self, _segment):
         if _segment:
@@ -877,7 +922,7 @@ def start(_config, _plugins, _m3u8_queue, _data_queue, _channel_dict, extra=None
                         'atsc': None})
                     time.sleep(0.01)
                     STREAM_QUEUE.put({'uri_dt': 'terminate'})
-                    time.sleep(0.1)
+                    time.sleep(0.01)
                 except (EOFError, TypeError, ValueError) as ex:
                     pass
                 logger.debug('4 m3u8_queue process terminated {}'.format(os.getpid()))

@@ -85,7 +85,7 @@ class PluginObj:
         """
         External request to determine if the m3u8 stream uri needs to 
         be refreshed.
-        Called from stream object.
+        Called from m3u8_queue.py
         """
         self.check_logger_refresh()
         return False
@@ -93,18 +93,19 @@ class PluginObj:
     def get_channel_uri_ext(self, _sid, _instance=None):
         """
         External request to return the reference uri for a m3u8 stream.
-        Called from stream object.
+        Called from m3u8_queue.py
         """
         self.check_logger_refresh()
         return self.instances[_instance].get_channel_uri(_sid)
 
-    def get_channel_ref_ext(self, _sid, _instance=None):
+    def get_channel_key_header_ext(self, _sid, _key_uri, _header, _instance=None):
         """
-        External request to return the uri for a m3u8 stream.
-        Called from stream object.
+        External request to update the default header or key uri to 
+        support any special info for a key request.
+        Return the updated key uri and header as a dict.
+        Called from m3u8_queue.py
         """
-        self.check_logger_refresh()
-        return self.instances[_instance].get_channel_ref(_sid)
+        return self.instances[_instance].get_channel_key_header(_sid, _key_uri, _header)
 
     def stream_terminated_ext(self, _sid, _instance=None):
         """

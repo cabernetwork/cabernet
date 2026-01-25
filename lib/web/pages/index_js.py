@@ -16,6 +16,9 @@ The above copyright notice and this permission notice shall be included in all c
 substantial portions of the Software.
 """
 
+import logging
+import threading
+
 import lib.common.utils as utils
 from lib.common.decorators import getrequest
 from lib.db.db_plugins import DBPlugins
@@ -33,13 +36,17 @@ class IndexJS:
     def __init__(self, _config):
         self.config = _config
         self.plugin_db = DBPlugins(_config)
+        self.logger = logging.getLogger(__name__ + str(threading.get_ident()))
 
     def check_upgrade_status(self):
         plugin_defns = self.plugin_db.get_plugins(
             True, None, None)
         if plugin_defns:
             for plugin_defn in plugin_defns:
-                latest_version = plugin_defn['version']['latest']
+                latest_version = plugin_defn['version'].get('latest')
+                if not latest_version:
+                    latest_version = plugin_defn['version'].get('current')
+
                 upgrade_available = ''
                 if plugin_defn['external'] and latest_version != plugin_defn['version']['current']:
                     return '$(\"#pluginStatus\").text("Upgrade");'
@@ -130,6 +137,7 @@ class IndexJS:
         return js
 
     def get_version_div(self):
+        # currently we only support cabernet's direct repo or local without a repo
         manifest_list = self.plugin_db.get_repos(utils.CABERNET_ID)
         if not manifest_list:
             current_version = utils.VERSION

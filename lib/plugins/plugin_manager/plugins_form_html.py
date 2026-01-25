@@ -380,6 +380,8 @@ class PluginsFormHTML:
         plugins_list = ''
         for plugin_defn in sorted(plugin_defns, key=lambda p: p['id']):
             repo_id = plugin_defn['repoid']
+            if repo_id == 'local':
+                continue
             plugin_id = plugin_defn['id']
             plugin_name = plugin_defn['name']
 

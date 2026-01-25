@@ -293,10 +293,10 @@ class InternalProxy(Stream):
         a short.  It is currently set to at least 20 seconds of data 
         before it stops transmitting
         """
-        x = 0
         try:
             bytes_written = 0
             count = 0
+            x = 0
             bytes_per_write = int(len(_data)/25)  # number of seconds to keep transmitting
             while self.out_queue.qsize() < 1 or \
                     (self.out_queue.qsize() > 0 and \
@@ -418,7 +418,7 @@ class InternalProxy(Stream):
         until python can do this correctly.
         """
         is_running = False
-        max_tries = 40
+        max_tries = 80
         restarts = 5
         while True:
             while InternalProxy.is_m3u8_starting != 0:
@@ -468,6 +468,7 @@ class InternalProxy(Stream):
 
                 time.sleep(0.1)
                 tries = 0
+                # Some providers needs more than 8 seconds to start up. Change max_tries to 16 seconds
                 while self.out_queue.empty() and tries < max_tries:
                     tries += 1
                     time.sleep(0.2)
@@ -477,7 +478,8 @@ class InternalProxy(Stream):
                     try:
                         # queue is not empty, but it sticks here anyway...
                         status = self.out_queue.get(False, 3)
-                    except queue.Empty:
+                    except queue.Empty as ex:
+                        self.logger.notice('Queue is empty, terminating  {}'.format(ex))
                         self.m3u8_terminate()
                         continue
 
