@@ -17,9 +17,9 @@ substantial portions of the Software.
 """
 
 import binascii
-import struct
 import datetime
 import logging
+import struct
 import lib.common.utils as utils
 from lib.common.algorithms import Crc
 from lib.common.models import CrcModels

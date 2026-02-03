@@ -122,14 +122,14 @@ class PluginChannels:
                 'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        self.logger.trace('HEADER: {}'.format(header))
+        self.logger.trace('HEADER: {}  URI: {}'.format(header, _uri))
         resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
         x = resp.json()
         resp.raise_for_status()
         return x
 
     @handle_url_except()
-    def get_uri_data(self, _uri, _retries, _header=None, _data=None, _cookies=None):
+    def get_uri_data(self, _uri, _retries, _header=None, _data=None, _cookies=None, _timeout=6):
         if _header is None:
             header = {
                 'Accept-Language': 'en-US',
@@ -138,9 +138,9 @@ class PluginChannels:
             header = _header
         self.logger.trace('HEADER: {} {} {}'.format(header, _uri, _data))
         if _data:
-            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=6, verify=False, cookies=_cookies)
+            resp = self.plugin_obj.http_session.post(_uri, headers=header, data=_data, timeout=_timeout, verify=False, cookies=_cookies)
         else:
-            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=6, verify=False, cookies=_cookies)
+            resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=_timeout, verify=False, cookies=_cookies)
         x = resp.content
         return x
 
@@ -150,7 +150,7 @@ class PluginChannels:
             header={'User-agent': utils.DEFAULT_USER_AGENT}
         else:
             header = _header
-        self.logger.trace('HEADER: {}'.format(header))
+        self.logger.trace('HEADER: {}  URI: {}'.format(header, _uri))
         return m3u8.load(_uri,
                          headers=header,
                          http_session=self.plugin_obj.http_session)
@@ -219,7 +219,7 @@ class PluginChannels:
              'Accept-Encoding': 'identity',
              'Connection': 'Keep-Alive'
              }
-        self.logger.trace('HEADER: {}'.format(h))
+        self.logger.trace('HEADER: {}  URI: {}'.format(h, _thumbnail))
         resp = self.plugin_obj.http_session.get(_thumbnail, headers=h, timeout=8)
         resp.raise_for_status()
         img_blob = resp.content
@@ -250,7 +250,7 @@ class PluginChannels:
                 'origin': _referer[:-1]}
         else:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
-        self.logger.trace('HEADER: {}'.format(header))
+        self.logger.trace('HEADER: {}  URI: {}'.format(header, _url))
         ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
         ch_json = ch_dict['json']
         best_resolution = -1

@@ -418,7 +418,7 @@ class InternalProxy(Stream):
         until python can do this correctly.
         """
         is_running = False
-        max_tries = 80
+        max_tries = 40
         restarts = 5
         while True:
             while InternalProxy.is_m3u8_starting != 0:
@@ -468,11 +468,12 @@ class InternalProxy(Stream):
 
                 time.sleep(0.1)
                 tries = 0
-                # Some providers needs more than 8 seconds to start up. Change max_tries to 16 seconds
+                # Some providers needs more than 8 seconds to start up. Change max_tries to 8 seconds
                 while self.out_queue.empty() and tries < max_tries:
                     tries += 1
                     time.sleep(0.2)
                 if tries >= max_tries:
+                    self.logger.notice('################# Forked process not responding, restarting')
                     self.m3u8_terminate()
                 else:
                     try:
