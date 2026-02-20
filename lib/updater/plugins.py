@@ -42,7 +42,7 @@ class PluginsUpgrade:
         for p_defn in plugin_defns:
             if not p_defn.get('external'):
                 continue
-            if p_defn['version']['current'] == p_defn['version']['latest']:
+            if not p_defn['version'].get('latest') or p_defn['version']['current'] == p_defn['version']['latest']:
                 continue
             # upgrade available
             _web_status.data += self.pm.delete_plugin(p_defn['repoid'], p_defn['id'])
