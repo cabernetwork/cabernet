@@ -114,7 +114,7 @@ class PluginChannels:
 
     @handle_url_except()
     @handle_json_except
-    def get_uri_json_data(self, _uri, _retries, _header=None):
+    def get_uri_json_data(self, _uri, _retries, _params=None, _header=None):
         if _header is None:
             header = {
                 'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ class PluginChannels:
         else:
             header = _header
         self.logger.trace('HEADER: {}  URI: {}'.format(header, _uri))
-        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
+        resp = self.plugin_obj.http_session.get(_uri, params=_params, headers=header, timeout=8)
         x = resp.json()
         resp.raise_for_status()
         return x
@@ -251,8 +251,6 @@ class PluginChannels:
         else:
             header = {'User-agent': utils.DEFAULT_USER_AGENT}
         self.logger.trace('HEADER: {}  URI: {}'.format(header, _url))
-        ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
-        ch_json = ch_dict['json']
         best_resolution = -1
         video_url_m3u = m3u8.load(
             _url, headers=header,
@@ -306,22 +304,27 @@ class PluginChannels:
                     best_stream = video_stream
                     best_resolution = video_stream.stream_info.resolution[1]
 
+
             json_needs_updating = False
             if best_stream is not None:
-                # use resolution over 720 as HD or
-                # bandwidth over 3mil
-                if best_resolution >= 720 and ch_json['HD'] == 0:
-                    ch_json['HD'] = 1
-                    json_needs_updating = True
-                elif 0 < best_resolution < 720 and ch_json['HD'] == 1:
-                    ch_json['HD'] = 0
-                    json_needs_updating = True
-                elif best_stream.stream_info.bandwidth > 3000000 and ch_json['HD'] == 0:
-                    ch_json['HD'] = 1
-                    json_needs_updating = True
-                elif best_stream.stream_info.bandwidth <= 3000000 and ch_json['HD'] == 1:
-                    ch_json['HD'] = 0
-                    json_needs_updating = True
+                ch_dict = self.db.get_channel(_channel_id, self.plugin_obj.name, self.instance_key)
+                if ch_dict:
+                    ch_json = ch_dict['json']
+
+                    # use resolution over 720 as HD or
+                    # bandwidth over 3mil
+                    if best_resolution >= 720 and ch_json['HD'] == 0:
+                        ch_json['HD'] = 1
+                        json_needs_updating = True
+                    elif 0 < best_resolution < 720 and ch_json['HD'] == 1:
+                        ch_json['HD'] = 0
+                        json_needs_updating = True
+                    elif best_stream.stream_info.bandwidth > 3000000 and ch_json['HD'] == 0:
+                        ch_json['HD'] = 1
+                        json_needs_updating = True
+                    elif best_stream.stream_info.bandwidth <= 3000000 and ch_json['HD'] == 1:
+                        ch_json['HD'] = 0
+                        json_needs_updating = True
 
                 if best_stream.stream_info.resolution is None:
                     self.logger.debug(

@@ -77,6 +77,7 @@ class TVHUserConfig:
         else:
             self.set_config(_config)
             self.defn_json.garbage_collect()
+        self.logger = logging.getLogger(__name__ + '1234')
         self.db = DBConfigDefn(self.data)
         self.db.add_config(self.data)
 
@@ -86,7 +87,6 @@ class TVHUserConfig:
     def set_config(self, _config):
         self.data = copy.deepcopy(_config)
         self.config_handler.read(self.data['paths']['config_file'])
-        self.logger = logging.getLogger(__name__)
 
     def init_logger_config(self):
         log_sections = ['loggers', 'logger_root', 'handlers', 'formatters',
@@ -239,6 +239,7 @@ class TVHUserConfig:
         self.data = utils.merge_dict(self.data, _delta_config_dict, ignore_conflicts=True)
 
     def update_config(self, _area, _updated_data):
+
         # make sure the config_handler has all the data from the file
         self.config_handler.read(self.data['paths']['config_file'])
 

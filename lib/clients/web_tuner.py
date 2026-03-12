@@ -168,7 +168,8 @@ class TunerHttpHandler(WebHTTPHandler):
         station_list = TunerHttpHandler.channels_db.get_channels(_namespace, _instance)
         try:
             self.real_namespace, self.real_instance, station_data = self.get_ns_inst_station(station_list[sid])
-            if not self.config[self.real_namespace.lower()]['enabled']:
+            if not self.config[self.real_namespace.lower()]['enabled'] or \
+                    not self.plugins.plugins[self.real_namespace].plugin_obj.enabled:
                 self.logger.warning(
                     'Plugin is not enabled, ignoring request: {} sid:{}'
                     .format(self.real_namespace, sid))

@@ -37,11 +37,11 @@ import tracemalloc
 
 import lib.common.exceptions as exceptions
 
-VERSION = '0.9.15.13'
+VERSION = '0.9.16.1'
 CABERNET_URL = 'https://github.com/cabernetwork/cabernet'
 CABERNET_ID = 'cabernet'
 CABERNET_REPO = 'manifest.json'
-DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0'
+DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:148.0) Gecko/20100101 Firefox/148.0'
 PLUGIN_DATA = 'Wawc9dxf2ivj5lmunpq4hrbsktgyXz01e3Y6o7Z8+/'
 
 

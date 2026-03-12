@@ -23,6 +23,7 @@ import threading
 
 import lib.common.utils as utils
 from lib.db.db_epg import DBepg
+from lib.db.db_channels import DBChannels
 from lib.common.decorators import handle_url_except
 from lib.common.decorators import handle_json_except
 
@@ -36,6 +37,7 @@ class PluginEPG:
         self.instance_key = _instance_obj.instance_key
         self.plugin_obj = _instance_obj.plugin_obj
         self.db = DBepg(self.config_obj.data)
+        self.dbchannels = DBChannels(self.config_obj.data)
         self.config_section = self.instance_obj.config_section
         self.episode_adj = self.config_obj.data[self.instance_obj.config_section]\
             .get('epg-episode_adjustment')
@@ -60,7 +62,7 @@ class PluginEPG:
 
     @handle_url_except(timeout=10.0)
     @handle_json_except
-    def get_uri_data(self, _uri, _retries, _header=None):
+    def get_uri_data(self, _uri, _retries, _params=None, _header=None):
         if _header is None:
             header = {
                 'User-agent': utils.DEFAULT_USER_AGENT,
@@ -68,13 +70,21 @@ class PluginEPG:
             }
         else:
             header = _header
-        self.logger.trace('HEADER: {}'.format(header))
-        resp = self.plugin_obj.http_session.get(_uri, headers=header, timeout=8)
+        self.logger.trace('HEADER: {}   URL: {}  PARAMS: {}'.format(header, _uri, _params))
+        resp = self.plugin_obj.http_session.get(_uri, params=_params, headers=header, timeout=8)
         x = resp.json()
         resp.raise_for_status()
         return x
 
     def refresh_epg(self):
+        # block running if any version of plugin is disabled
+        if not self.plugin_obj.enabled or \
+                not self.instance_obj.enabled or \
+                not self.config_obj.data[self.instance_obj.config_section]['enabled'] or \
+                not self.config_obj.data[self.plugin_obj.name.lower()]['enabled']:
+            self.logger.notice('{} Plugin Disabled, aborting EPG Refresh'.format(self.plugin_obj.name))
+            return False
+            
         if not self.is_refresh_expired():
             self.logger.debug('EPG still new for {} {}, not refreshing'.format(self.plugin_obj.name, self.instance_key))
             return False
