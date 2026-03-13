@@ -76,6 +76,7 @@ class InternalProxy(Stream):
         self.last_atsc_msg = 0
         self.filter_counter = 0
         self.is_starting = True
+        self.is_filtered = False
         self.cue = False
 
     def terminate(self, *args):
@@ -114,7 +115,8 @@ class InternalProxy(Stream):
         self.tuner_no = _tuner_no
         self.config = self.db_configdefn.get_config()
         IDLE_COUNTER_MAX = self.config[self.namespace.lower()]['stream-g_stream_timeout']
-        
+        instance_config = utils.instance_config_section(_channel_dict['namespace'], _channel_dict['instance'])
+        self.is_filtered = self.config[instance_config]['player-enable_url_filter']
         self.channel_dict = _channel_dict
         if not self.start_m3u8_queue_process():
             self.terminate()
@@ -191,6 +193,7 @@ class InternalProxy(Stream):
         elif self.idle_counter > self.last_atsc_msg+14:
             self.last_atsc_msg = self.idle_counter
             self.update_tuner_status('No Reply')
+            self.logger.warning('2 setting to No Reply')
             self.logger.debug('1 Requesting status from m3u8_queue {}'.format(self.t_m3u8_pid))
             self.in_queue.put({'thread_id': threading.get_ident(), 'uri': 'status'})
             if not self.is_starting \
@@ -261,6 +264,7 @@ class InternalProxy(Stream):
                 else:
                     if not self.is_starting:
                         self.update_tuner_status('No Reply')
+                        self.logger.warning('1 setting to No Reply')
                     uri_decoded = urllib.parse.unquote(uri)
                     self.logger.debug(
                         'No Video Stream from Provider {} {}'
@@ -297,7 +301,11 @@ class InternalProxy(Stream):
             bytes_written = 0
             count = 0
             x = 0
-            bytes_per_write = int(len(_data)/25)  # number of seconds to keep transmitting
+            filtering = False
+            if self.is_filtered:
+                bytes_per_write = 752  # slow down if possible filtering
+            else:
+                bytes_per_write = int(len(_data)/25)  # number of seconds to keep transmitting
             while self.out_queue.qsize() < 1 or \
                     (self.out_queue.qsize() > 0 and \
                     self.out_queue.queue[0]['data'] is not None and \
@@ -314,7 +322,9 @@ class InternalProxy(Stream):
                 else:
                     count += 1
                     if count > 13:
-                        self.update_tuner_status('No Reply')
+                        if not filtering:
+                            self.logger.warning('1 setting to No Reply')
+                            self.update_tuner_status('No Reply')
                     x = self.wfile.write(_data[bytes_written:next_buffer_write])
                     bytes_written = next_buffer_write
                     # x = self.wfile.write('\r\n'.encode())
@@ -333,8 +343,7 @@ class InternalProxy(Stream):
                         continue
                     if out_queue_item['data']['filtered']:
                         self.process_filtered_packet(out_queue_item['uri'])
-                        bytes_per_write = 752  # change writes to a 
-                        #                       # small number so it does not exit during the filtered packets
+                        filtering = True  # currently stream is being filtered
                     else:
                         # somehow NOT filtered, log this issue
                         self.logger.warning('Unexpected Error: Found unfiltered packet when a filtered packet was expected')

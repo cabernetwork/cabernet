@@ -117,7 +117,7 @@ class M3U8GetUriData(Thread):
         try:
             resp.raise_for_status()
         except (requests.exceptions.HTTPError, urllib.error.HTTPError) as ex:
-            self.logger.warning('Error: Will refreshing session   {}'.format(ex))
+            self.logger.warning('Error: {}, refreshing session'.format(ex))
             M3U8Queue.http_session.close()
             time.sleep(0.01)
             M3U8Queue.http_session = requests.session()
@@ -574,7 +574,7 @@ class M3U8Process(Thread):
                     zero_added += 1
                     if zero_added == 2:
                         zero_added = 0
-                        self.logger.warning('No change in m3u8 load, resetting session')
+                        self.logger.debug('No change in m3u8 load, resetting session')
                         M3U8Queue.http_session.close()
                         time.sleep(0.01)
                         M3U8Queue.http_session = requests.session()
